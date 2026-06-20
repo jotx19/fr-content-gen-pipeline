@@ -7,8 +7,9 @@ import {
   onRequestPractice,
   onSubmitAnswers,
   prefetchPractice,
+  checkSessionAnswer,
 } from '../agent/orchestrator.js';
-import type { SubmitAnswersBody } from '../schemas/tef.schema.js';
+import type { SubmitAnswersBody, CheckAnswerBody } from '../schemas/tef.schema.js';
 
 type AuthedRequest = FastifyRequest & { userId: string };
 
@@ -85,6 +86,21 @@ export async function practicePrefetch(req: AuthedRequest, reply: FastifyReply) 
   try {
     prefetchPractice(req.userId);
     return reply.send({ ok: true, prefetching: true });
+  } catch (err) {
+    return mapError(reply, err);
+  }
+}
+
+export async function checkAnswer(req: AuthedRequest, reply: FastifyReply) {
+  try {
+    const body = req.body as CheckAnswerBody;
+    const data = await checkSessionAnswer(
+      req.userId,
+      body.kind,
+      body.questionIndex,
+      body.userAnswer
+    );
+    return reply.send(data);
   } catch (err) {
     return mapError(reply, err);
   }

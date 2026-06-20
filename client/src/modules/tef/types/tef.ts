@@ -1,0 +1,72 @@
+export type PublicQuestion = {
+  id?: string;
+  question: string;
+  options: string[];
+  skillTag?: string;
+};
+
+export type TefStats = {
+  totalSessions: number;
+  totalQuestions: number;
+  streakDays: number;
+  xp: number;
+};
+
+export type TefEvaluationSummary = {
+  _id: string;
+  kind: 'placement' | 'practice';
+  overallAccuracy: number;
+  levelBefore?: string | null;
+  levelAfter?: string | null;
+  adjustment?: string | null;
+  weakAreas?: string[];
+  summary?: string;
+  topic?: string | null;
+  createdAt: string;
+};
+
+export type TefProfile = {
+  level: string;
+  confidence?: number | null;
+  weakAreas?: string[];
+  summary?: string;
+  onboardedAt?: string | null;
+  practiceReady?: boolean;
+  stats?: TefStats;
+  lastEvaluation?: {
+    id: string;
+    kind: string;
+    overallAccuracy: number;
+    levelAfter?: string | null;
+    summary?: string;
+    createdAt?: string;
+  } | null;
+};
+
+export type PracticeBatch = {
+  level: string;
+  weakAreas: string[];
+  topic?: string;
+  questions: PublicQuestion[];
+  ready: boolean;
+};
+
+export type TefDiagnostic = {
+  overallAccuracy?: number;
+  skillBreakdown?: { skillTag: string; correct: number; total: number; accuracy: number }[];
+  weakAreas?: string[];
+  adjustment?: string;
+  newLevel?: string;
+  summary?: string;
+  estimatedLevel?: string;
+  confidence?: number;
+  evaluationId?: string;
+  profile?: TefProfile;
+};
+
+export type OnboardStartResponse = { questions: PublicQuestion[] };
+
+export type CheckAnswerResponse = {
+  correct: boolean;
+  correctIndex: number;
+};

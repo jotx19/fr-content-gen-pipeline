@@ -430,3 +430,36 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     profile,
   };
 }
+
+export async function checkSessionAnswer(
+  userId: string,
+  kind: 'placement' | 'practice',
+  questionIndex: number,
+  userAnswer: number
+) {
+  requireMongo();
+
+  const doc = await TefProfile.findOne({ userId }).lean();
+  const pending =
+    kind === 'placement'
+      ? (doc?.pendingPlacement as { questions?: unknown[] } | undefined)
+      : (doc?.pendingPractice as { questions?: unknown[] } | undefined);
+
+  const questions = pending?.questions;
+  if (!questions?.length) {
+    throw new Error(`No ${kind} session found — start a session first`);
+  }
+  if (questionIndex < 0 || questionIndex >= questions.length) {
+    throw new Error('Invalid question index');
+  }
+
+  const question = questions[questionIndex] as { correctIndex?: number };
+  if (typeof question.correctIndex !== 'number') {
+    throw new Error('Question is missing an answer key');
+  }
+
+  return {
+    correct: userAnswer === question.correctIndex,
+    correctIndex: question.correctIndex,
+  };
+}

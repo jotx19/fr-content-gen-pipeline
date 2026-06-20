@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { attachUserId } from './auth.routes.js';
 import * as tef from '../controllers/tef.controller.js';
-import { submitAnswersSchema, evaluationHistoryQuerySchema } from '../schemas/tef.schema.js';
+import { submitAnswersSchema, evaluationHistoryQuerySchema, checkAnswerSchema } from '../schemas/tef.schema.js';
 
 export async function tefRoutes(app: FastifyInstance) {
   const auth = { preHandler: [attachUserId] };
@@ -22,4 +22,8 @@ export async function tefRoutes(app: FastifyInstance) {
     return tef.practiceSubmit({ ...req, body } as never, reply);
   });
   app.post('/api/tef/practice/prefetch', auth, tef.practicePrefetch);
+  app.post('/api/tef/check-answer', auth, async (req, reply) => {
+    const body = checkAnswerSchema.parse(req.body);
+    return tef.checkAnswer({ ...req, body } as never, reply);
+  });
 }

@@ -1,0 +1,3 @@
+# Repo root — server/ and client/ are independent deploy units
+.DS_Store
+*.log

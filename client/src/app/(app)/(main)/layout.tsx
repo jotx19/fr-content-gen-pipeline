@@ -10,13 +10,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isLesson = pathname.startsWith('/learn/lesson') || pathname.startsWith('/learn/results');
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      {!isLesson && <Navbar />}
+    <div className={cn('flex flex-col', isSignIn || isLesson ? 'h-dvh' : 'min-h-dvh')}>
+      {!isLesson && !isSignIn && <Navbar />}
       <main
         className={cn(
           'flex flex-1 flex-col',
           pathname === '/' && 'overflow-y-auto',
-          (isSignIn || isLesson) && 'h-dvh overflow-hidden'
+          isSignIn && 'h-dvh overflow-hidden',
+          isLesson && 'h-dvh overflow-hidden'
         )}
       >
         {children}

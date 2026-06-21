@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowRight, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { BRAND } from '@/lib/brand';
 import { LANDING_FEATURES } from '@/modules/home/config/landing-features';
 import { useAuthStore } from '@/store/authStore';
 
@@ -19,15 +20,12 @@ export function LandingPage() {
         className="mb-12 text-center"
       >
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary shadow-[0_6px_0_0_hsl(var(--primary-shadow))]">
-          <GraduationCap className="h-10 w-10 text-primary-foreground" />
+          <Languages className="h-10 w-10 text-primary-foreground" />
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-          Master French for <span className="text-primary">TEF Canada</span>
+          {BRAND.name} — <span className="text-primary">French made fun</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-          Adaptive placement, Duolingo-style daily lessons, and full evaluation reports —
-          powered by AI.
-        </p>
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">{BRAND.description}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg">
             <Link href={isAuthenticated ? '/learn' : '/signin'}>
@@ -41,7 +39,7 @@ export function LandingPage() {
         </div>
       </motion.section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {LANDING_FEATURES.map((feature, i) => (
           <motion.div
             key={feature.title}

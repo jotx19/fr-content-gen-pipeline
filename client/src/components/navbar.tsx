@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { GraduationCap, LogOut, Moon, Sun } from 'lucide-react';
+import { Languages, LogOut, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { useAuthStore } from '@/store/authStore';
+import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -25,14 +26,14 @@ export function Navbar() {
       .map((n) => n[0])
       .join('')
       .slice(0, 2)
-      .toUpperCase() || 'TC';
+      .toUpperCase() || 'FR';
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-extrabold">
-          <GraduationCap className="h-6 w-6 text-primary" />
-          TEF Coach
+          <Languages className="h-6 w-6 text-primary" />
+          {BRAND.name}
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">

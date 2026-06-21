@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, authRequired, isAuthenticated: false }),
     }),
     {
-      name: 'tef-auth',
+      name: 'fringo-auth',
       partialize: (state) => ({ user: state.user }),
     }
   )

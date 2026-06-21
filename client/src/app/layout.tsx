@@ -1,23 +1,18 @@
 import type { Metadata } from 'next';
-import { Nunito } from 'next/font/google';
 import { Providers } from '@/components/providers';
+import { BRAND } from '@/lib/brand';
+import { bricolage, inter, playfair } from '@/lib/fonts';
 import './globals.css';
 
-const nunito = Nunito({
-  subsets: ['latin'],
-  variable: '--font-nunito',
-  weight: ['400', '600', '700', '800'],
-});
-
 export const metadata: Metadata = {
-  title: 'TEF Canada Coach',
-  description: 'Adaptive French practice for TEF Canada',
+  title: BRAND.name,
+  description: BRAND.description,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${nunito.variable} font-sans`}>
+      <body className={`${inter.variable} ${playfair.variable} ${bricolage.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

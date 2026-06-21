@@ -1,4 +1,4 @@
-const PLACEMENT_KEY = 'tef-placement-progress';
+const PLACEMENT_KEY = 'fringo-placement-progress';
 
 export type PlacementProgress = {
   questions: { id?: string; question: string; options: string[]; skillTag?: string }[];

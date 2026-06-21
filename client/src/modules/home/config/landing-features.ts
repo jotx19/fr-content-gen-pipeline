@@ -5,7 +5,7 @@ export const LANDING_FEATURES = [
   },
   {
     title: 'Daily practice',
-    description: 'Short lessons targeting your weak areas — like Duolingo, for TEF.',
+    description: 'Short lessons targeting your weak areas — Duolingo-style, powered by Fringo.',
   },
   {
     title: 'Full progress report',

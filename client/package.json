@@ -1,8 +1,8 @@
 {
-  "name": "tef-agent-client",
+  "name": "fringo-client",
   "version": "5.0.0",
   "private": true,
-  "description": "TEF Canada — Next.js frontend",
+  "description": "Fringo — adaptive French learning app",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",

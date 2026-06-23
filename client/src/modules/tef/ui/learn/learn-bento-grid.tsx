@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { ArrowRight, ChartNoAxesCombined, Loader2, Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { bricolage, inter } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +36,6 @@ type LearnBentoGridProps = {
 const panelBg = "bg-[#FCFCFC] dark:bg-[#1C1C1C]";
 const streakGold = "bg-[#C9A227] dark:bg-[#A8860D]";
 const streakGoldText = "text-[#C9A227] dark:text-[#A8860D]";
-const streakFireLottie = "/Fire%20animation.lottie";
 
 function HeroArrowIcon() {
   return (
@@ -94,62 +98,53 @@ function GoldenXpStat({ xp }: { xp: number }) {
   );
 }
 
-function StreakFireLottie({ className }: { className?: string }) {
-  return (
-    <DotLottieReact
-      src={streakFireLottie}
-      loop
-      autoplay
-      className={className}
-    />
-  );
-}
-
 function StreakDayBars({ streak }: { streak: number }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const totalDays = Math.max(21, streak + 7);
-  const active = Math.min(streak, totalDays);
+  const displayStreak = Math.max(streak, 1);
+  const totalDays = Math.max(21, displayStreak + 7);
+  const active = Math.min(displayStreak, totalDays);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollLeft = el.scrollWidth;
+    el.scrollLeft = 0;
   }, [streak, totalDays]);
 
   return (
-    <div className="flex w-full flex-col gap-2.5">
-      <div
-        ref={scrollRef}
-        className="w-full overflow-x-auto rounded-2xl bg-[#F0F0F0]/90 px-3 py-3 [-ms-overflow-style:none] [scrollbar-width:none] dark:bg-white/[0.06] sm:px-4 sm:py-3.5 [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="flex min-w-min items-end gap-2.5 sm:gap-3">
-          {Array.from({ length: totalDays }, (_, i) => {
-            const filled = i >= totalDays - active;
-            return (
-              <div
-                key={i}
-                className="flex shrink-0 flex-col items-center gap-1.5"
-              >
-                {filled ? (
-                  <StreakFireLottie className="h-6 w-5 sm:h-7 sm:w-6" />
-                ) : (
-                  <span className="h-6 w-5 sm:h-7 sm:w-6" aria-hidden />
-                )}
-                <div
-                  className={cn(
-                    "w-4 rounded-[5px] transition-all sm:w-5",
-                    filled
-                      ? cn("h-16 sm:h-[4.5rem]", streakGold)
-                      : "h-10 bg-[#E0E0E0] dark:bg-white/10 sm:h-10",
-                  )}
-                  aria-hidden
-                />
-              </div>
-            );
-          })}
+    <TooltipProvider delayDuration={200}>
+      <div className="flex w-full flex-col gap-2.5">
+        <div
+          ref={scrollRef}
+          className="w-full overflow-x-auto rounded-2xl bg-[#F0F0F0]/90 px-3 py-3 [-ms-overflow-style:none] [scrollbar-width:none] dark:bg-white/[0.06] sm:px-4 sm:py-3.5 [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex min-w-min items-end gap-2.5 sm:gap-3">
+            {Array.from({ length: totalDays }, (_, i) => {
+              const filled = i < active;
+              const dayNumber = i + 1;
+              return (
+                <Tooltip key={i}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "w-4 shrink-0 cursor-default rounded-[5px] transition-all sm:w-5",
+                        filled
+                          ? cn("h-16 sm:h-[4.5rem]", streakGold)
+                          : "h-10 bg-[#E0E0E0] dark:bg-white/10 sm:h-10",
+                      )}
+                      aria-label={`Day ${dayNumber}`}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6}>
+                    Day {dayNumber}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 

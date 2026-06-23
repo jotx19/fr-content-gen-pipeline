@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
+import { getTefModelCandidates } from '../../core/llm.js';
 import { writingEvaluationOutputSchema } from './writing.schemas.js';
 
 const EVAL_SYSTEM = `Evaluate a French writing submission for TCF / TEF expression écrite.
@@ -35,6 +36,8 @@ export default {
       },
       schema: writingEvaluationOutputSchema,
       maxAttempts: 2,
+      // Prefer configured model only — full fallback chain can exceed proxy timeouts.
+      models: getTefModelCandidates().slice(0, 2),
     });
   },
 };

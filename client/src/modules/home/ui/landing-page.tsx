@@ -16,7 +16,7 @@ export function LandingPage() {
   const ctaHref = isAuthenticated ? '/learn' : '/signin';
 
   return (
-    <div className="min-h-dvh bg-[#f9f7f2] text-neutral-900">
+    <div className="min-h-dvh bg-background text-foreground">
       <LandingNav />
 
       <div className="h-20 md:h-24" aria-hidden />
@@ -30,15 +30,15 @@ export function LandingPage() {
             Learn French with clarity & <span className="underline">confidence</span>.
           </h1>
 
-          <div className="hidden w-px self-stretch bg-neutral-300/80 lg:block" aria-hidden />
+          <div className="hidden w-px self-stretch bg-border lg:block" aria-hidden />
 
-          <p className="max-w-sm text-sm leading-relaxed text-neutral-600 sm:text-[15px] lg:pt-1">
+          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground sm:text-[15px] lg:pt-1">
             Adaptive placement, daily practice, and full progress reports everything you need to
             reach your French goals. Start free and learn at your own pace.
           </p>
 
           <div className="hidden items-start justify-end lg:flex">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-900/5 text-neutral-800">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground">
               <Languages className="h-6 w-6" strokeWidth={1.8} />
             </span>
           </div>
@@ -78,14 +78,14 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="pricing" className="mt-16 border-t border-neutral-200/60 pt-12 text-center">
+        <section id="pricing" className="mt-16 border-t border-border pt-12 text-center">
           <p className={`${bricolage.className} text-xl font-semibold sm:text-2xl`}>
             Start learning with {BRAND.name}
           </p>
-          <p className="mt-2 text-sm text-neutral-500">Free to start. No credit card required.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Free to start. No credit card required.</p>
           <Link
             href={ctaHref}
-            className="mt-6 inline-flex h-11 items-center rounded-full bg-neutral-900 px-7 text-sm font-medium text-white hover:opacity-90"
+            className="mt-6 inline-flex h-11 items-center rounded-full bg-foreground px-7 text-sm font-medium text-background hover:opacity-90"
           >
             {isAuthenticated ? 'Continue learning' : 'Get started free'}
           </Link>

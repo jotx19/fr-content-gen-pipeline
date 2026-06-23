@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Navbar } from '@/components/navbar';
+import { Navbar, NavbarSpacer } from '@/components/navbar';
 import { cn } from '@/lib/utils';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -13,10 +13,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     pathname.startsWith('/learn/writing/results');
 
   const isLanding = pathname === '/';
+  const navOverlaysContent = pathname === '/learn' || pathname === '/learn/writing';
 
   return (
     <div className={cn('flex flex-col', isSignIn || isLesson ? 'h-dvh' : 'min-h-dvh')}>
-      {!isLesson && !isSignIn && !isLanding && <Navbar />}
+      {!isLesson && !isSignIn && !isLanding && (
+        <>
+          <Navbar />
+          {!navOverlaysContent && <NavbarSpacer />}
+        </>
+      )}
       <main
         className={cn(
           'flex flex-1 flex-col',

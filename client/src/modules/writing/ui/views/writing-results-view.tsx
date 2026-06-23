@@ -22,19 +22,19 @@ export function WritingResultsView() {
     result;
 
   return (
-    <div className="min-h-dvh bg-[#f9f7f2] text-neutral-900">
+    <div className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-8 sm:px-6">
         <div className="mb-8 text-center">
-          <span className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-900 text-white">
+          <span className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-background">
             <PenLine className="h-6 w-6" strokeWidth={2} />
           </span>
           <h1 className={`${bricolage.className} text-3xl font-semibold`}>Writing evaluated</h1>
-          <p className="mt-3 text-5xl font-semibold tabular-nums text-neutral-900">{overallScore}</p>
-          <p className="text-sm text-neutral-500">out of 100 · {wordCount} words submitted</p>
+          <p className="mt-3 text-5xl font-semibold tabular-nums text-foreground">{overallScore}</p>
+          <p className="text-sm text-muted-foreground">out of 100 · {wordCount} words submitted</p>
         </div>
 
         {summary && (
-          <p className="mb-6 rounded-2xl border border-neutral-200/70 bg-white p-4 text-sm leading-relaxed text-neutral-600">
+          <p className="mb-6 rounded-2xl border border-border bg-card p-4 text-sm leading-relaxed text-muted-foreground">
             {summary}
           </p>
         )}
@@ -43,9 +43,9 @@ export function WritingResultsView() {
           <div
             className={cn(
               'mb-6 flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm',
-              adjustment === 'levelUp' && 'border-emerald-200 bg-emerald-50 text-emerald-900',
-              adjustment === 'levelDown' && 'border-amber-200 bg-amber-50 text-amber-900',
-              adjustment === 'same' && 'border-neutral-200 bg-white text-neutral-700'
+              adjustment === 'levelUp' && 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100',
+              adjustment === 'levelDown' && 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100',
+              adjustment === 'same' && 'border-border bg-card text-muted-foreground'
             )}
           >
             {adjustment === 'levelUp' && <ArrowUp className="mt-0.5 h-4 w-4 shrink-0" />}
@@ -55,23 +55,23 @@ export function WritingResultsView() {
                 <p className="font-medium">Level adjusted → {newLevel}</p>
               )}
               {adjustment === 'same' && <p className="font-medium">Level unchanged — {newLevel}</p>}
-              {reason && <p className="mt-1 text-neutral-600">{reason}</p>}
+              {reason && <p className="mt-1 text-muted-foreground">{reason}</p>}
             </div>
           </div>
         )}
 
-        <section className="rounded-2xl border border-neutral-200/70 bg-white p-6 shadow-[0_2px_16px_rgba(15,23,42,0.04)]">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className={`${bricolage.className} mb-6 text-lg font-semibold`}>Criteria breakdown</h2>
           <WritingCriteriaList criteria={criteria} />
         </section>
 
         {suggestions?.length > 0 && (
-          <section className="mt-6 rounded-2xl border border-neutral-200/70 bg-white p-6">
+          <section className="mt-6 rounded-2xl border border-border bg-card p-6">
             <h2 className={`${bricolage.className} mb-4 text-lg font-semibold`}>Suggestions</h2>
-            <ul className="space-y-2 text-sm leading-relaxed text-neutral-600">
+            <ul className="space-y-2 text-sm leading-relaxed text-muted-foreground">
               {suggestions.map((s) => (
                 <li key={s} className="flex gap-2">
-                  <span className="text-neutral-400">·</span>
+                  <span className="text-muted-foreground/60">·</span>
                   {s}
                 </li>
               ))}
@@ -80,19 +80,19 @@ export function WritingResultsView() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200/60 bg-[#f9f7f2]/95 p-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 p-4 backdrop-blur">
         <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={() => router.push('/learn/writing')}
-            className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-neutral-900 text-sm font-medium text-white hover:opacity-90"
+            className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-foreground text-sm font-medium text-background hover:opacity-90"
           >
             Practice again
           </button>
           <button
             type="button"
             onClick={() => router.push('/learn')}
-            className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-neutral-300 bg-white text-sm font-medium text-neutral-900 hover:bg-neutral-50"
+            className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted"
           >
             Back to Learn
           </button>

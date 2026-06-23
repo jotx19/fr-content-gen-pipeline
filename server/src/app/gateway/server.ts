@@ -10,6 +10,9 @@ import { registerRoutes } from '../routes/index.js';
 export async function buildServer() {
   const app = Fastify({
     logger: config.nodeEnv !== 'production',
+    // Writing evaluation can take 20–60s via OpenRouter.
+    connectionTimeout: 120_000,
+    requestTimeout: 120_000,
   });
 
   await app.register(fastifyCors, {

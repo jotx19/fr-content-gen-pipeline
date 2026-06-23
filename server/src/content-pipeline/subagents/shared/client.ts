@@ -61,12 +61,13 @@ export async function callStructuredSubagent({
   normalize,
   guardrailsKind,
   maxAttempts = 2,
+  models: modelsOverride,
 }) {
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not configured');
   }
 
-  const models = getTefModelCandidates();
+  const models = modelsOverride?.length ? modelsOverride : getTefModelCandidates();
   let payload = userPayload;
   let lastError = '';
 

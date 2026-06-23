@@ -88,7 +88,7 @@ export function WritingView() {
 
   if (profileLoading) {
     return (
-      <div className="min-h-dvh bg-[#f9f7f2] px-4 py-10">
+      <div className="min-h-dvh bg-background px-4 py-10">
         <div className="mx-auto max-w-3xl space-y-4">
           <Skeleton className="h-8 w-48 rounded-lg" />
           <Skeleton className="h-48 w-full rounded-2xl" />
@@ -100,17 +100,17 @@ export function WritingView() {
 
   if (!profile?.level) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-[#f9f7f2] px-4 text-center">
-        <p className={`${bricolage.className} text-2xl font-semibold text-neutral-900`}>
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 text-center">
+        <p className={`${bricolage.className} text-2xl font-semibold text-foreground`}>
           Complete reading placement first
         </p>
-        <p className="mt-2 max-w-sm text-sm text-neutral-600">
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
           Writing practice uses your CEFR level from the reading placement test.
         </p>
         <button
           type="button"
           onClick={() => router.push('/learn')}
-          className="mt-8 inline-flex h-11 items-center rounded-full bg-neutral-900 px-7 text-sm font-medium text-white hover:opacity-90"
+          className="mt-8 inline-flex h-11 items-center rounded-full bg-foreground px-7 text-sm font-medium text-background hover:opacity-90"
         >
           Back to Learn
         </button>
@@ -119,18 +119,18 @@ export function WritingView() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#f9f7f2] text-neutral-900">
-      <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8">
+    <div className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto max-w-3xl px-4 pb-24 pt-20 sm:px-6 md:pt-24">
         <div className="mb-8 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => router.push('/learn')}
-            className="inline-flex items-center gap-1.5 text-sm text-neutral-600 hover:text-neutral-900"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Learn
           </button>
-          <span className="rounded-full bg-neutral-900/5 px-3 py-1 text-xs font-medium text-neutral-700">
+          <span className="rounded-full bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
             Level {profile.level}
           </span>
         </div>
@@ -139,7 +139,7 @@ export function WritingView() {
           <h1 className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl`}>
             Writing practice
           </h1>
-          <p className="mt-2 text-sm text-neutral-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             TCF-style expression écrite — write in French, then get scored on four criteria.
           </p>
         </header>
@@ -158,23 +158,23 @@ export function WritingView() {
           </div>
         ) : (
           <>
-            <article className="rounded-2xl border border-neutral-200/70 bg-white p-6 shadow-[0_2px_16px_rgba(15,23,42,0.04)]">
+            <article className="rounded-2xl border border-border/70 bg-card p-6 shadow-[0_2px_16px_rgba(15,23,42,0.04)]">
               <div className="mb-4 flex items-start gap-3">
-                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                   <BookOpen className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {prompt.taskType} · {prompt.register}
                   </p>
                   <h2 className={`${bricolage.className} mt-1 text-xl font-semibold`}>{prompt.title}</h2>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-neutral-600">{prompt.instructions}</p>
-              <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-800">
+              <p className="text-sm leading-relaxed text-muted-foreground">{prompt.instructions}</p>
+              <div className="mt-4 rounded-xl bg-muted p-4 text-sm leading-relaxed text-foreground">
                 {prompt.prompt}
               </div>
-              <p className="mt-3 text-xs text-neutral-500">
+              <p className="mt-3 text-xs text-muted-foreground">
                 Target length: {prompt.minWords}–{prompt.maxWords} words
               </p>
             </article>
@@ -185,11 +185,11 @@ export function WritingView() {
                   <Sparkles className="h-4 w-4" />
                   Example answer ({exampleData.wordCount} words)
                 </div>
-                <div className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
+                <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                   {exampleData.exampleAnswer}
                 </div>
                 {exampleData.notes && (
-                  <p className="mt-4 border-t border-amber-200/60 pt-3 text-xs leading-relaxed text-neutral-600">
+                  <p className="mt-4 border-t border-amber-200/60 pt-3 text-xs leading-relaxed text-muted-foreground">
                     {exampleData.notes}
                   </p>
                 )}
@@ -197,7 +197,7 @@ export function WritingView() {
             )}
 
             <div className="mt-6">
-              <label htmlFor="writing-answer" className="text-sm font-medium text-neutral-900">
+              <label htmlFor="writing-answer" className="text-sm font-medium text-foreground">
                 Your answer (French)
               </label>
               <textarea
@@ -206,13 +206,13 @@ export function WritingView() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Rédigez votre réponse ici…"
                 rows={12}
-                className="mt-2 w-full resize-y rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-900 shadow-sm outline-none ring-neutral-900/10 placeholder:text-neutral-400 focus:ring-2"
+                className="mt-2 w-full resize-y rounded-2xl border border-border bg-card px-4 py-3 text-sm leading-relaxed text-foreground shadow-sm outline-none ring-foreground/10 placeholder:text-muted-foreground focus:ring-2"
               />
               <div className="mt-2 flex items-center justify-between text-xs">
                 <span
                   className={
                     wordCountOk
-                      ? 'text-neutral-500'
+                      ? 'text-muted-foreground'
                       : wordCount < minWords
                         ? 'text-amber-700'
                         : 'text-red-600'
@@ -229,7 +229,7 @@ export function WritingView() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submit.isPending || !text.trim()}
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-neutral-900 px-7 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:min-w-[180px] sm:flex-none"
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-foreground px-7 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50 sm:min-w-[180px] sm:flex-none"
               >
                 {submit.isPending ? (
                   <>
@@ -244,7 +244,7 @@ export function WritingView() {
                 type="button"
                 onClick={handleExample}
                 disabled={example.isPending}
-                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white px-7 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-50 disabled:opacity-50 sm:min-w-[180px] sm:flex-none"
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-card px-7 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 sm:min-w-[180px] sm:flex-none"
               >
                 {example.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -257,7 +257,7 @@ export function WritingView() {
                 type="button"
                 onClick={handleNewPrompt}
                 disabled={refreshPrompt.isPending || promptLoading}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-neutral-200 px-5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-muted-foreground hover:bg-muted"
               >
                 <RefreshCw className="h-4 w-4" />
                 New prompt

@@ -2,18 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Languages, LogOut, Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { ArrowRight } from 'lucide-react';
+import { AccountDropdownContent } from '@/components/account-dropdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { useAuthStore } from '@/store/authStore';
+import { bricolage } from '@/lib/fonts';
 import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
+const APP_NAV_LEFT = [
+  { label: 'Home', href: '/' },
+  { label: 'Learn', href: '/learn' },
+] as const;
+
 export function Navbar() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const logout = useLogoutMutation();
@@ -28,79 +34,75 @@ export function Navbar() {
       .slice(0, 2)
       .toUpperCase() || 'FR';
 
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-extrabold">
-          <Languages className="h-6 w-6 text-primary" />
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-20 md:h-18">
+      <NavBlurBackdrop />
+
+      <header className="pointer-events-auto relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 md:grid md:h-[4.5rem] md:grid-cols-[1fr_auto_1fr] md:justify-normal">
+        <nav className="hidden items-center gap-6 md:flex">
+          {APP_NAV_LEFT.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'text-sm transition-colors',
+                isActive(item.href)
+                  ? 'font-medium text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <Link
+          href="/"
+          className={`${bricolage.className} text-xl font-semibold tracking-tight text-foreground sm:text-2xl md:col-start-2 md:justify-self-center`}
+        >
           {BRAND.name}
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
-          <NavLink href="/" active={pathname === '/'}>
-            Home
-          </NavLink>
-          {isAuthenticated && (
-            <NavLink href="/learn" active={pathname.startsWith('/learn')}>
-              Learn
-            </NavLink>
-          )}
-        </nav>
-
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-
+        <div className="flex justify-end md:col-start-3">
           {isAuthenticated && user ? (
-            <>
-              <Avatar className="h-8 w-8 border">
-                <AvatarImage src={user.picture ?? undefined} alt={user.name} />
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Sign out"
-                onClick={() => logout.mutate()}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="rounded-full outline-none ring-offset-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label="Account menu"
+                >
+                  <Avatar className="h-9 w-9 border border-border sm:h-10 sm:w-10">
+                    <AvatarImage src={user.picture ?? undefined} alt={user.name} />
+                    <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <AccountDropdownContent
+                user={user}
+                initials={initials}
+                onLogout={() => logout.mutate()}
+              />
+            </DropdownMenu>
           ) : (
-            <Button asChild size="sm">
-              <Link href="/signin">Sign in</Link>
-            </Button>
+            <Link
+              href="/signin"
+              className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 sm:px-5"
+            >
+              Get started
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           )}
         </div>
-      </div>
-    </header>
+      </header>
+    </div>
   );
 }
 
-function NavLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'rounded-xl px-3 py-2 text-sm font-bold transition-colors',
-        active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
-      )}
-    >
-      {children}
-    </Link>
-  );
+/** Spacer matching fixed navbar height — place below Navbar in layout */
+export function NavbarSpacer() {
+  return <div className="h-20 shrink-0 md:h-24" aria-hidden />;
 }

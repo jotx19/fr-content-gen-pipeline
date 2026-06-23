@@ -12,19 +12,6 @@ export type TefStats = {
   xp: number;
 };
 
-export type TefEvaluationSummary = {
-  _id: string;
-  kind: 'placement' | 'practice';
-  overallAccuracy: number;
-  levelBefore?: string | null;
-  levelAfter?: string | null;
-  adjustment?: string | null;
-  weakAreas?: string[];
-  summary?: string;
-  topic?: string | null;
-  createdAt: string;
-};
-
 export type TefProfile = {
   level: string;
   confidence?: number | null;

@@ -18,7 +18,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem
+        disableTransitionOnChange
+        storageKey="fringo-theme"
+      >
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <AuthBootstrap>{children}</AuthBootstrap>
           <CustomToaster />

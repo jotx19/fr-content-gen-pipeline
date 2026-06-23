@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchPractice,
-  fetchTefEvaluations,
   fetchTefProfile,
   prefetchPractice,
   startOnboard,
@@ -19,14 +18,6 @@ export function useTefProfileQuery(enabled = true) {
     queryFn: fetchTefProfile,
     enabled,
     retry: false,
-  });
-}
-
-export function useTefEvaluationsQuery(limit = 10, enabled = true) {
-  return useQuery({
-    queryKey: tefKeys.evaluations(limit),
-    queryFn: () => fetchTefEvaluations(limit),
-    enabled,
   });
 }
 

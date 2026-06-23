@@ -18,8 +18,8 @@ const SIGNIN_ICONS = [Target, BookOpen, BarChart3] as const;
 function BrandMark({ className }: { className?: string }) {
   return (
     <Link href="/" className={`flex items-center gap-2 font-semibold ${className ?? ''}`}>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 sm:h-9 sm:w-9">
-        <Languages className="h-4 w-4 text-white sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground sm:h-9 sm:w-9">
+        <Languages className="h-4 w-4 text-background sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
       </span>
       <span className="text-base sm:text-lg">{BRAND.name}</span>
     </Link>
@@ -44,11 +44,11 @@ function SignInCard({
 
         <div className="text-center">
           <h1
-            className={`${bricolage.className} text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl`}
+            className={`${bricolage.className} text-xl font-semibold tracking-tight text-foreground sm:text-2xl`}
           >
             Sign in to {BRAND.name}
           </h1>
-          <p className={`${bricolage.className} text-[11px] font-normal text-neutral-400 sm:text-xs`}>
+          <p className={`${bricolage.className} text-[11px] font-normal text-muted-foreground sm:text-xs`}>
             {BRAND.tagline}
           </p>
         </div>
@@ -64,7 +64,7 @@ function SignInCard({
           ) : (
             <>
               <div
-                className="pointer-events-none flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-neutral-200 bg-white text-sm font-medium text-neutral-700"
+                className="pointer-events-none flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground"
                 aria-hidden
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden>
@@ -102,27 +102,27 @@ function SignInCard({
           )}
         </div>
 
-        <Separator className="bg-neutral-200" />
+        <Separator className="bg-border" />
 
         <div className="flex items-center justify-center gap-4">
           {SIGNIN_ICONS.map((Icon, i) => (
             <span
               key={i}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200/90 bg-white text-neutral-600"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground"
             >
               <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
             </span>
           ))}
         </div>
 
-        <p className="text-center text-[11px] leading-relaxed text-neutral-500 sm:text-xs">
+        <p className="text-center text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
           <span className="block">By clicking continue, you agree to our</span>
           <span className="block">
-            <Link href="/" className="underline underline-offset-4 hover:text-neutral-900">
+            <Link href="/" className="underline underline-offset-4 hover:text-foreground">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/" className="underline underline-offset-4 hover:text-neutral-900">
+            <Link href="/" className="underline underline-offset-4 hover:text-foreground">
               Privacy Policy
             </Link>
             .

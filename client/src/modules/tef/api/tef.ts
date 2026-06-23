@@ -5,7 +5,6 @@ import type {
   OnboardStartResponse,
   PracticeBatch,
   TefDiagnostic,
-  TefEvaluationSummary,
   TefProfile,
 } from '../types/tef';
 
@@ -17,13 +16,6 @@ export async function fetchTefProfile() {
     if (axios.isAxiosError(err) && err.response?.status === 404) return null;
     throw err;
   }
-}
-
-export async function fetchTefEvaluations(limit = 10) {
-  const { data } = await axiosInstance.get<{ evaluations: TefEvaluationSummary[] }>(
-    `/tef/evaluations?limit=${limit}`
-  );
-  return data.evaluations;
 }
 
 export async function startOnboard() {

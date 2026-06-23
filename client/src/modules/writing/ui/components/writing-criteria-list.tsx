@@ -21,16 +21,16 @@ export function WritingCriteriaList({
       {criteria.map((c) => (
         <div key={c.criterion} className="space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-neutral-900">
+            <span className="text-sm font-medium text-foreground">
               {c.label || CRITERION_LABELS[c.criterion] || c.criterion}
             </span>
             <span className={cn('text-sm font-semibold tabular-nums', scoreColor(c.score))}>
               {c.score}/100
             </span>
           </div>
-          <Progress value={c.score} className="h-2 bg-neutral-100" />
+          <Progress value={c.score} className="h-2 bg-muted" />
           {!compact && c.feedback && (
-            <p className="text-sm leading-relaxed text-neutral-500">{c.feedback}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{c.feedback}</p>
           )}
         </div>
       ))}

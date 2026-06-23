@@ -1,4 +1,4 @@
-import { Bricolage_Grotesque, Inter, Nunito, Playfair_Display } from 'next/font/google';
+import { Bricolage_Grotesque, Inter, Playfair_Display } from 'next/font/google';
 
 export const inter = Inter({
   variable: '--font-sans',
@@ -19,13 +19,5 @@ export const bricolage = Bricolage_Grotesque({
   variable: '--font-bricolage-face',
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600', '700', '800'],
-  display: 'swap',
-});
-
-/** Opt-in only — add `nunito.variable` + `font-nunito` where needed */
-export const nunito = Nunito({
-  variable: '--font-nunito-face',
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
   display: 'swap',
 });

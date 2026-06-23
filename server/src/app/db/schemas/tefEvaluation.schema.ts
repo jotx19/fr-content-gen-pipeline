@@ -1,7 +1,7 @@
 // @ts-nocheck
 import mongoose from 'mongoose';
 
-export const TEF_MODULES = ['reading', 'writing', 'listening'] as const;
+export const TEF_MODULES = ['reading', 'writing'] as const;
 export type TefModule = (typeof TEF_MODULES)[number];
 
 const skillBreakdownItemSchema = new mongoose.Schema(

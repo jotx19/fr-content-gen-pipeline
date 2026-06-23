@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Flame, Loader2, Star } from 'lucide-react';
+import { BookOpen, Flame, Loader2, PenLine, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -137,6 +137,26 @@ export function LearnHomeView() {
             ))}
           </section>
         )}
+
+        <Separator />
+
+        <section className="space-y-3">
+          <h3 className="text-lg font-extrabold">Writing practice</h3>
+          <Card className="border-2 border-neutral-200">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-900 text-white">
+                <PenLine className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold">Expression écrite</p>
+                <p className="text-xs text-muted-foreground">
+                  TCF-style prompts with criteria-based feedback
+                </p>
+              </div>
+              <Button onClick={() => router.push('/learn/writing')}>Start writing</Button>
+            </CardContent>
+          </Card>
+        </section>
 
         <Separator />
 

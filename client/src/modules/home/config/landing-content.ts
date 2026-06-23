@@ -25,8 +25,8 @@ export const LANDING_LESSONS = [
     color: 'from-sky-500 to-blue-600',
   },
   {
-    title: 'Listening drill',
-    tag: 'Comprehension',
+    title: 'Formal letter writing',
+    tag: 'Writing',
     progress: 30,
     color: 'from-amber-500 to-orange-600',
   },

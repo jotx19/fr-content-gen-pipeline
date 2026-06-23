@@ -7,7 +7,10 @@ import { cn } from '@/lib/utils';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignIn = pathname === '/signin';
-  const isLesson = pathname.startsWith('/learn/lesson') || pathname.startsWith('/learn/results');
+  const isLesson =
+    pathname.startsWith('/learn/lesson') ||
+    pathname.startsWith('/learn/results') ||
+    pathname.startsWith('/learn/writing/results');
 
   const isLanding = pathname === '/';
 

@@ -13,7 +13,7 @@ function resolveApiBaseUrl() {
 export const axiosInstance = axios.create({
   baseURL: resolveApiBaseUrl(),
   withCredentials: true,
-  timeout: 120_000,
+  timeout: 180_000,
   headers: { 'Content-Type': 'application/json' },
 });
 

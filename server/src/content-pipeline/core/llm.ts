@@ -4,6 +4,7 @@ const DEFAULT_MODEL = 'openrouter/free';
 const APP_TITLE = process.env.APP_TITLE || 'TEF Canada';
 
 const MAX_RETRIES = 3;
+const LLM_REQUEST_TIMEOUT_MS = Number(process.env.LLM_REQUEST_TIMEOUT_MS) || 90_000;
 
 let lastRequestAt = 0;
 const MIN_GAP_MS = Number(process.env.OPENROUTER_MIN_GAP_MS) || 2000;
@@ -163,11 +164,20 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
     try {
       await throttleRequests(skipThrottle);
 
-      const res = await fetch(OPENROUTER_URL, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(body),
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), LLM_REQUEST_TIMEOUT_MS);
+
+      let res;
+      try {
+        res = await fetch(OPENROUTER_URL, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       if (isRetryableStatus(res.status) && attempt < MAX_RETRIES) {
         const waitMs = 3000 * 2 ** attempt;
@@ -192,6 +202,14 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
       console.log(`[llm] success (${model})`);
       return json.choices?.[0]?.message?.content ?? '';
     } catch (err) {
+      if (err.name === 'AbortError') {
+        lastDetail = `timed out after ${LLM_REQUEST_TIMEOUT_MS}ms`;
+        if (attempt < MAX_RETRIES) {
+          await sleep(2000 * 2 ** attempt);
+          continue;
+        }
+        throw new Error(`LLM request timed out (${model})`);
+      }
       if (err.message?.includes('OpenRouter')) throw err;
       lastDetail = err.message;
       if (attempt < MAX_RETRIES) {

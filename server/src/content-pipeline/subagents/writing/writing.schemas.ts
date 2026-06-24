@@ -58,3 +58,69 @@ export const WORD_COUNT_BY_LEVEL: Record<string, { min: number; max: number }> =
 export function wordCountBandForLevel(level: string) {
   return WORD_COUNT_BY_LEVEL[level] ?? WORD_COUNT_BY_LEVEL.B1;
 }
+
+const CRITERION_ORDER = [
+  'content_coherence',
+  'vocabulary',
+  'language_accuracy',
+  'task_fulfillment',
+] as const;
+
+const CRITERION_LABELS: Record<(typeof CRITERION_ORDER)[number], string> = {
+  content_coherence: 'Content / Coherence',
+  vocabulary: 'Vocabulary',
+  language_accuracy: 'Language Accuracy',
+  task_fulfillment: 'Task Fulfillment',
+};
+
+function clampScore(value: unknown) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+/** Coerce common LLM shape drift before zod validation. */
+export function normalizeWritingEvaluationOutput(parsed: Record<string, unknown>) {
+  if (!parsed || typeof parsed !== 'object') return parsed;
+
+  const rawCriteria = Array.isArray(parsed.criteria) ? parsed.criteria : [];
+  const criteria = CRITERION_ORDER.map((key, index) => {
+    const row =
+      rawCriteria.find(
+        (c) =>
+          typeof c === 'object' &&
+          c !== null &&
+          String((c as Record<string, unknown>).criterion ?? '')
+            .toLowerCase()
+            .includes(key.split('_')[0])
+      ) ?? rawCriteria[index];
+
+    const item = (row && typeof row === 'object' ? row : {}) as Record<string, unknown>;
+    return {
+      criterion: key,
+      label: String(item.label ?? CRITERION_LABELS[key]),
+      score: clampScore(item.score),
+      feedback: String(item.feedback ?? 'No feedback provided.'),
+    };
+  });
+
+  const weighted =
+    criteria[0].score * 0.2 +
+    criteria[1].score * 0.2 +
+    criteria[2].score * 0.3 +
+    criteria[3].score * 0.3;
+
+  const overallScore = clampScore(parsed.overallScore ?? weighted);
+  const suggestions = Array.isArray(parsed.suggestions)
+    ? parsed.suggestions.map(String).filter(Boolean).slice(0, 6)
+    : [];
+
+  return {
+    ...parsed,
+    criteria,
+    overallScore,
+    summary: String(parsed.summary ?? 'Writing evaluation complete.'),
+    suggestions:
+      suggestions.length > 0 ? suggestions : ['Review grammar, vocabulary, and task requirements.'],
+  };
+}

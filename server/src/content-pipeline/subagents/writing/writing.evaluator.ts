@@ -1,24 +1,24 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
-import { getTefModelCandidates } from '../../core/llm.js';
-import { writingEvaluationOutputSchema } from './writing.schemas.js';
+import { getTefModel } from '../../core/llm.js';
+import {
+  normalizeWritingEvaluationOutput,
+  writingEvaluationOutputSchema,
+} from './writing.schemas.js';
 
 const EVAL_SYSTEM = `Evaluate a French writing submission for TCF / TEF expression écrite.
 
-Score each criterion from 0 to 100:
-1. content_coherence — Content/Coherence: clarity, logical flow, relevance
-2. vocabulary — Vocabulary: range, precision, appropriateness
-3. language_accuracy — Language Accuracy: grammar, spelling, punctuation
-4. task_fulfillment — Task Fulfillment: instructions, tone, word count
+Return JSON with exactly these fields:
+- criteria: array of 4 objects, each with:
+  - criterion: one of "content_coherence" | "vocabulary" | "language_accuracy" | "task_fulfillment"
+  - label: short English label
+  - score: integer 0–100
+  - feedback: 1–2 English sentences
+- overallScore: integer 0–100 (weighted: task_fulfillment and language_accuracy matter slightly more)
+- summary: 2–3 English sentences
+- suggestions: array of 3–5 English strings
 
-Be fair but rigorous like an official examiner. Feedback per criterion: 1–2 sentences in English.
-
-Also provide:
-- overallScore: weighted average (task_fulfillment and language_accuracy slightly more important)
-- summary: 2–3 sentences in English
-- suggestions: 3–5 actionable improvements in English
-
-Output only JSON matching the schema.`;
+Be fair but rigorous like an official examiner. Output only JSON.`;
 
 export default {
   name: 'writingEvaluator',
@@ -35,9 +35,10 @@ export default {
         level: payload.level,
       },
       schema: writingEvaluationOutputSchema,
-      maxAttempts: 2,
-      // Prefer configured model only — full fallback chain can exceed proxy timeouts.
-      models: getTefModelCandidates().slice(0, 2),
+      normalize: normalizeWritingEvaluationOutput,
+      maxAttempts: 3,
+      // Single fast model — avoid openrouter/free fallback (often 90s+).
+      models: [getTefModel()],
     });
   },
 };

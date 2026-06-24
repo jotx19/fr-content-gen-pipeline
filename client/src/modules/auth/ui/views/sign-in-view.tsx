@@ -55,7 +55,7 @@ function SignInCard({
       </div>
 
       <div className="space-y-5">
-        <div ref={googleWrapRef} className="relative w-full">
+        <div ref={googleWrapRef} className="group relative w-full">
           {isPending ? (
             <Button variant="outline" className="h-11 w-full rounded-xl" disabled>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -64,7 +64,7 @@ function SignInCard({
           ) : (
             <>
               <div
-                className="pointer-events-none flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground"
+                className="pointer-events-none flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-background text-sm font-medium text-foreground transition-all duration-200 group-hover:border-foreground/20 group-hover:bg-muted/70 group-hover:shadow-sm group-active:scale-[0.95] dark:bg-foreground/90 dark:text-background dark:group-hover:border-background/30 dark:group-hover:bg-foreground dark:group-hover:shadow-md"
                 aria-hidden
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden>

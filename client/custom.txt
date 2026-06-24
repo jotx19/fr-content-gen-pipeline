@@ -1,0 +1,2 @@
+custom styling for buttons tailwind;
+group-active:scale-[0.95]

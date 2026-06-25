@@ -20,14 +20,11 @@ export const WRITING_CRITERIA = [
   {
     key: 'task_fulfillment',
     label: 'Task Fulfillment',
-    description: 'Adherence to instructions, tone, and word count.',
+    description: 'Adherence to instructions, tone, and register (word count scored separately).',
   },
 ] as const;
 
 export type WritingCriterionKey = (typeof WRITING_CRITERIA)[number]['key'];
-
-/** Map TCF/CEFR level → typical word-count band for expression écrite */
-export { WORD_COUNT_BY_LEVEL, wordCountBandForLevel } from '../../../content-pipeline/subagents/writing/writing.schemas.js';
 
 /** Aggregate criterion scores (0–100) into a 0–1 overall accuracy for universal evaluation storage */
 export function aggregateWritingScore(criteria: { score: number }[]) {

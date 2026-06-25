@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
 import { getTefModel } from '../../core/llm.js';
+import { applyWordCountToEvaluation } from '../../../services/writing/scoring/writingWordCount.js';
 import {
   normalizeWritingEvaluationOutput,
   writingEvaluationOutputSchema,
@@ -18,6 +19,15 @@ Return JSON with exactly these fields:
 - summary: 2–3 English sentences
 - suggestions: array of 3–5 English strings
 
+Scoring rules:
+1. Use prompt.minWords and prompt.maxWords as the ONLY word-count requirements for this task.
+   Do NOT compare length to CEFR-level word bands or level-based length expectations.
+2. Do NOT penalize vocabulary, language_accuracy, or content_coherence for word count.
+3. Score task_fulfillment for instructions, tone, register, and task type only — NOT for word count.
+   Word-count compliance is scored separately by the system after your response.
+4. Use the CEFR level (prompt.level) only for qualitative expectations:
+   vocabulary sophistication, grammatical complexity, coherence, and register appropriateness.
+
 Be fair but rigorous like an official examiner. Output only JSON.`;
 
 export default {
@@ -26,19 +36,29 @@ export default {
   async run(input) {
     const payload = typeof input === 'string' ? JSON.parse(input) : input ?? {};
 
-    return callStructuredSubagent({
+    const llmEvaluation = await callStructuredSubagent({
       systemPrompt: EVAL_SYSTEM,
       userPayload: {
         prompt: payload.prompt,
         submission: payload.submission,
         wordCount: payload.wordCount,
         level: payload.level,
+        wordCountRequirements: {
+          minWords: payload.prompt?.minWords,
+          maxWords: payload.prompt?.maxWords,
+        },
       },
       schema: writingEvaluationOutputSchema,
       normalize: normalizeWritingEvaluationOutput,
       maxAttempts: 3,
-      // Single fast model — avoid openrouter/free fallback (often 90s+).
       models: [getTefModel()],
     });
+
+    return applyWordCountToEvaluation(
+      llmEvaluation,
+      payload.wordCount,
+      payload.prompt,
+      payload.level
+    );
   },
 };

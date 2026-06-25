@@ -5,13 +5,14 @@ import { writingPromptOutputSchema, wordCountBandForLevel } from './writing.sche
 const PROMPT_SYSTEM = `Generate one TCF Canada / TEF expression écrite writing task as JSON.
 
 Rules:
-- Match the requested CEFR level (A1–C2) in complexity, vocabulary, and expected response length.
+- Match the requested CEFR level (A1–C2) in vocabulary and grammatical complexity expectations.
 - Use French for title, instructions, and prompt text.
-- Task must feel like an official TCF written production exercise (formal letter, email, essay, or short message as appropriate for level).
+- Task must feel like an official TCF/TEF written production exercise (formal letter, email, essay, or short message as appropriate for level).
 - register is usually "formel" for B1+ and administrative topics.
-- Include clear word-count expectations in instructions (minWords / maxWords).
+- Set minWords and maxWords to the exact word-count requirement for THIS exam task (these become authoritative during evaluation).
+- The suggested minWords/maxWords in the user payload are CEFR-level defaults for generation only — override them when the task needs different limits.
 - topic: short English slug for analytics (e.g. "workplace complaint", "housing request").
-- rubricHints: 2–4 brief English hints for the evaluator.
+- rubricHints: 2–4 brief English hints for the evaluator (do not mention CEFR word bands for scoring).
 
 Output only:
 {"prompt":{"id":"w1","title":"...","instructions":"...","prompt":"...","taskType":"letter","register":"formel","level":"B1","topic":"...","minWords":120,"maxWords":180,"rubricHints":["..."]}}`;

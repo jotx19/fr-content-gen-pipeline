@@ -46,6 +46,7 @@ export const writingExampleOutputSchema = z.object({
   notes: z.string().optional(),
 });
 
+/** CEFR-level word bands — used for generic prompt generation and scoring fallback when minWords/maxWords are absent. */
 export const WORD_COUNT_BY_LEVEL: Record<string, { min: number; max: number }> = {
   A1: { min: 40, max: 60 },
   A2: { min: 60, max: 90 },

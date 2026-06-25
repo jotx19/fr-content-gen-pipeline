@@ -15,6 +15,7 @@ export type WritingPrompt = {
   title: string;
   instructions: string;
   prompt: string;
+  examSection?: 'A' | 'B';
   taskType: string;
   register: string;
   level: string;

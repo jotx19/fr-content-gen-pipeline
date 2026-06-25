@@ -18,6 +18,10 @@ import {
   countWords,
   WRITING_CRITERIA,
 } from '../scoring/writingScore.js';
+import {
+  inferTefWritingSection,
+  resolveTefWritingSection,
+} from '../../../content-pipeline/subagents/writing/tefWritingSections.js';
 
 function requireMongo() {
   if (!isMongoReady()) {
@@ -27,7 +31,22 @@ function requireMongo() {
 
 function publicPrompt(prompt: Record<string, unknown>) {
   const { rubricHints, ...rest } = prompt;
-  return rest;
+  const examSection = inferTefWritingSection(rest) ?? rest.examSection;
+  return examSection ? { ...rest, examSection } : rest;
+}
+
+async function getLastWritingSection(userId: string) {
+  const lastEval = await TefEvaluation.findOne({ userId, module: WRITING_MODULE })
+    .sort({ createdAt: -1 })
+    .lean();
+  const storedPrompt = lastEval?.questions?.[0] as Record<string, unknown> | undefined;
+  return inferTefWritingSection(storedPrompt);
+}
+
+function defaultTopicForSection(section: 'A' | 'B') {
+  return section === 'A'
+    ? 'daily life situation, short narrative, or brief message'
+    : 'social or professional topic requiring a structured opinion';
 }
 
 async function persistWritingEvaluation(
@@ -88,7 +107,10 @@ async function persistWritingEvaluation(
   return evalDoc;
 }
 
-export async function getWritingPrompt(userId: string, opts: { topic?: string; refresh?: boolean } = {}) {
+export async function getWritingPrompt(
+  userId: string,
+  opts: { topic?: string; section?: 'A' | 'B'; refresh?: boolean } = {}
+) {
   requireMongo();
 
   const doc = await TefProfile.findOne({ userId }).lean();
@@ -110,12 +132,18 @@ export async function getWritingPrompt(userId: string, opts: { topic?: string; r
     ['expression écrite', 'vocabulaire', 'grammaire'].includes(t)
   );
 
+  const lastSection =
+    inferTefWritingSection(pending?.prompt) ?? (await getLastWritingSection(userId));
+  const section = resolveTefWritingSection(opts.section, lastSection);
+
   const { prompt } = await runContentPipeline({
     service: PIPELINE_SERVICES.WRITING_GENERATE_PROMPT,
     userId,
     input: {
       level: doc.level,
-      topic: opts.topic ?? 'formal letter or email in a French administrative context',
+      section,
+      lastSection,
+      topic: opts.topic ?? defaultTopicForSection(section),
       weakAreas,
     },
   });

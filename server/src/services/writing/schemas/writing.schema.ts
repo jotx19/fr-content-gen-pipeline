@@ -15,6 +15,7 @@ export const writingExampleSchema = z.object({
 
 export const writingPromptQuerySchema = z.object({
   topic: z.string().max(120).optional(),
+  section: z.enum(['A', 'B']).optional(),
   refresh: z
     .enum(['true', 'false'])
     .optional()

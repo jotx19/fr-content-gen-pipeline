@@ -1,11 +1,14 @@
 // @ts-nocheck
 import { z } from 'zod';
 
+export const tefWritingSectionSchema = z.enum(['A', 'B']);
+
 export const writingPromptSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   instructions: z.string().min(1),
   prompt: z.string().min(1),
+  examSection: tefWritingSectionSchema,
   taskType: z.enum(['message', 'letter', 'email', 'essay', 'article']),
   register: z.enum(['formel', 'neutre']),
   level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),

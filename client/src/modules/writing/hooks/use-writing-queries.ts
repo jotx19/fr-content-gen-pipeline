@@ -30,9 +30,10 @@ export function useWritingPromptQuery(topic?: string, enabled = true) {
 export function useRefreshWritingPromptMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (topic?: string) => fetchWritingPrompt({ topic, refresh: true }),
-    onSuccess: (_data, topic) => {
-      queryClient.invalidateQueries({ queryKey: writingKeys.prompt(topic) });
+    mutationFn: (params?: { topic?: string; section?: 'A' | 'B' }) =>
+      fetchWritingPrompt({ ...params, refresh: true }),
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: writingKeys.prompt(params?.topic) });
       queryClient.invalidateQueries({ queryKey: writingKeys.profile() });
     },
   });

@@ -7,7 +7,7 @@ import {
   writingEvaluationOutputSchema,
 } from './writing.schemas.js';
 
-const EVAL_SYSTEM = `Evaluate a French writing submission for TCF / TEF expression écrite.
+const EVAL_SYSTEM = `Evaluate a French writing submission for TEF Canada expression écrite.
 
 Return JSON with exactly these fields:
 - criteria: array of 4 objects, each with:
@@ -21,14 +21,16 @@ Return JSON with exactly these fields:
 
 Scoring rules:
 1. Use prompt.minWords and prompt.maxWords as the ONLY word-count requirements for this task.
+   Section A targets ~80–120 words; Section B targets ~200–280 words when set on the prompt.
    Do NOT compare length to CEFR-level word bands or level-based length expectations.
 2. Do NOT penalize vocabulary, language_accuracy, or content_coherence for word count.
 3. Score task_fulfillment for instructions, tone, register, and task type only — NOT for word count.
    Word-count compliance is scored separately by the system after your response.
-4. Use the CEFR level (prompt.level) only for qualitative expectations:
-   vocabulary sophistication, grammatical complexity, coherence, and register appropriateness.
+4. Use prompt.examSection (A or B) and prompt.level for qualitative expectations:
+   - Section A: shorter narrative/message tasks; Section B: longer argumentative/discursive tasks.
+   - CEFR level guides vocabulary sophistication, grammatical complexity, coherence, and register.
 
-Be fair but rigorous like an official examiner. Output only JSON.`;
+Be fair but rigorous like an official TEF examiner. Output only JSON.`;
 
 export default {
   name: 'writingEvaluator',

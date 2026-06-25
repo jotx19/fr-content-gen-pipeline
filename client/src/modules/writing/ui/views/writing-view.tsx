@@ -14,6 +14,7 @@ import {
   useWritingProfileQuery,
 } from '@/modules/writing/hooks/use-writing-queries';
 import type { WritingExampleResponse } from '@/modules/writing/types/writing';
+import { sectionMetaForPrompt } from '@/modules/writing/config/tef-sections';
 import { useWritingStore } from '@/store/writingStore';
 
 function countWords(text: string) {
@@ -41,6 +42,7 @@ export function WritingView() {
 
   const wordCount = useMemo(() => countWords(text), [text]);
   const prompt = promptData?.prompt;
+  const sectionMeta = prompt ? sectionMetaForPrompt(prompt) : null;
   const minWords = prompt?.minWords ?? 0;
   const maxWords = prompt?.maxWords ?? 9999;
   const wordCountOk = wordCount >= minWords && wordCount <= maxWords;
@@ -73,14 +75,14 @@ export function WritingView() {
     }
   };
 
-  const handleNewPrompt = async () => {
+  const handleNewPrompt = async (section?: 'A' | 'B') => {
     try {
-      await refreshPrompt.mutateAsync(undefined);
+      await refreshPrompt.mutateAsync(section ? { section } : undefined);
       await refetch();
       setText('');
       setExampleData(null);
       setShowExample(false);
-      toast.success('New prompt ready');
+      toast.success(section ? `Section ${section} prompt ready` : 'New prompt ready');
     } catch {
       toast.error('Could not refresh prompt');
     }
@@ -140,7 +142,8 @@ export function WritingView() {
             Writing practice
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            TCF-style expression écrite — write in French, then get scored on four criteria.
+            TEF Canada expression écrite — Section A (shorter) or Section B (longer), scored on four
+            criteria.
           </p>
         </header>
 
@@ -159,15 +162,25 @@ export function WritingView() {
         ) : (
           <>
             <article className="rounded-2xl border border-border/70 bg-card p-6 shadow-[0_2px_16px_rgba(15,23,42,0.04)]">
-              <div className="mb-4 flex items-start gap-3">
+              <div className="mb-4 flex flex-wrap items-start gap-3">
                 <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                   <BookOpen className="h-5 w-5" strokeWidth={2} />
                 </span>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {prompt.taskType} · {prompt.register}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-semibold text-background">
+                      {sectionMeta?.label ?? 'Section A'}
+                    </span>
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {prompt.taskType} · {prompt.register}
+                    </span>
+                  </div>
                   <h2 className={`${bricolage.className} mt-1 text-xl font-semibold`}>{prompt.title}</h2>
+                  {sectionMeta && (
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {sectionMeta.description}
+                    </p>
+                  )}
                 </div>
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">{prompt.instructions}</p>
@@ -176,6 +189,7 @@ export function WritingView() {
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 Target length: {prompt.minWords}–{prompt.maxWords} words
+                {sectionMeta ? ` (TEF minimum ≥ ${sectionMeta.examMinimum} words)` : ''}
               </p>
             </article>
 
@@ -255,12 +269,28 @@ export function WritingView() {
               </button>
               <button
                 type="button"
-                onClick={handleNewPrompt}
+                onClick={() => handleNewPrompt()}
                 disabled={refreshPrompt.isPending || promptLoading}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-muted-foreground hover:bg-muted"
               >
                 <RefreshCw className="h-4 w-4" />
-                New prompt
+                Next task
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNewPrompt('A')}
+                disabled={refreshPrompt.isPending || promptLoading}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-muted"
+              >
+                Section A
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNewPrompt('B')}
+                disabled={refreshPrompt.isPending || promptLoading}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-muted"
+              >
+                Section B
               </button>
             </div>
           </>

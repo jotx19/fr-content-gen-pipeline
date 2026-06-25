@@ -2,11 +2,12 @@
 import { callStructuredSubagent } from '../shared/client.js';
 import { writingExampleOutputSchema } from './writing.schemas.js';
 
-const EXAMPLE_SYSTEM = `Write a model answer for a TCF / TEF expression écrite prompt.
+const EXAMPLE_SYSTEM = `Write a model answer for a TEF Canada expression écrite prompt.
 
 Rules:
 - French only in exampleAnswer
-- Match the prompt level, register, task type, and word count (minWords–maxWords)
+- Match the prompt examSection (A or B), level, register, task type, and word count (minWords–maxWords)
+- Section A: shorter narrative/message style; Section B: longer structured argument
 - Demonstrate strong performance on all four criteria but keep it realistic for the level (not C2 quality at B1)
 - notes: 1–2 English sentences on why this answer works
 

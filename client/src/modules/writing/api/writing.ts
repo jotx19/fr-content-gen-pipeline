@@ -17,9 +17,14 @@ export async function fetchWritingProfile() {
   }
 }
 
-export async function fetchWritingPrompt(params?: { topic?: string; refresh?: boolean }) {
+export async function fetchWritingPrompt(params?: {
+  topic?: string;
+  section?: 'A' | 'B';
+  refresh?: boolean;
+}) {
   const search = new URLSearchParams();
   if (params?.topic) search.set('topic', params.topic);
+  if (params?.section) search.set('section', params.section);
   if (params?.refresh) search.set('refresh', 'true');
   const qs = search.toString();
   const { data } = await axiosInstance.get<WritingPromptResponse>(

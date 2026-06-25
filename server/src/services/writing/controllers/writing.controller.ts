@@ -33,7 +33,7 @@ export async function profile(req: AuthedRequest, reply: FastifyReply) {
 
 export async function prompt(req: AuthedRequest, reply: FastifyReply) {
   try {
-    const query = req.query as { topic?: string; refresh?: boolean };
+    const query = req.query as { topic?: string; section?: 'A' | 'B'; refresh?: boolean };
     const data = await getWritingPrompt(req.userId, query);
     return reply.send(data);
   } catch (err) {

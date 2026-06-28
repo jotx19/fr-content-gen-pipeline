@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
-import { BarChart3, BookOpen, Languages, Loader2, Target } from 'lucide-react';
+import { BarChart3, BookOpen, Loader2, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/logo';
 import { BRAND } from '@/lib/brand';
 import { bricolage } from '@/lib/fonts';
 import { useGoogleLoginMutation } from '@/modules/auth/hooks/use-auth-query';
@@ -17,12 +18,13 @@ const SIGNIN_ICONS = [Target, BookOpen, BarChart3] as const;
 
 function BrandMark({ className }: { className?: string }) {
   return (
-    <Link href="/" className={`flex items-center gap-2 font-semibold ${className ?? ''}`}>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground sm:h-9 sm:w-9">
-        <Languages className="h-4 w-4 text-background sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
-      </span>
-      <span className="text-base sm:text-lg">{BRAND.name}</span>
-    </Link>
+    <BrandLogo
+      href="/"
+      iconSize={36}
+      iconRounded="full"
+      textClassName="text-base sm:text-lg"
+      className={className}
+    />
   );
 }
 

@@ -7,6 +7,10 @@ import './globals.css';
 export const metadata: Metadata = {
   title: BRAND.name,
   description: BRAND.description,
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

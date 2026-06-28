@@ -4,13 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { AccountDropdownContent } from '@/components/account-dropdown';
+import { BrandLogo } from '@/components/logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { useAuthStore } from '@/store/authStore';
-import { bricolage } from '@/lib/fonts';
-import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
 const APP_NAV_LEFT = [
@@ -59,12 +58,7 @@ export function Navbar() {
           ))}
         </nav>
 
-        <Link
-          href="/"
-          className={`${bricolage.className} text-xl font-semibold tracking-tight text-foreground sm:text-2xl md:col-start-2 md:justify-self-center`}
-        >
-          {BRAND.name}
-        </Link>
+        <BrandLogo href="/" iconSize={30} className="md:col-start-2 md:justify-self-center" />
 
         <div className="flex justify-end md:col-start-3">
           {isAuthenticated && user ? (

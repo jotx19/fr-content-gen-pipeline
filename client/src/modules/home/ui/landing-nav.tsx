@@ -3,9 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
+import { BrandLogo } from '@/components/logo';
 import { ThemeToggleButton } from '@/components/theme-toggle';
-import { bricolage } from '@/lib/fonts';
-import { BRAND } from '@/lib/brand';
 import { LANDING_NAV_LEFT } from '@/modules/home/config/landing-content';
 import { useAuthStore } from '@/store/authStore';
 
@@ -29,12 +28,7 @@ export function LandingNav() {
           ))}
         </nav>
 
-        <Link
-          href="/"
-          className={`${bricolage.className} text-xl font-semibold tracking-tight text-foreground sm:text-2xl md:col-start-2 md:justify-self-center`}
-        >
-          {BRAND.name}
-        </Link>
+        <BrandLogo href="/" iconSize={30} className="md:col-start-2 md:justify-self-center" />
 
         <div className="flex items-center justify-end gap-2 md:col-start-3">
           <ThemeToggleButton />

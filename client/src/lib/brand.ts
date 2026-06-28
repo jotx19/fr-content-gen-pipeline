@@ -5,4 +5,7 @@ export const BRAND = {
     'Adaptive French practice placement, daily lessons, and full evaluation reports.',
   quote:
     'Adaptive placement, daily practice, and full reports everything I needed to reach my French goals.',
+  colors: {
+    lime: '#DFFF4F',
+  },
 } as const;

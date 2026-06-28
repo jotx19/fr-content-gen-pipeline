@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { bricolage, inter } from "@/lib/fonts";
+import { BrandLogo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 export type LearnBentoData = {
@@ -241,11 +242,12 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
           <div
             className={`${inter.className} flex items-center justify-between text-[11px] text-[#675549]/80 dark:text-white/70 sm:text-xs`}
           >
-            <span
-              className={`${bricolage.className} text-sm font-semibold text-[#675549] dark:text-white`}
-            >
-              Fringo
-            </span>
+            <BrandLogo
+              href="/learn"
+              iconSize={24}
+              textClassName="text-sm font-semibold text-[#675549] dark:text-white"
+              className="gap-1.5"
+            />
             {!placementMode && onStartPlacement && (
               <button
                 type="button"

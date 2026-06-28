@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Languages } from 'lucide-react';
 import { bricolage } from '@/lib/fonts';
+import { LogoIcon } from '@/components/logo';
 import { BRAND } from '@/lib/brand';
 import { LANDING_FEATURES } from '@/modules/home/config/landing-features';
 import { LandingFeatureCard } from '@/modules/home/ui/landing-feature-card';
@@ -38,9 +38,7 @@ export function LandingPage() {
           </p>
 
           <div className="hidden items-start justify-end lg:flex">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground">
-              <Languages className="h-6 w-6" strokeWidth={1.8} />
-            </span>
+            <LogoIcon size={48} rounded="2xl" />
           </div>
         </section>
 

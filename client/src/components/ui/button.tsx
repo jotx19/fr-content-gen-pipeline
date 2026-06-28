@@ -20,13 +20,18 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         elevated:
-        "bg-primary hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-[4px] hover:-translate-y-[4px] transition-all",
+          "bg-primary hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-[4px] hover:-translate-y-[4px] transition-all",
+        pillPrimary:
+          "rounded-full border-0 bg-[#ededed] font-semibold text-black shadow-none hover:bg-[#EFEFEF] active:scale-[0.98]",
+        pillGlass:
+          "rounded-full border border-black/10 bg-black/5 font-semibold text-neutral-700 shadow-none backdrop-blur-md hover:bg-black/8 active:scale-[0.98] dark:border-white/12 dark:bg-white/8 dark:text-neutral-300 dark:hover:bg-white/12",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        pill: "h-11 rounded-full px-6 text-sm font-semibold has-[>svg]:px-5",
         icon: "size-9",
         "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",

@@ -2,11 +2,12 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, ClipboardList, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { bricolage } from '@/lib/fonts';
+import { cn } from '@/lib/utils';
 import {
   clearPlacementProgress,
   loadPlacementProgress,
@@ -22,6 +23,34 @@ import {
 } from '@/modules/tef/hooks/use-tef-queries';
 import type { PublicQuestion } from '@/modules/tef/types/tef';
 import { useLessonStore } from '@/store/lessonStore';
+
+const panelClass = 'bg-[#FCFCFC] dark:bg-[#1C1C1C]';
+
+function segmentTone({
+  index,
+  currentIdx,
+  checked,
+  answer,
+  correctIndex,
+}: {
+  index: number;
+  currentIdx: number;
+  checked: boolean;
+  answer: number | null;
+  correctIndex: number | null;
+}) {
+  if (index > currentIdx) return 'bg-black/8 dark:bg-white/10';
+  if (index < currentIdx) {
+    if (correctIndex != null && answer != null) {
+      return answer === correctIndex ? 'bg-primary' : 'bg-destructive/80';
+    }
+    return 'bg-primary/70';
+  }
+  if (checked && correctIndex != null && answer != null) {
+    return answer === correctIndex ? 'bg-primary' : 'bg-destructive/80';
+  }
+  return 'bg-primary/45';
+}
 
 export function LessonView() {
   const router = useRouter();
@@ -153,6 +182,16 @@ export function LessonView() {
     }
   };
 
+  const handleClearSelection = () => {
+    if (checked || answers[currentIdx] == null) return;
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[currentIdx] = null;
+      if (isPlacement) persistPlacement(next, currentIdx);
+      return next;
+    });
+  };
+
   const goToNext = () => {
     setChecked(false);
     setShake(false);
@@ -193,37 +232,72 @@ export function LessonView() {
   const currentQuestion = questions[currentIdx];
 
   const title = useMemo(
-    () => (isPlacement ? 'Placement test' : topic ? `Practice · ${topic}` : 'Practice'),
+    () => (isPlacement ? 'Placement test' : topic ? topic : 'Practice'),
     [isPlacement, topic]
   );
 
+  const modeLabel = isPlacement ? 'Placement' : 'Practice';
+  const ModeIcon = isPlacement ? ClipboardList : BookOpen;
+
   if (loading || (mode === 'practice' && practiceQuery.isLoading)) {
     return (
-      <div className="lesson-shell items-center justify-center gap-4 px-4 py-20">
+      <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 py-20 sm:max-w-3xl">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <Skeleton className="h-4 w-48" />
+        <Skeleton className={cn('h-4 w-48 rounded-md', panelClass)} />
       </div>
     );
   }
 
   return (
-    <div className="lesson-shell">
-      <header className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
-            <p className="text-sm font-extrabold">
-              Question {currentIdx + 1} / {questions.length}
-            </p>
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col sm:max-w-3xl">
+      <header className="sticky top-0 z-10 px-4 pt-4 pb-3">
+        <div className={cn('rounded-2xl px-4 py-3.5', panelClass)}>
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"> 
+                <span className="uppercase tracking-wide">{modeLabel}</span>
+              </div>
+              <h1
+                className={`${bricolage.className} mt-1 truncate text-lg font-semibold leading-tight tracking-tight sm:text-xl uppercase`}
+                title={title}
+              >
+                {title}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Question{' '}
+                <span className="font-medium tabular-nums text-foreground">{currentIdx + 1}</span>
+                <span className="text-muted-foreground/70"> / {questions.length}</span>
+              </p>
+            </div>
+
+            <div className="shrink-0 text-right">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Progress</p>
+              <p className={`${bricolage.className} text-lg font-semibold tabular-nums`}>{progressPct}%</p>
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => router.push('/learn')} aria-label="Exit">
-            <X className="h-4 w-4" />
-          </Button>
+
+          <div className="mt-3.5 flex gap-1" aria-label={`Question progress: ${currentIdx + 1} of ${questions.length}`}>
+            {questions.map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  'h-1.5 min-w-0 flex-1 rounded-full transition-colors duration-300',
+                  segmentTone({
+                    index,
+                    currentIdx,
+                    checked,
+                    answer: answers[index],
+                    correctIndex: correctIndices[index],
+                  }),
+                  index === currentIdx && 'ring-1 ring-primary/25 ring-offset-1 ring-offset-[#FCFCFC] dark:ring-offset-[#1C1C1C]'
+                )}
+              />
+            ))}
+          </div>
         </div>
-        <Progress value={progressPct} className="mt-3 h-3" />
       </header>
 
-      <main className="flex-1 px-4 py-6 pb-28">
+      <main className="flex-1 px-4 py-5 pb-24">
         {currentQuestion && (
           <McqQuestion
             question={currentQuestion}
@@ -245,47 +319,51 @@ export function LessonView() {
         )}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 p-4 backdrop-blur">
-        <div className="mx-auto max-w-lg">
-          {!checked ? (
-            <Button
-              size="lg"
-              className="w-full uppercase tracking-wide"
-              disabled={answers[currentIdx] == null || busy}
-              onClick={handleCheck}
-            >
-              {checkAnswer.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Checking…
-                </>
-              ) : (
-                'Check'
-              )}
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              className="w-full uppercase tracking-wide"
-              disabled={busy}
-              onClick={() => {
+      <div className="fixed bottom-5 left-0 right-0 z-40 bg-transparent px-2.5 sm:px-4">
+        <div className="mx-auto flex w-full max-w-xl items-center gap-1.5 overflow-hidden rounded-4xl border border-black/8 bg-white/72 p-1.5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/65 md:rounded-full">
+          <Button
+            type="button"
+            variant="destructive"
+            size="pill"
+            onClick={handleClearSelection}
+            disabled={checked || answers[currentIdx] == null || busy}
+            className="w-[5.25rem] shrink-0 px-0"
+          >
+            Clear
+          </Button>
+          <Button
+            variant="pillPrimary"
+            size="pill"
+            className="min-w-0 flex-1"
+            disabled={checked ? busy : answers[currentIdx] == null || busy}
+            onClick={() => {
+              if (checked) {
                 if (isLast) {
                   isPlacement ? finishPlacement() : finishPractice();
                 } else {
                   goToNext();
                 }
-              }}
-            >
-              {busy ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Scoring…
-                </>
-              ) : isLast ? (
-                'Finish'
-              ) : (
-                'Continue'
-              )}
-            </Button>
-          )}
+                return;
+              }
+              handleCheck();
+            }}
+          >
+            {!checked && checkAnswer.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Checking…
+              </>
+            ) : !checked ? (
+              'Check'
+            ) : busy ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Scoring…
+              </>
+            ) : isLast ? (
+              'Finish'
+            ) : (
+              'Continue'
+            )}
+          </Button>
         </div>
       </div>
     </div>

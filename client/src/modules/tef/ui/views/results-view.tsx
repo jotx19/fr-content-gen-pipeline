@@ -2,15 +2,16 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowUp, Flame, Star, Trophy } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ArrowUp, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { bricolage } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
+import { SuccessLottie } from '@/modules/tef/ui/components/success-lottie';
 import { useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
 import { useLessonStore } from '@/store/lessonStore';
+import { Badge } from '@/components/ui/badge';
+
+const panelClass = 'rounded-2xl bg-[#FCFCFC] dark:bg-[#1C1C1C]';
 
 export function ResultsView() {
   const router = useRouter();
@@ -23,113 +24,124 @@ export function ResultsView() {
 
   if (!diagnostic) return null;
 
-  const { overallAccuracy, skillBreakdown = [], weakAreas = [], adjustment, newLevel, summary } =
-    diagnostic;
+  const { overallAccuracy, skillBreakdown = [], weakAreas = [], adjustment, newLevel } = diagnostic;
   const pct = overallAccuracy != null ? Math.round(overallAccuracy * 100) : null;
   const xpGain = pct != null ? pct + (skillBreakdown.length || 1) * 5 : 0;
+  const levelLabel = profile?.level || newLevel;
 
   return (
-    <div className="lesson-shell px-4 py-6 pb-28">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-        <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-background">
-          <CardHeader className="items-center pb-2 text-center">
-            <div className="mb-2 flex h-20 w-20 items-center justify-center rounded-full bg-primary shadow-[0_4px_0_0_hsl(var(--primary-shadow))]">
-              <Trophy className="h-10 w-10 text-primary-foreground" />
-            </div>
-            <CardTitle className="text-2xl">Lesson complete!</CardTitle>
-            {pct != null && <p className="text-4xl font-extrabold text-primary">{pct}%</p>}
-          </CardHeader>
-          <CardContent className="flex justify-center gap-6 pb-6">
-            <Stat icon={Flame} value={profile?.stats?.streakDays ?? 0} label="Day streak" color="text-duo-orange" />
-            <Stat icon={Star} value={`+${xpGain}`} label="XP earned" color="text-duo-yellow" />
-          </CardContent>
-        </Card>
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col sm:max-w-3xl">
+      <main className="flex-1 px-4 py-6 pb-24 sm:px-6">
+        <div className={cn('overflow-hidden px-5 py-8 text-center', panelClass)}>
+          <h1
+            className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl`}
+          >
+            Lesson complete
+          </h1>
 
-        {summary && (
-          <p className="rounded-2xl border-2 bg-card p-4 text-sm leading-relaxed text-muted-foreground">
-            {summary}
-          </p>
-        )}
+          <div className="relative mx-auto h-44 w-full max-w-[17rem] sm:h-52 sm:max-w-[20rem]">
+            {pct != null && (
+              <p
+                className={`${bricolage.className} pointer-events-none absolute inset-x-0 top-[14%] z-10 text-5xl font-semibold tabular-nums sm:text-6xl`}
+              >
+                {pct}
+                <span className="text-sm text-muted-foreground">%</span>
+              </p>
+            )}
+            <SuccessLottie className="absolute inset-0" />
+          </div>
+        </div>
+
+        <div className={cn('mt-4 flex items-center gap-2 px-5 py-4 text-sm', panelClass)}>
+          <Star className="h-4 w-4 shrink-0 text-amber-500" />
+          <p className="font-medium text-foreground">+{xpGain} XP earned</p>
+        </div>
 
         {adjustment && (
           <div
             className={cn(
-              'flex items-center gap-2 rounded-2xl border-2 px-4 py-3 font-bold',
-              adjustment === 'levelUp' && 'border-primary bg-primary/10 text-primary',
-              adjustment === 'levelDown' && 'border-duo-orange bg-duo-orange/10 text-duo-orange',
-              adjustment === 'same' && 'border-border bg-muted'
+              'mt-4 flex items-start gap-2 px-5 py-4 text-sm',
+              panelClass,
+              adjustment === 'levelUp' && 'text-primary',
+              adjustment === 'levelDown' && 'text-amber-600 dark:text-amber-500',
+              adjustment === 'same' && 'text-muted-foreground'
             )}
           >
-            {adjustment === 'levelUp' && <ArrowUp className="h-5 w-5" />}
-            {adjustment === 'levelUp' && `Level up → ${newLevel}`}
-            {adjustment === 'levelDown' && `Level adjusted → ${newLevel}`}
-            {adjustment === 'same' && `Level unchanged — ${profile?.level || newLevel}`}
+            {adjustment === 'levelUp' && <ArrowUp className="mt-0.5 h-4 w-4 shrink-0" />}
+            <p className="font-medium">
+              {adjustment === 'levelUp' && `Level up → ${newLevel}`}
+              {adjustment === 'levelDown' && `Level adjusted → ${newLevel}`}
+              {adjustment === 'same' && `Level unchanged  ${levelLabel}`}
+            </p>
           </div>
         )}
 
         {skillBreakdown.length > 0 && (
-          <section className="space-y-3">
-            <h3 className="text-lg font-extrabold">Skills breakdown</h3>
-            {skillBreakdown.map((s) => (
-              <div key={s.skillTag} className="space-y-2">
-                <div className="flex items-center justify-between text-sm font-bold">
-                  <span>{s.skillTag}</span>
-                  <span className="text-muted-foreground">
-                    {s.correct}/{s.total}
-                  </span>
-                </div>
-                <Progress value={Math.round((s.accuracy ?? 0) * 100)} className="h-3" />
-              </div>
-            ))}
+          <section className={cn('mt-4 space-y-4 px-5 py-4', panelClass)}>
+            <h2 className={`${bricolage.className} text-base font-semibold`}>Skills breakdown</h2>
+            <ul className="space-y-4">
+              {skillBreakdown.map((s) => {
+                const skillPct = Math.round((s.accuracy ?? 0) * 100);
+                return (
+                  <li key={s.skillTag} className="space-y-2">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium capitalize">{s.skillTag}</span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {s.correct}/{s.total}
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-black/8 dark:bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{ width: `${skillPct}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
         )}
 
         {weakAreas.length > 0 && (
-          <section className="space-y-3">
-            <h3 className="text-lg font-extrabold">Focus next</h3>
-            <div className="flex flex-wrap gap-2">
+          <section className={cn('mt-3 px-5 py-4', panelClass)}>
+            <h2 className={`${bricolage.className} text-base font-semibold`}>Focus next</h2>
+            <ul className="mt-3 space-y-2">
               {weakAreas.map((tag) => (
-                <Badge key={tag} variant="weak">
+                <Badge
+                  variant='secondary'
+                  key={tag}
+                  className="text-sm capitalize text-muted-foreground"
+                >
                   {tag}
                 </Badge>
               ))}
-            </div>
+            </ul>
           </section>
         )}
-      </motion.div>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 p-4 backdrop-blur">
-        <div className="mx-auto flex max-w-lg flex-col gap-3">
-          <Button size="lg" className="w-full" onClick={() => router.push('/learn/lesson?mode=practice')}>
-            Continue learning
+      </main>
+
+      <div className="fixed bottom-5 left-0 right-0 z-40 bg-transparent px-2.5 sm:px-4">
+        <div className="mx-auto flex w-full max-w-xl items-center gap-1.5 overflow-hidden rounded-4xl border border-black/8 bg-white/72 p-1.5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/65 md:rounded-full">
+          <Button
+            variant="pillGlass"
+            size="pill"
+            className="min-w-0 flex-1"
+            onClick={() => router.push('/learn/lesson?mode=placement&fresh=1')}
+          >
+            Retake
           </Button>
-          <Button size="lg" variant="outline" className="w-full" onClick={() => router.push('/learn/lesson?mode=placement&fresh=1')}>
-            Retake placement
+          <Button
+            variant="pillPrimary"
+            size="pill"
+            className="min-w-0 flex-1"
+            onClick={() => router.push('/learn/lesson?mode=practice')}
+          >
+            Continue
           </Button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  value,
-  label,
-  color,
-}: {
-  icon: typeof Flame;
-  value: string | number;
-  label: string;
-  color: string;
-}) {
-  return (
-    <div className="text-center">
-      <div className={cn('flex items-center justify-center gap-1', color)}>
-        <Icon className="h-5 w-5" />
-        <span className="text-lg font-extrabold">{value}</span>
-      </div>
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
     </div>
   );
 }

@@ -83,26 +83,72 @@ export function levelFromWritingScore(overallScore: number) {
   return { level, confidence };
 }
 
+/** Consecutive strong submissions required before CEFR level increases */
+export const WRITING_LEVEL_UP_SESSIONS = 4;
+/** Every submission in the window must meet this score (0–100) */
+export const WRITING_LEVEL_UP_MIN_SCORE = 88;
+/** Average across the window must also meet this score (0–100) */
+export const WRITING_LEVEL_UP_AVG_SCORE = 86;
+
+/** Consecutive weak submissions before level decreases */
+export const WRITING_LEVEL_DOWN_SESSIONS = 2;
+/** Each score in the down window must stay below this (0–100) */
+export const WRITING_LEVEL_DOWN_MAX_SCORE = 44;
+/** Single very weak submission can trigger level down */
+export const WRITING_LEVEL_DOWN_SINGLE_SCORE = 32;
+
 export function adjustWritingLevel(currentLevel: string, scoreHistory: number[], currentScore: number) {
-  const normalized = [...scoreHistory, currentScore].map((s) => s / 100);
-  const recent = normalized.slice(-3);
-  const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const allScores = [...scoreHistory, currentScore].filter(
+    (s) => typeof s === 'number' && Number.isFinite(s) && s >= 0 && s <= 100
+  );
   const idx = CEFR_LEVELS.indexOf(currentLevel);
   if (idx < 0) return { adjustment: 'same', newLevel: currentLevel, reason: 'Unknown level' };
 
-  if (recent.length >= 2 && avg >= 0.82 && idx < CEFR_LEVELS.length - 1) {
+  const recentForUp = allScores.slice(-WRITING_LEVEL_UP_SESSIONS);
+  const avgUp =
+    recentForUp.length > 0 ? recentForUp.reduce((a, b) => a + b, 0) / recentForUp.length : 0;
+
+  if (
+    recentForUp.length >= WRITING_LEVEL_UP_SESSIONS &&
+    recentForUp.every((s) => s >= WRITING_LEVEL_UP_MIN_SCORE) &&
+    avgUp >= WRITING_LEVEL_UP_AVG_SCORE &&
+    idx < CEFR_LEVELS.length - 1
+  ) {
     return {
       adjustment: 'levelUp',
       newLevel: CEFR_LEVELS[idx + 1],
-      reason: `Strong writing scores (avg ${Math.round(avg * 100)}%) over recent sessions`,
+      reason: `${WRITING_LEVEL_UP_SESSIONS} consecutive strong writing scores (each ≥${WRITING_LEVEL_UP_MIN_SCORE}%, avg ${Math.round(avgUp)}%)`,
     };
   }
 
-  if (recent.length >= 1 && currentScore < 45 && idx > 0) {
+  const recentForDown = allScores.slice(-WRITING_LEVEL_DOWN_SESSIONS);
+
+  if (idx > 0) {
+    if (
+      recentForDown.length >= WRITING_LEVEL_DOWN_SESSIONS &&
+      recentForDown.every((s) => s <= WRITING_LEVEL_DOWN_MAX_SCORE)
+    ) {
+      return {
+        adjustment: 'levelDown',
+        newLevel: CEFR_LEVELS[idx - 1],
+        reason: `${WRITING_LEVEL_DOWN_SESSIONS} consecutive weak writing scores (≤${WRITING_LEVEL_DOWN_MAX_SCORE}%)`,
+      };
+    }
+
+    if (currentScore <= WRITING_LEVEL_DOWN_SINGLE_SCORE) {
+      return {
+        adjustment: 'levelDown',
+        newLevel: CEFR_LEVELS[idx - 1],
+        reason: `Writing score ${currentScore}% is well below expectations for ${currentLevel}`,
+      };
+    }
+  }
+
+  if (allScores.length < WRITING_LEVEL_UP_SESSIONS) {
     return {
-      adjustment: 'levelDown',
-      newLevel: CEFR_LEVELS[idx - 1],
-      reason: `Writing score ${currentScore}% suggests revisiting ${CEFR_LEVELS[idx - 1]} tasks`,
+      adjustment: 'same',
+      newLevel: currentLevel,
+      reason: `Need ${WRITING_LEVEL_UP_SESSIONS - allScores.length} more strong writing submission(s) before level can increase`,
     };
   }
 

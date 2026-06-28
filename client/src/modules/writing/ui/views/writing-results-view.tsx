@@ -18,7 +18,7 @@ export function WritingResultsView() {
 
   if (!result) return null;
 
-  const { overallScore, criteria, suggestions, summary, adjustment, newLevel, reason, wordCount } =
+  const { overallScore, criteria, suggestions, summary, adjustment, newLevel, reason, wordCount, xpGain, writingXp } =
     result;
 
   return (
@@ -31,6 +31,9 @@ export function WritingResultsView() {
           <h1 className={`${bricolage.className} text-3xl font-semibold`}>Writing evaluated</h1>
           <p className="mt-3 text-5xl font-semibold tabular-nums text-foreground">{overallScore}</p>
           <p className="text-sm text-muted-foreground">out of 100 · {wordCount} words submitted</p>
+          {xpGain != null && (
+            <p className="mt-2 text-sm font-medium text-foreground">+{xpGain} writing XP · {writingXp ?? 0} total</p>
+          )}
         </div>
 
         {summary && (
@@ -50,11 +53,11 @@ export function WritingResultsView() {
           >
             {adjustment === 'levelUp' && <ArrowUp className="mt-0.5 h-4 w-4 shrink-0" />}
             <div>
-              {adjustment === 'levelUp' && <p className="font-medium">Level up → {newLevel}</p>}
+              {adjustment === 'levelUp' && <p className="font-medium">Writing level up → {newLevel}</p>}
               {adjustment === 'levelDown' && (
-                <p className="font-medium">Level adjusted → {newLevel}</p>
+                <p className="font-medium">Writing level adjusted → {newLevel}</p>
               )}
-              {adjustment === 'same' && <p className="font-medium">Level unchanged — {newLevel}</p>}
+              {adjustment === 'same' && <p className="font-medium">Writing level — {newLevel}</p>}
               {reason && <p className="mt-1 text-muted-foreground">{reason}</p>}
             </div>
           </div>

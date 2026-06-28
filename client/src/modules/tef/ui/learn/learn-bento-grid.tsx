@@ -60,7 +60,7 @@ function EmbossedStat({
     <div className="flex flex-col justify-end">
       <div className="mb-3 h-px w-full bg-[#DADADA] dark:bg-white/20" />
       <p
-        className={`${bricolage.className} text-[3.25rem] font-semibold leading-none tracking-tight text-[#DADADA] [text-shadow:0_1px_0_rgba(255,255,255,0.9),0_-1px_0_rgba(0,0,0,0.06)] dark:text-white/25 dark:[text-shadow:none] sm:text-[3.75rem]`}
+        className={`${bricolage.className} text-[2.25rem] font-semibold leading-none tracking-tight text-[#DADADA] [text-shadow:0_1px_0_rgba(255,255,255,0.9),0_-1px_0_rgba(0,0,0,0.06)] dark:text-white/25 dark:[text-shadow:none] sm:text-[3.25rem] md:text-[3.75rem]`}
       >
         {value}
       </p>
@@ -78,7 +78,7 @@ function GoldenXpStat({ xp }: { xp: number }) {
     <div className="flex flex-col">
       <div className="flex items-center gap-0.5">
         <p
-          className={`${bricolage.className} text-[2.75rem] font-semibold leading-none tracking-tight text-[#C9A227] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_-1px_0_rgba(0,0,0,0.12)] dark:text-[#A8860D] dark:[text-shadow:0_1px_0_rgba(255,255,255,0.08),0_-1px_0_rgba(0,0,0,0.4)] sm:text-[3rem]`}
+          className={`${bricolage.className} text-[2rem] font-semibold leading-none tracking-tight text-[#C9A227] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_-1px_0_rgba(0,0,0,0.12)] dark:text-[#A8860D] dark:[text-shadow:0_1px_0_rgba(255,255,255,0.08),0_-1px_0_rgba(0,0,0,0.4)] sm:text-[2.75rem] md:text-[3rem]`}
         >
           {xp}
         </p>
@@ -93,7 +93,7 @@ function GoldenXpStat({ xp }: { xp: number }) {
       <p
         className={`${inter.className} mt-1 text-[9px] uppercase font-medium tracking-wide text-neutral-400 dark:text-white/40`}
       >
-        your current xp
+        reading xp
       </p>
     </div>
   );
@@ -151,9 +151,9 @@ function StreakDayBars({ streak }: { streak: number }) {
 
 function BentoXpStreakPanel({ xp, streak }: { xp: number; streak: number }) {
   return (
-    <div className="flex h-full min-h-0 flex-col px-4 py-4 sm:px-8 sm:py-8">
+    <div className="flex h-full min-h-0 flex-col px-3 py-4 sm:px-8 sm:py-8">
       <GoldenXpStat xp={xp} />
-      <div className="mt-6 sm:mt-4">
+      <div className="mt-4 sm:mt-4 md:mt-6">
         <StreakDayBars streak={streak} />
       </div>
     </div>
@@ -184,14 +184,19 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
   return (
     <section
       className={cn(
-        "grid h-[78vh] max-h-[800px] min-h-[480px] w-full grid-cols-12 grid-rows-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-4 sm:gap-5",
+        "grid w-full gap-4 sm:gap-5",
+        /* mobile: 2-col — hero + last session full width; level | xp side by side */
+        "grid-cols-2 auto-rows-auto",
+        /* desktop: original 12-col bento */
+        "md:grid-cols-12 md:grid-rows-[minmax(0,1.15fr)_minmax(0,0.85fr)] md:h-[78vh] md:max-h-[800px] md:min-h-[480px]",
         className,
       )}
     >
       {/* Top-left — hero copy (wide, row 1) */}
       <div
         className={cn(
-          "col-span-7 col-start-1 row-start-1 flex h-full min-h-0 flex-col justify-between rounded-[28px] px-6 pb-6 pt-4 sm:rounded-[32px] sm:px-8 sm:pb-8 sm:pt-5",
+          "col-span-2 flex min-h-[220px] flex-col justify-between rounded-[28px] px-6 pb-6 pt-4 sm:min-h-[260px] sm:rounded-[32px] sm:px-8 sm:pb-8 sm:pt-5",
+          "md:col-span-7 md:col-start-1 md:row-start-1 md:h-full md:min-h-0",
           panelBg,
         )}
       >
@@ -219,7 +224,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
           ) : (
             <>
               <h2
-                className={`${bricolage.className} text-4xl font-semibold leading-tight text-[#675549] dark:text-white sm:text-[1.75rem]`}
+                className={`${bricolage.className} text-2xl font-semibold leading-tight text-[#675549] dark:text-white sm:text-[1.75rem] md:text-[1.75rem]`}
               >
                 Bonjour{firstName ? `, ${firstName}` : ""}!
               </h2>
@@ -264,7 +269,8 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
       {/* Bottom-left — level + embossed confidence (row 2) */}
       <div
         className={cn(
-          "col-span-3 col-start-1 row-start-2 flex h-full min-h-0 flex-col justify-between rounded-[28px] p-5 sm:rounded-[32px] sm:p-6",
+          "col-span-1 flex min-h-[200px] flex-col justify-between rounded-[28px] p-4 sm:min-h-[220px] sm:rounded-[32px] sm:p-6",
+          "md:col-span-3 md:col-start-1 md:row-start-2 md:h-full md:min-h-0",
           panelBg,
         )}
       >
@@ -280,7 +286,8 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
       {/* Bottom-center — golden XP + streak bars (row 2) */}
       <div
         className={cn(
-          "col-span-4 col-start-4 row-start-2 h-full min-h-0 overflow-hidden rounded-[28px] sm:rounded-[32px]",
+          "col-span-1 min-h-[200px] overflow-hidden rounded-[28px] sm:min-h-[220px] sm:rounded-[32px]",
+          "md:col-span-4 md:col-start-4 md:row-start-2 md:h-full md:min-h-0",
           panelBg,
         )}
       >
@@ -290,7 +297,8 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
       {/* Right — last session + actions */}
       <div
         className={cn(
-          "col-span-5 col-start-8 row-span-2 row-start-1 flex min-h-0 flex-col justify-between rounded-[28px] p-6 ring-1 ring-black/[0.04] sm:rounded-[32px] sm:p-8 dark:ring-white/[0.06]",
+          "col-span-2 flex min-h-[280px] flex-col justify-between rounded-[28px] p-6 ring-1 ring-black/[0.04] sm:min-h-[320px] sm:rounded-[32px] sm:p-8 dark:ring-white/[0.06]",
+          "md:col-span-5 md:col-start-8 md:row-span-2 md:row-start-1 md:h-full md:min-h-0",
           panelBg,
         )}
       >

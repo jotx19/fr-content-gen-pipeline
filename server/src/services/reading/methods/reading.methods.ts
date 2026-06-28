@@ -32,6 +32,7 @@ function profileFromDoc(doc: Record<string, unknown> | null, lastEval?: Record<s
   if (!doc?.level) return null;
   const pending = doc.pendingPractice as { questions?: unknown[] } | undefined;
   const stats = (doc.stats as Record<string, number>) ?? {};
+  const readingXp = stats.readingXp ?? stats.xp ?? 0;
   return {
     level: doc.level,
     confidence: doc.confidence ?? null,
@@ -44,7 +45,9 @@ function profileFromDoc(doc: Record<string, unknown> | null, lastEval?: Record<s
       totalSessions: stats.totalSessions ?? 0,
       totalQuestions: stats.totalQuestions ?? 0,
       streakDays: stats.streakDays ?? 0,
-      xp: stats.xp ?? 0,
+      xp: readingXp,
+      readingXp,
+      writingXp: stats.writingXp ?? 0,
     },
     lastEvaluation: lastEval
       ? {
@@ -123,6 +126,7 @@ async function persistEvaluation(
       $inc: {
         'stats.totalSessions': 1,
         'stats.totalQuestions': questionCount,
+        'stats.readingXp': xpGain,
         'stats.xp': xpGain,
       },
     }

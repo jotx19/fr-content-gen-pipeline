@@ -1,9 +1,21 @@
 import { z } from 'zod';
 import { TEF_MODULES } from '../../../app/db/schemas/tefEvaluation.schema.js';
 
-export const submitWritingSchema = z.object({
-  text: z.string().min(10).max(8000),
-});
+export const writingTaskModeSchema = z.enum(['fill_blanks', 'sentences', 'full']);
+
+export const submitWritingSchema = z
+  .object({
+    text: z.string().max(8000).optional(),
+    blanks: z.record(z.string(), z.string()).optional(),
+    sentences: z.record(z.string(), z.string()).optional(),
+  })
+  .refine(
+    (body) =>
+      Boolean(body.text?.trim()) ||
+      (body.blanks && Object.values(body.blanks).some((v) => v.trim())) ||
+      (body.sentences && Object.values(body.sentences).some((v) => v.trim())),
+    { message: 'Submit your answer before evaluation.' }
+  );
 
 export const writingEvaluationQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),

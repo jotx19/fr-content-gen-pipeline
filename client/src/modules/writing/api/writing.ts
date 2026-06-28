@@ -4,6 +4,7 @@ import type {
   WritingExampleResponse,
   WritingProfile,
   WritingPromptResponse,
+  WritingSubmitPayload,
   WritingSubmitResponse,
 } from '../types/writing';
 
@@ -33,8 +34,8 @@ export async function fetchWritingPrompt(params?: {
   return data;
 }
 
-export async function submitWriting(text: string) {
-  const { data } = await axiosInstance.post<WritingSubmitResponse>('/tef/writing/submit', { text });
+export async function submitWriting(payload: WritingSubmitPayload) {
+  const { data } = await axiosInstance.post<WritingSubmitResponse>('/tef/writing/submit', payload);
   return data;
 }
 

@@ -3,18 +3,42 @@ import { z } from 'zod';
 
 export const tefWritingSectionSchema = z.enum(['A', 'B']);
 
+export const writingTaskModeSchema = z.enum(['fill_blanks', 'sentences', 'full']);
+
+export const writingBlankSchema = z.object({
+  id: z.string().min(1),
+  hint: z.string().optional(),
+  acceptableAnswers: z.array(z.string()).optional(),
+});
+
+export const writingParagraphPartSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('text'), value: z.string() }),
+  z.object({ type: z.literal('blank'), id: z.string(), hint: z.string().optional() }),
+]);
+
+export const writingSentencePromptSchema = z.object({
+  id: z.string().min(1),
+  prompt: z.string().min(1),
+  minWords: z.number().int().min(1),
+  maxWords: z.number().int().min(1),
+});
+
 export const writingPromptSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   instructions: z.string().min(1),
   prompt: z.string().min(1),
-  examSection: tefWritingSectionSchema,
-  taskType: z.enum(['message', 'letter', 'email', 'essay', 'article']),
-  register: z.enum(['formel', 'neutre']),
+  taskMode: writingTaskModeSchema.default('full'),
+  examSection: tefWritingSectionSchema.optional(),
+  taskType: z.enum(['message', 'letter', 'email', 'essay', 'article', 'fill_blanks', 'sentences']).optional(),
+  register: z.enum(['formel', 'neutre']).optional(),
   level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
   topic: z.string().min(1),
-  minWords: z.number().int().min(20),
-  maxWords: z.number().int().min(20),
+  minWords: z.number().int().min(0),
+  maxWords: z.number().int().min(0),
+  paragraphParts: z.array(writingParagraphPartSchema).optional(),
+  blanks: z.array(writingBlankSchema).optional(),
+  sentencePrompts: z.array(writingSentencePromptSchema).optional(),
   rubricHints: z.array(z.string()).optional(),
 });
 

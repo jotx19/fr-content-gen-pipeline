@@ -5,6 +5,7 @@ const tefProfileSchema = new mongoose.Schema(
   {
     userId: { type: String, required: true, unique: true, index: true },
     level: { type: String, default: null },
+    writingLevel: { type: String, default: null },
     confidence: { type: Number, default: null },
     weakAreas: { type: [String], default: [] },
     summary: { type: String, default: '' },
@@ -19,6 +20,8 @@ const tefProfileSchema = new mongoose.Schema(
       totalQuestions: { type: Number, default: 0 },
       streakDays: { type: Number, default: 0 },
       xp: { type: Number, default: 0 },
+      readingXp: { type: Number, default: 0 },
+      writingXp: { type: Number, default: 0 },
     },
     onboardedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },

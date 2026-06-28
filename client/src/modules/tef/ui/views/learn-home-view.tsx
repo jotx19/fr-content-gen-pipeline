@@ -16,7 +16,7 @@ import { clearPlacementProgress } from '@/lib/tef-session-storage';
 function LearnSkeleton() {
   return (
     <div className="min-h-dvh">
-      <div className="mx-auto flex min-h-dvh w-full max-w-6xl items-center justify-center px-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col justify-center px-4 pb-6 sm:px-6 md:min-h-dvh">
         <div className="bento-island w-full">
           <Skeleton className="h-[78vh] max-h-[800px] min-h-[480px] w-full rounded-[32px] bg-[#FCFCFC] dark:bg-[#1C1C1C]" />
         </div>
@@ -80,7 +80,7 @@ export function LearnHomeView() {
       ? undefined
       : summary,
     streak: profile?.stats?.streakDays ?? 0,
-    xp: profile?.stats?.xp ?? 0,
+    xp: profile?.stats?.readingXp ?? profile?.stats?.xp ?? 0,
     lastScore: placementMode ? null : lastScore,
     lastKind: profile?.lastEvaluation?.kind,
     lastLevel: profile?.lastEvaluation?.levelAfter ?? profile?.level,
@@ -93,7 +93,7 @@ export function LearnHomeView() {
 
   return (
     <div className="min-h-dvh">
-      <div className="mx-auto flex min-h-dvh w-full max-w-6xl items-center justify-center px-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col justify-center px-4 pb-6 sm:px-6 md:min-h-dvh">
         <div className="bento-island w-full">
           <LearnBentoGrid data={bentoData} />
         </div>

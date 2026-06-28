@@ -1,4 +1,3 @@
-import { buildAgentContext } from './agent/context.js';
 import { spawnSubagent } from './agent/subagent_spawn.js';
 
 /** Discriminator for content-pipeline service requests — modules pass this + input payload */
@@ -31,19 +30,15 @@ export async function runContentPipeline(
 
   switch (opts.service) {
     case PIPELINE_SERVICES.WRITING_GENERATE_PROMPT: {
-      const genCtx = await buildAgentContext({
-        userId: opts.userId,
-        action: 'practice',
-        level: input.level as string,
-        weakAreas: (input.weakAreas as string[]) ?? [],
-        topic: (input.topic as string) ?? 'formal French writing',
-      });
-
       const { result } = await spawnSubagent('writingPrompt', {
+        userId: opts.userId,
         level: input.level,
         topic: input.topic,
+        section: input.section,
+        lastSection: input.lastSection,
         weakAreas: input.weakAreas,
-        contextBlock: genCtx.contextBlock,
+        previousPromptId: input.previousPromptId,
+        seed: `${opts.userId}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
       });
 
       return { prompt: result.prompt, context: { topic: input.topic } };

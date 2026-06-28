@@ -12,16 +12,30 @@ import {
   overallWritingScore,
   criteriaToSkillBreakdown,
   weakAreasFromCriteria,
-  levelFromWritingScore,
-  adjustWritingLevel,
   buildWritingSummary,
   countWords,
   WRITING_CRITERIA,
 } from '../scoring/writingScore.js';
 import {
+  composeFillBlankSubmission,
+  scoreFillBlanks,
+} from '../scoring/fillBlankScore.js';
+import {
+  ensureFillBlankPrompt,
+  exampleAnswersFromPrompt,
+} from '../normalizeFillBlankPrompt.js';
+import {
+  adjustWritingLevelFromXp,
+  seedWritingLevel,
+  taskModeForWritingLevel,
+  writingXpGain,
+  xpProgressForLevel,
+} from '../scoring/writingXp.js';
+import {
   inferTefWritingSection,
   resolveTefWritingSection,
 } from '../../../content-pipeline/subagents/writing/tefWritingSections.js';
+import { applyWordCountToEvaluation } from '../scoring/writingWordCount.js';
 
 function requireMongo() {
   if (!isMongoReady()) {
@@ -29,10 +43,34 @@ function requireMongo() {
   }
 }
 
-function publicPrompt(prompt: Record<string, unknown>) {
-  const { rubricHints, ...rest } = prompt;
-  const examSection = inferTefWritingSection(rest) ?? rest.examSection;
-  return examSection ? { ...rest, examSection } : rest;
+function stripPrivatePromptFields(prompt: Record<string, unknown>) {
+  const {
+    rubricHints,
+    acceptableAnswers,
+    fullParagraph,
+    blankTargets,
+    context,
+    ...rest
+  } = prompt as Record<string, unknown> & {
+    blanks?: { id: string; hint?: string; acceptableAnswers?: string[] }[];
+  };
+  const normalized =
+    rest.taskMode === 'fill_blanks' ? ensureFillBlankPrompt(rest) : rest;
+  const examSection = inferTefWritingSection(normalized) ?? normalized.examSection;
+  const publicBlanks = Array.isArray(normalized.blanks)
+    ? normalized.blanks.map(({ id, hint }) => ({ id, hint }))
+    : undefined;
+  return {
+    ...normalized,
+    ...(publicBlanks ? { blanks: publicBlanks } : {}),
+    ...(examSection ? { examSection } : {}),
+  };
+}
+
+function resolveWritingLevel(doc: Record<string, unknown>) {
+  const readingLevel = doc.level as string | null;
+  const writingLevel = (doc.writingLevel as string | null) ?? seedWritingLevel(readingLevel);
+  return { readingLevel, writingLevel };
 }
 
 async function getLastWritingSection(userId: string) {
@@ -49,6 +87,15 @@ function defaultTopicForSection(section: 'A' | 'B') {
     : 'social or professional topic requiring a structured opinion';
 }
 
+function composeSentenceSubmission(
+  sentencePrompts: { id: string; prompt: string }[],
+  answers: Record<string, string>
+) {
+  return sentencePrompts
+    .map((row, index) => `${index + 1}. ${row.prompt}\n→ ${String(answers[row.id] ?? '').trim()}`)
+    .join('\n\n');
+}
+
 async function persistWritingEvaluation(
   userId: string,
   data: {
@@ -63,7 +110,8 @@ async function persistWritingEvaluation(
     levelAfter: string;
     adjustment: string;
     reason: string;
-    confidence: number;
+    xpGain: number;
+    writingXp: number;
     summary: string;
     suggestions: string[];
   }
@@ -87,7 +135,7 @@ async function persistWritingEvaluation(
     levelAfter: data.levelAfter,
     adjustment: data.adjustment,
     reason: data.reason,
-    confidence: data.confidence,
+    confidence: null,
     summary: data.summary,
     topic: data.prompt.topic ?? null,
   });
@@ -99,12 +147,74 @@ async function persistWritingEvaluation(
       $inc: {
         'stats.totalSessions': 1,
         'stats.totalQuestions': 1,
-        'stats.xp': data.overallScore + 10,
+        'stats.writingXp': data.xpGain,
       },
     }
   );
 
   return evalDoc;
+}
+
+async function generateAndStoreWritingPrompt(
+  userId: string,
+  opts: {
+    writingLevel: string;
+    topic?: string;
+    section?: 'A' | 'B';
+    lastSection?: 'A' | 'B' | null;
+    weakAreas?: string[];
+    previousPromptId?: string | null;
+  }
+) {
+  const lastSection = opts.lastSection ?? null;
+  const section = resolveTefWritingSection(opts.section, lastSection);
+  const weakAreas = opts.weakAreas ?? [];
+
+  const { prompt } = await runContentPipeline({
+    service: PIPELINE_SERVICES.WRITING_GENERATE_PROMPT,
+    userId,
+    input: {
+      level: opts.writingLevel,
+      section,
+      lastSection,
+      topic: opts.topic ?? defaultTopicForSection(section),
+      weakAreas,
+      previousPromptId: opts.previousPromptId ?? null,
+    },
+  });
+
+  const storedPrompt =
+    (prompt as Record<string, unknown>).taskMode === 'fill_blanks'
+      ? ensureFillBlankPrompt(prompt as Record<string, unknown>)
+      : prompt;
+
+  await TefProfile.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        pendingWriting: { prompt: storedPrompt, createdAt: new Date() },
+        updatedAt: new Date(),
+      },
+    }
+  );
+
+  return storedPrompt as Record<string, unknown>;
+}
+
+function prefetchWritingPrompt(
+  userId: string,
+  writingLevel: string,
+  weakAreas: string[]
+) {
+  getLastWritingSection(userId)
+    .then((lastSection) =>
+      generateAndStoreWritingPrompt(userId, {
+        writingLevel,
+        weakAreas,
+        lastSection,
+      })
+    )
+    .catch((err) => console.warn('[writing] prefetch:', err.message));
 }
 
 export async function getWritingPrompt(
@@ -118,11 +228,45 @@ export async function getWritingPrompt(
     throw new Error('Complete reading placement before starting writing practice');
   }
 
-  const pending = doc.pendingWriting as { prompt?: Record<string, unknown> } | undefined;
-  if (pending?.prompt && !opts.refresh) {
+  const { readingLevel, writingLevel } = resolveWritingLevel(doc);
+  const taskMode = taskModeForWritingLevel(writingLevel);
+
+  if (!doc.writingLevel) {
+    await TefProfile.findOneAndUpdate(
+      { userId },
+      { $set: { writingLevel, updatedAt: new Date() } }
+    );
+  }
+
+  const pending = doc.pendingWriting as { prompt?: Record<string, unknown>; createdAt?: Date } | undefined;
+  const isLegacyFillBlank =
+    taskMode === 'fill_blanks' &&
+    pending?.prompt &&
+    !pending.prompt.fullParagraph &&
+    !pending.prompt.blankTargets;
+
+  if (pending?.prompt && !opts.refresh && !isLegacyFillBlank) {
+    let storedPrompt = pending.prompt;
+    if (storedPrompt.taskMode === 'fill_blanks' || taskMode === 'fill_blanks') {
+      storedPrompt = ensureFillBlankPrompt(storedPrompt);
+      if (storedPrompt !== pending.prompt) {
+        await TefProfile.findOneAndUpdate(
+          { userId },
+          {
+            $set: {
+              pendingWriting: { prompt: storedPrompt, createdAt: pending.createdAt ?? new Date() },
+              updatedAt: new Date(),
+            },
+          }
+        );
+      }
+    }
     return {
-      level: doc.level,
-      prompt: publicPrompt(pending.prompt),
+      readingLevel,
+      level: writingLevel,
+      writingLevel,
+      taskMode: storedPrompt.taskMode ?? taskMode,
+      prompt: stripPrivatePromptFields(storedPrompt),
       criteria: WRITING_CRITERIA,
       ready: true,
     };
@@ -134,35 +278,33 @@ export async function getWritingPrompt(
 
   const lastSection =
     inferTefWritingSection(pending?.prompt) ?? (await getLastWritingSection(userId));
-  const section = resolveTefWritingSection(opts.section, lastSection);
 
-  const { prompt } = await runContentPipeline({
-    service: PIPELINE_SERVICES.WRITING_GENERATE_PROMPT,
-    userId,
-    input: {
-      level: doc.level,
-      section,
-      lastSection,
-      topic: opts.topic ?? defaultTopicForSection(section),
-      weakAreas,
-    },
+  const storedPrompt = await generateAndStoreWritingPrompt(userId, {
+    writingLevel,
+    section: opts.section,
+    lastSection,
+    topic: opts.topic,
+    weakAreas,
+    previousPromptId: opts.refresh ? String(pending?.prompt?.id ?? '') : null,
   });
 
-  const pendingWriting = { prompt, createdAt: new Date() };
-  await TefProfile.findOneAndUpdate(
-    { userId },
-    { $set: { pendingWriting, updatedAt: new Date() } }
-  );
+  const publicPromptData = stripPrivatePromptFields(storedPrompt);
 
   return {
-    level: doc.level,
-    prompt: publicPrompt(prompt as Record<string, unknown>),
+    readingLevel,
+    level: writingLevel,
+    writingLevel,
+    taskMode: (publicPromptData.taskMode as string) ?? taskMode,
+    prompt: publicPromptData,
     criteria: WRITING_CRITERIA,
     ready: true,
   };
 }
 
-export async function submitWriting(userId: string, text: string) {
+export async function submitWriting(
+  userId: string,
+  body: { text?: string; blanks?: Record<string, string>; sentences?: Record<string, string> }
+) {
   requireMongo();
 
   const doc = await TefProfile.findOne({ userId }).lean();
@@ -171,34 +313,90 @@ export async function submitWriting(userId: string, text: string) {
   }
 
   const pending = doc.pendingWriting as { prompt?: Record<string, unknown> } | undefined;
-  const prompt = pending?.prompt;
+  let prompt = pending?.prompt;
   if (!prompt) {
     throw new Error('No writing prompt found — request a prompt first');
   }
 
-  const wordCount = countWords(text);
-  const levelBefore = doc.level as string;
+  if (String(prompt.taskMode) === 'fill_blanks') {
+    prompt = ensureFillBlankPrompt(prompt);
+  }
 
-  const evaluation = await runContentPipeline({
-    service: PIPELINE_SERVICES.WRITING_EVALUATE,
-    userId,
-    input: {
-      prompt,
-      submission: text,
+  const { writingLevel } = resolveWritingLevel(doc);
+  const levelBefore = writingLevel;
+  const taskMode = String(prompt.taskMode ?? taskModeForWritingLevel(writingLevel));
+  const stats = (doc.stats as Record<string, number>) ?? {};
+  const previousWritingXp = stats.writingXp ?? 0;
+
+  let evaluation: Record<string, unknown>;
+  let submission = '';
+  let wordCount = 0;
+
+  if (taskMode === 'fill_blanks') {
+    const blanks = (prompt.blanks as { id: string; acceptableAnswers?: string[] }[]) ?? [];
+    const answers = body.blanks ?? {};
+    const scored = scoreFillBlanks(blanks, answers);
+    evaluation = scored;
+    submission = composeFillBlankSubmission(
+      (prompt.paragraphParts as { type: string; value?: string; id?: string }[]) ?? [],
+      answers
+    );
+    wordCount = scored.wordCount;
+  } else if (taskMode === 'sentences') {
+    const sentencePrompts =
+      (prompt.sentencePrompts as { id: string; prompt: string; minWords: number; maxWords: number }[]) ??
+      [];
+    submission = composeSentenceSubmission(sentencePrompts, body.sentences ?? {});
+    wordCount = countWords(submission);
+
+    const llmEvaluation = await runContentPipeline({
+      service: PIPELINE_SERVICES.WRITING_EVALUATE,
+      userId,
+      input: {
+        prompt: {
+          ...prompt,
+          taskMode: 'sentences',
+          minWords: 4,
+          maxWords: 18,
+        },
+        submission,
+        wordCount,
+        level: writingLevel,
+      },
+    });
+    evaluation = llmEvaluation as Record<string, unknown>;
+  } else {
+    submission = String(body.text ?? '').trim();
+    if (!submission) throw new Error('Write your answer before submitting');
+    wordCount = countWords(submission);
+
+    const llmEvaluation = await runContentPipeline({
+      service: PIPELINE_SERVICES.WRITING_EVALUATE,
+      userId,
+      input: {
+        prompt,
+        submission,
+        wordCount,
+        level: writingLevel,
+      },
+    });
+    evaluation = applyWordCountToEvaluation(
+      llmEvaluation,
       wordCount,
-      level: levelBefore,
-    },
-  });
+      prompt,
+      writingLevel
+    ) as Record<string, unknown>;
+  }
 
   const criteria = evaluation.criteria as Record<string, unknown>[];
   const overallScore = overallWritingScore(criteria);
   const overallAccuracy = aggregateWritingScore(criteria);
   const weakAreas = weakAreasFromCriteria(criteria);
-  const { level: estimatedLevel, confidence } = levelFromWritingScore(overallScore);
 
-  const scoreHistory = (doc.writingScoreHistory as number[]) ?? [];
-  const levelResult = adjustWritingLevel(levelBefore, scoreHistory, overallScore);
+  const xpGain = writingXpGain(overallScore, taskMode);
+  const levelResult = adjustWritingLevelFromXp(levelBefore, previousWritingXp, xpGain);
   const newLevel = levelResult.newLevel ?? levelBefore;
+  const newWritingXp = levelResult.newXp;
 
   const summary = buildWritingSummary({
     overallScore,
@@ -211,18 +409,18 @@ export async function submitWriting(userId: string, text: string) {
     { userId },
     {
       $set: {
-        level: newLevel,
+        writingLevel: newLevel,
         summary,
         updatedAt: now,
         pendingWriting: null,
-        writingScoreHistory: [...scoreHistory, overallScore].slice(-20),
+        writingScoreHistory: [...((doc.writingScoreHistory as number[]) ?? []), overallScore].slice(-20),
       },
     }
   );
 
   const evalDoc = await persistWritingEvaluation(userId, {
     prompt,
-    submission: text,
+    submission,
     wordCount,
     criteria,
     overallScore,
@@ -232,7 +430,8 @@ export async function submitWriting(userId: string, text: string) {
     levelAfter: newLevel,
     adjustment: levelResult.adjustment,
     reason: levelResult.reason,
-    confidence,
+    xpGain,
+    writingXp: newWritingXp,
     summary,
     suggestions: (evaluation.suggestions as string[]) ?? [],
   });
@@ -246,6 +445,10 @@ export async function submitWriting(userId: string, text: string) {
     skillBreakdown: criteriaToSkillBreakdown(criteria),
   }).catch((err) => console.warn('[rag] writing index:', err.message));
 
+  prefetchWritingPrompt(userId, newLevel, weakAreas);
+
+  const progress = xpProgressForLevel(newWritingXp, newLevel);
+
   return {
     module: WRITING_MODULE,
     evaluationId: evalDoc._id.toString(),
@@ -254,14 +457,20 @@ export async function submitWriting(userId: string, text: string) {
     criteria,
     weakAreas,
     suggestions: evaluation.suggestions,
-    summary: evaluation.summary,
+    summary: evaluation.summary ?? summary,
     adjustment: levelResult.adjustment,
     newLevel,
     reason: levelResult.reason,
     wordCount,
+    xpGain,
+    writingXp: newWritingXp,
+    writingProgress: progress,
+    taskMode,
     profile: {
+      readingLevel: doc.level,
       level: newLevel,
-      confidence,
+      writingLevel: newLevel,
+      writingXp: newWritingXp,
       weakAreas,
       summary,
       lastEvaluation: {
@@ -281,11 +490,31 @@ export async function getWritingExample(userId: string) {
   requireMongo();
 
   const doc = await TefProfile.findOne({ userId }).lean();
-  const pending = doc?.pendingWriting as { prompt?: Record<string, unknown> } | undefined;
+  const pending = doc.pendingWriting as { prompt?: Record<string, unknown> } | undefined;
   const prompt = pending?.prompt;
-
   if (!prompt) {
     throw new Error('No active writing prompt — request a prompt first');
+  }
+
+  const { writingLevel } = resolveWritingLevel(doc ?? {});
+  const taskMode = String(prompt.taskMode ?? taskModeForWritingLevel(writingLevel));
+
+  if (taskMode === 'fill_blanks') {
+    const fullPrompt = ensureFillBlankPrompt(prompt);
+    const blankAnswers = exampleAnswersFromPrompt(fullPrompt);
+    const exampleAnswer = composeFillBlankSubmission(
+      (fullPrompt.paragraphParts as { type: string; value?: string; id?: string }[]) ?? [],
+      blankAnswers
+    );
+
+    return {
+      promptId: fullPrompt.id,
+      exampleAnswer,
+      blankAnswers,
+      wordCount: Object.values(blankAnswers).join(' ').trim().split(/\s+/).filter(Boolean).length,
+      notes:
+        'Each blank uses a common A1 word form. Copy the pattern: short answers, correct verb tense, simple politeness.',
+    };
   }
 
   const result = await runContentPipeline({
@@ -293,7 +522,7 @@ export async function getWritingExample(userId: string) {
     userId,
     input: {
       prompt,
-      level: doc?.level ?? prompt.level,
+      level: writingLevel,
     },
   });
 
@@ -315,15 +544,23 @@ export async function getWritingProfile(userId: string) {
   const doc = await TefProfile.findOne({ userId }).lean();
   if (!doc?.level) return null;
 
+  const { readingLevel, writingLevel } = resolveWritingLevel(doc);
+  const stats = (doc.stats as Record<string, number>) ?? {};
+  const writingXp = stats.writingXp ?? 0;
   const pending = doc.pendingWriting as { prompt?: Record<string, unknown> } | undefined;
   const lastEval = doc.lastEvaluationId
     ? await TefEvaluation.findById(doc.lastEvaluationId).lean()
     : null;
 
   return {
-    level: doc.level,
+    readingLevel,
+    level: writingLevel,
+    writingLevel,
+    writingXp,
+    writingProgress: xpProgressForLevel(writingXp, writingLevel),
+    taskMode: taskModeForWritingLevel(writingLevel),
     writingReady: Boolean(pending?.prompt),
-    pendingPrompt: pending?.prompt ? publicPrompt(pending.prompt) : null,
+    pendingPrompt: pending?.prompt ? stripPrivatePromptFields(pending.prompt) : null,
     writingScoreHistory: doc.writingScoreHistory ?? [],
     criteria: WRITING_CRITERIA,
     lastEvaluation:

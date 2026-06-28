@@ -44,7 +44,7 @@ export async function prompt(req: AuthedRequest, reply: FastifyReply) {
 export async function submit(req: AuthedRequest, reply: FastifyReply) {
   try {
     const body = req.body as SubmitWritingBody;
-    const data = await submitWriting(req.userId, body.text);
+    const data = await submitWriting(req.userId, body);
     return reply.send(data);
   } catch (err) {
     return mapError(reply, err);

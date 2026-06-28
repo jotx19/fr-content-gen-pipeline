@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Check, ChevronDown, Copy, Info, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,18 +35,30 @@ import {
   type TefWritingSectionKey,
 } from '@/modules/writing/config/tef-sections';
 import { WritingAiTyping } from '@/modules/writing/ui/components/writing-ai-typing';
+import {
+  BlankListFallback,
+  FillBlankAnswer,
+  SentenceAnswer,
+} from '@/modules/writing/ui/components/writing-answer-fields';
+import type { WritingSubmitPayload } from '@/modules/writing/types/writing';
 import { useWritingStore } from '@/store/writingStore';
 
-const surfaceClass = 'bg-[#FCFCFC] dark:bg-[#1C1C1C]';
+const surfaceClass = 'bg-white/80 backdrop-blur-md dark:bg-white/10';
 
 const toolbarIcon =
-  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-[color,background-color] duration-150 hover:bg-black/[0.05] hover:text-foreground disabled:pointer-events-none disabled:opacity-35 dark:hover:bg-white/[0.08]';
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground/55 transition-[color,background-color] duration-150 hover:bg-white/70 hover:text-foreground disabled:pointer-events-none disabled:opacity-35 dark:text-white/55 dark:hover:bg-white/15';
 
 const toolbarIconActive =
-  'bg-black/[0.06] text-foreground dark:bg-white/[0.1] dark:text-foreground';
+  'bg-white/70 text-foreground dark:bg-white/15 dark:text-foreground';
+
+const levelBadgeClass =
+  'rounded-full border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold tabular-nums text-foreground dark:border-white/15 dark:bg-white/10 dark:text-white';
+
+const xpBadgeClass =
+  'rounded-full border-[#C9A227]/30 bg-[#C9A227]/10 px-3 py-1 text-xs font-semibold tabular-nums text-[#A8860D] dark:border-[#A8860D]/40 dark:bg-[#A8860D]/15 dark:text-[#C9A227]';
 
 function FooterSeparator() {
-  return <div className="h-4 w-px shrink-0 bg-black/10 dark:bg-white/10" aria-hidden />;
+  return <div className="h-4 w-px shrink-0 bg-white/50 dark:bg-white/20" aria-hidden />;
 }
 
 function ToolbarIconButton({
@@ -103,6 +116,8 @@ export function WritingView() {
   const refreshPrompt = useRefreshWritingPromptMutation();
 
   const [text, setText] = useState('');
+  const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>({});
+  const [sentenceAnswers, setSentenceAnswers] = useState<Record<string, string>>({});
   const [promptRefreshing, setPromptRefreshing] = useState(false);
   const [pendingSection, setPendingSection] = useState<TefWritingSectionKey | null>(null);
   const [exampleData, setExampleData] = useState<WritingExampleResponse | null>(null);
@@ -131,23 +146,75 @@ export function WritingView() {
     return countWords(text);
   }, [text, showExample, exampleTypedText]);
   const prompt = promptData?.prompt;
+  const taskMode = prompt?.taskMode ?? profile?.taskMode ?? 'full';
+
+  useEffect(() => {
+    if (!prompt?.id) return;
+    setBlankAnswers({});
+    setSentenceAnswers({});
+    setText('');
+    setExampleData(null);
+    setExampleTypedText('');
+    setExampleTypingDone(false);
+    setShowExample(false);
+  }, [prompt?.id]);
+
   const sectionMeta = prompt ? sectionMetaForPrompt(prompt) : null;
   const minWords = prompt?.minWords ?? 0;
   const maxWords = prompt?.maxWords ?? 9999;
-  const wordCountOk = wordCount >= minWords && wordCount <= maxWords;
+  const writingLevel = profile?.writingLevel ?? profile?.level ?? '?';
+  const writingXp = profile?.writingXp ?? 0;
+  const wordCountOk = taskMode === 'full' ? wordCount >= minWords && wordCount <= maxWords : true;
   const currentSection = sectionMeta?.key ?? 'A';
   const displaySectionLabel = pendingSection
     ? TEF_WRITING_SECTIONS[pendingSection].label
     : (sectionMeta?.label ?? 'Section A');
   const questionLoading = promptRefreshing || refreshPrompt.isPending;
 
-  const handleSubmit = async () => {
-    if (!text.trim()) {
-      toast.error('Write your answer before submitting.');
-      return;
+  const canSubmit = useMemo(() => {
+    if (showExample) return false;
+    if (taskMode === 'fill_blanks') {
+      const ids = prompt?.blanks?.map((b) => b.id) ?? [];
+      return ids.length > 0 && ids.every((id) => (blankAnswers[id] ?? '').trim());
     }
+    if (taskMode === 'sentences') {
+      const rows = prompt?.sentencePrompts ?? [];
+      return (
+        rows.length > 0 &&
+        rows.every((row) => {
+          const words = (sentenceAnswers[row.id] ?? '').trim().split(/\s+/).filter(Boolean).length;
+          return words >= row.minWords && words <= row.maxWords;
+        })
+      );
+    }
+    return text.trim().length >= 10 && wordCountOk;
+  }, [
+    showExample,
+    taskMode,
+    prompt?.blanks,
+    prompt?.sentencePrompts,
+    blankAnswers,
+    sentenceAnswers,
+    text,
+    wordCountOk,
+  ]);
+
+  const handleSubmit = async () => {
+    let payload: WritingSubmitPayload;
+    if (taskMode === 'fill_blanks') {
+      payload = { blanks: blankAnswers };
+    } else if (taskMode === 'sentences') {
+      payload = { sentences: sentenceAnswers };
+    } else {
+      if (!text.trim()) {
+        toast.error('Write your answer before submitting.');
+        return;
+      }
+      payload = { text: text.trim() };
+    }
+
     try {
-      const result = await submit.mutateAsync(text.trim());
+      const result = await submit.mutateAsync(payload);
       setLastResult(result);
       router.push('/learn/writing/results');
     } catch (err) {
@@ -160,6 +227,7 @@ export function WritingView() {
       setShowExample(false);
       setExampleTypedText('');
       setExampleTypingDone(false);
+      if (taskMode === 'fill_blanks') setBlankAnswers({});
       return;
     }
 
@@ -168,11 +236,25 @@ export function WritingView() {
     setExampleTypingDone(false);
     setExampleSession((n) => n + 1);
 
-    if (exampleData) return;
+    const showExampleNotes = (notes: string | null | undefined) => {
+      if (taskMode === 'fill_blanks' && notes?.trim()) {
+        toast.message(notes.trim(), { duration: 6000 });
+      }
+    };
+
+    if (exampleData?.blankAnswers && Object.keys(exampleData.blankAnswers).length > 0) {
+      setBlankAnswers(exampleData.blankAnswers);
+      showExampleNotes(exampleData.notes);
+      return;
+    }
 
     try {
       const data = await example.mutateAsync();
       setExampleData(data);
+      if (data.blankAnswers && Object.keys(data.blankAnswers).length > 0) {
+        setBlankAnswers(data.blankAnswers);
+      }
+      showExampleNotes(data.notes);
     } catch (err) {
       setShowExample(false);
       toast.error(err instanceof Error ? err.message : 'Could not load example');
@@ -185,6 +267,8 @@ export function WritingView() {
 
   const handleClearAnswer = () => {
     setText('');
+    setBlankAnswers({});
+    setSentenceAnswers({});
     setCopied(false);
   };
 
@@ -224,12 +308,6 @@ export function WritingView() {
     if (section) setPendingSection(section);
     try {
       await refreshPrompt.mutateAsync(section ? { section } : undefined);
-      await refetch();
-      setText('');
-      setExampleData(null);
-      setExampleTypedText('');
-      setExampleTypingDone(false);
-      setShowExample(false);
       setQuestionOpen(true);
       toast.success(section ? `Section ${section} prompt ready` : 'New prompt ready');
     } catch {
@@ -257,8 +335,8 @@ export function WritingView() {
         <p className={`${bricolage.className} text-2xl font-semibold text-foreground`}>
           Complete reading placement first
         </p>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-          Writing practice uses your CEFR level from the reading placement test.
+        <p className="mt-2 max-w-sm text-sm text-foreground/55">
+          Writing practice unlocks after reading placement. Writing level and XP are tracked separately.
         </p>
         <Button type="button" onClick={() => router.push('/learn')} className="mt-8 rounded-full">
           Back to Learn
@@ -273,7 +351,7 @@ export function WritingView() {
         {promptLoading ? (
           <div className="space-y-4">
             <Skeleton className={cn('h-24 w-full rounded-2xl', surfaceClass)} />
-            <Skeleton className={cn('h-56 w-full rounded-2xl border border-dashed border-border/70', surfaceClass)} />
+            <Skeleton className={cn('h-56 w-full rounded-2xl border border-dashed border-white/60 dark:border-white/15', surfaceClass)} />
           </div>
         ) : promptError || !prompt ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
@@ -285,41 +363,48 @@ export function WritingView() {
         ) : (
           <>
             <div className="mb-4 flex items-center gap-1.5">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    disabled={questionLoading}
-                    className="group inline-flex items-center gap-1.5 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 data-[state=open]:[&_svg]:rotate-180"
-                    aria-label="Switch writing section"
-                  >
-                    <h2 className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}>
-                      {displaySectionLabel}
-                    </h2>
-                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[8.5rem] p-1">
-                  {writingSections.map((key) => (
-                    <DropdownMenuItem
-                      key={key}
+              {taskMode === 'full' ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
                       disabled={questionLoading}
-                      onClick={() => {
-                        if (key !== currentSection) handleNewPrompt(key);
-                      }}
-                      className="cursor-pointer px-3 py-2 text-sm font-medium"
+                      className="group inline-flex items-center gap-1.5 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 data-[state=open]:[&_svg]:rotate-180"
+                      aria-label="Switch writing section"
                     >
-                      {TEF_WRITING_SECTIONS[key].label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      <h2 className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}>
+                        {displaySectionLabel}
+                      </h2>
+                      <ChevronDown className="h-4 w-4 shrink-0 text-foreground/55 transition-transform duration-200" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[8.5rem] p-1">
+                    {writingSections.map((key) => (
+                      <DropdownMenuItem
+                        key={key}
+                        disabled={questionLoading}
+                        onClick={() => {
+                          if (key !== currentSection) handleNewPrompt(key);
+                        }}
+                        className="cursor-pointer px-3 py-2 text-sm font-medium"
+                      >
+                        {TEF_WRITING_SECTIONS[key].label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <h2 className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}>
+                  {taskMode === 'fill_blanks' ? 'Fill in the blanks' : 'Write sentences'}
+                </h2>
+              )}
 
+              {taskMode === 'full' && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-foreground/55 transition-colors hover:text-foreground"
                     aria-label="Section information"
                   >
                     <Info className="h-3.5 w-3.5" />
@@ -338,6 +423,7 @@ export function WritingView() {
                   </p>
                 </TooltipContent>
               </Tooltip>
+              )}
             </div>
 
             {/* Header + question — full navbar width */}
@@ -348,31 +434,25 @@ export function WritingView() {
                 </h1>
 
                 <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-                  <p className="text-xs text-muted-foreground">
-                    Level{' '}
-                    <span className="font-medium tabular-nums text-foreground">{profile.level}</span>
-                  </p>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-white/50 px-2 py-1 text-[11px] tabular-nums text-foreground/45 backdrop-blur-sm dark:bg-white/[0.06] dark:text-white/45">
+                    <span className="font-medium text-foreground/65 dark:text-white/65">{writingLevel}</span>
+                    <span className="text-foreground/20 dark:text-white/20" aria-hidden>|</span>
+                    <span>
+                      <span className="font-medium text-foreground/65 dark:text-white/65">{writingXp}</span>
+                      <span className="ml-0.5 font-normal">xp</span>
+                    </span>
+                  </span>
 
                   <div className="flex items-center gap-0.5">
-                    <ToolbarIconButton
-                      label="Next task"
-                      onClick={() => handleNewPrompt()}
-                      disabled={questionLoading || promptLoading}
-                    >
-                      <RefreshCw
-                        className={cn('h-3.5 w-3.5', questionLoading && 'animate-spin')}
-                      />
-                    </ToolbarIconButton>
-
                     <Button
                       type="button"
                       size="sm"
                       onClick={handleExample}
                       disabled={example.isPending}
                       className={cn(
-                        'h-8 rounded-md border border-black/8 bg-white px-3 text-xs font-medium text-black shadow-sm transition-colors hover:bg-neutral-100',
-                        'dark:border-white/12 dark:bg-white dark:text-black dark:hover:bg-white/90',
-                        showExample && 'ring-1 ring-black/10 dark:ring-white/20'
+                        'h-8 rounded-md border border-white/80 bg-white/90 px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-white',
+                        'dark:border-white/20 dark:bg-white/15 dark:text-white dark:hover:bg-white/25',
+                        showExample && 'ring-1 ring-white/80 dark:ring-white/25'
                       )}
                     >
                       {example.isPending ? (
@@ -387,13 +467,13 @@ export function WritingView() {
               <div className="px-5 pb-4">
                 {questionLoading ? (
                   <div className="space-y-3 py-1" aria-busy="true" aria-label="Loading question">
-                    <Skeleton className="h-3 w-16 rounded-md bg-foreground/8" />
-                    <Skeleton className="h-6 w-[88%] rounded-md bg-foreground/8 sm:h-7" />
+                    <Skeleton className="h-3 w-16 rounded-md bg-white/60 dark:bg-white/10" />
+                    <Skeleton className="h-6 w-[88%] rounded-md bg-white/60 dark:bg-white/10 sm:h-7" />
                     <div className="space-y-2 pt-1">
-                      <Skeleton className="h-3.5 w-full rounded-md bg-foreground/8" />
-                      <Skeleton className="h-3.5 w-[94%] rounded-md bg-foreground/8" />
-                      <Skeleton className="h-3.5 w-[82%] rounded-md bg-foreground/8" />
-                      <Skeleton className="h-3.5 w-[90%] rounded-md bg-foreground/8" />
+                      <Skeleton className="h-3.5 w-full rounded-md bg-white/60 dark:bg-white/10" />
+                      <Skeleton className="h-3.5 w-[94%] rounded-md bg-white/60 dark:bg-white/10" />
+                      <Skeleton className="h-3.5 w-[82%] rounded-md bg-white/60 dark:bg-white/10" />
+                      <Skeleton className="h-3.5 w-[90%] rounded-md bg-white/60 dark:bg-white/10" />
                     </div>
                   </div>
                 ) : (
@@ -405,7 +485,7 @@ export function WritingView() {
                     aria-expanded={questionOpen}
                   >
                     <div className="min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs font-medium uppercase tracking-wide text-foreground/55">
                         Question
                       </p>
                       <p className={`${bricolage.className} mt-0.5 text-base font-semibold leading-snug sm:text-lg`}>
@@ -414,7 +494,7 @@ export function WritingView() {
                     </div>
                     <ChevronDown
                       className={cn(
-                        'mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                        'mt-1 h-4 w-4 shrink-0 text-foreground/55 transition-transform duration-200',
                         questionOpen && 'rotate-180'
                       )}
                     />
@@ -422,8 +502,21 @@ export function WritingView() {
 
                   {questionOpen && (
                     <div className="mt-3 space-y-3">
-                      <p className="text-sm leading-relaxed text-muted-foreground">{prompt.instructions}</p>
-                      <p className="text-sm leading-relaxed text-foreground">{prompt.prompt}</p>
+                      <p className="text-sm leading-relaxed text-foreground/55">{prompt.instructions}</p>
+                      {taskMode === 'fill_blanks' && prompt.prompt && (
+                        <div className="rounded-xl bg-white/70 px-4 py-3 text-sm leading-relaxed text-foreground/55 dark:bg-white/10">
+                          <p className="text-xs font-medium uppercase tracking-wide text-foreground/50 dark:text-white/50">
+                            Situation
+                          </p>
+                          <p className="mt-1.5 text-foreground">{prompt.prompt}</p>
+                        </div>
+                      )}
+                      {taskMode === 'full' && (
+                        <p className="text-sm leading-relaxed text-foreground">{prompt.prompt}</p>
+                      )}
+                      {taskMode === 'sentences' && prompt.prompt && (
+                        <p className="text-sm leading-relaxed text-foreground">{prompt.prompt}</p>
+                      )}
                     </div>
                   )}
                   </>
@@ -432,6 +525,87 @@ export function WritingView() {
               </div>
 
             <div className="mt-5 w-full">
+              {(taskMode === 'fill_blanks' || taskMode === 'sentences') && (
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    {showExample ? 'AI example — your reply' : 'Your reply'}
+                  </label>
+                  <div
+                    className={cn(
+                      surfaceClass,
+                      'relative mt-2 flex flex-col rounded-2xl border border-dashed border-white/60 dark:border-white/15'
+                    )}
+                  >
+                    {taskMode === 'fill_blanks' &&
+                      (prompt.paragraphParts?.length ? (
+                        <FillBlankAnswer
+                          key={prompt.id}
+                          parts={prompt.paragraphParts}
+                          blanks={prompt.blanks ?? []}
+                          values={blankAnswers}
+                          onChange={(id, value) =>
+                            setBlankAnswers((prev) => ({ ...prev, [id]: value }))
+                          }
+                          readOnly={showExample}
+                          className="border-0 px-4 py-4"
+                        />
+                      ) : (
+                        <BlankListFallback
+                          blanks={prompt.blanks ?? []}
+                          values={blankAnswers}
+                          onChange={(id, value) =>
+                            setBlankAnswers((prev) => ({ ...prev, [id]: value }))
+                          }
+                          readOnly={showExample}
+                        />
+                      ))}
+                    {taskMode === 'sentences' && prompt.sentencePrompts?.length ? (
+                      <SentenceAnswer
+                        prompts={prompt.sentencePrompts}
+                        values={sentenceAnswers}
+                        onChange={(id, value) =>
+                          setSentenceAnswers((prev) => ({ ...prev, [id]: value }))
+                        }
+                        readOnly={showExample}
+                        className="px-3 py-3"
+                      />
+                    ) : null}
+                    <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-white/50 px-4 py-3 dark:border-white/10">
+                      <ToolbarIconButton
+                        label="Next task"
+                        onClick={() => handleNewPrompt()}
+                        disabled={questionLoading || promptLoading}
+                      >
+                        <RefreshCw
+                          className={cn('h-3.5 w-3.5', questionLoading && 'animate-spin')}
+                        />
+                      </ToolbarIconButton>
+                      <Button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={submit.isPending || !canSubmit || showExample}
+                        size="sm"
+                        className={cn(
+                          'h-9 rounded-lg px-4 text-xs font-medium',
+                          'bg-foreground text-background hover:bg-foreground/90',
+                          'dark:border dark:border-white/12 dark:bg-white dark:text-black dark:hover:bg-white/90'
+                        )}
+                      >
+                        {submit.isPending ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Submitting…
+                          </>
+                        ) : (
+                          'Submit'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {taskMode === 'full' && (
               <div className="mt-6">
                 <label htmlFor="writing-answer" className="text-sm font-medium text-foreground">
                   {showExample ? 'AI example (French)' : 'Your answer (French)'}
@@ -439,7 +613,7 @@ export function WritingView() {
                 <div
                   className={cn(
                     surfaceClass,
-                    'relative mt-2 flex flex-col rounded-2xl border border-dashed border-border/70 dark:border-white/15'
+                    'relative mt-2 flex flex-col rounded-2xl border border-dashed border-white/60 dark:border-white/15'
                   )}
                 >
                   {showExample ? (
@@ -453,7 +627,7 @@ export function WritingView() {
                                   type="button"
                                   className={cn(
                                     toolbarIcon,
-                                    'pointer-events-auto border border-border/70 bg-background/80 shadow-sm backdrop-blur-sm dark:border-white/15 dark:bg-[#1C1C1C]/90'
+                                    'pointer-events-auto border border-white/60 bg-white/80 shadow-sm backdrop-blur-md dark:border-white/15 dark:bg-white/10'
                                   )}
                                   aria-label="Why this example works"
                                 >
@@ -478,7 +652,7 @@ export function WritingView() {
                                 onClick={handleCopyExample}
                                 disabled={!exampleData?.exampleAnswer && !exampleTypedText.trim()}
                                 className={cn(
-                                  'pointer-events-auto rounded-md border-border/70 shadow-sm dark:border-white/15',
+                                  'pointer-events-auto rounded-md border-white/60 shadow-sm dark:border-white/15',
                                   surfaceClass
                                 )}
                                 aria-label={exampleCopied ? 'Copied' : 'Copy example'}
@@ -535,7 +709,7 @@ export function WritingView() {
                               onClick={handleCopyAnswer}
                               disabled={!text.trim()}
                               className={cn(
-                                'pointer-events-auto rounded-md border-border/70 shadow-sm dark:border-white/15',
+                                'pointer-events-auto rounded-md border-white/60 shadow-sm dark:border-white/15',
                                 surfaceClass
                               )}
                               aria-label={copied ? 'Copied' : 'Copy answer'}
@@ -558,18 +732,18 @@ export function WritingView() {
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Rédigez votre réponse ici…"
                         rows={12}
-                        className="min-h-[240px] w-full flex-1 resize-y rounded-2xl border-0 bg-transparent px-4 py-3 pr-[4.75rem] text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
+                        className="min-h-[240px] w-full flex-1 resize-y rounded-2xl border-0 bg-transparent px-4 py-3 pr-[4.75rem] text-sm leading-relaxed text-foreground outline-none placeholder:text-foreground/40 dark:placeholder:text-white/40 focus:ring-0"
                       />
                     </>
                   )}
-                  <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-border/50 px-4 py-3 dark:border-white/10">
+                  <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-white/50 px-4 py-3 dark:border-white/10">
                     <span
                       className={cn(
                         'text-xs tabular-nums',
                         showExample
-                          ? 'text-muted-foreground'
+                          ? 'text-foreground/55'
                           : wordCountOk
-                            ? 'text-muted-foreground'
+                            ? 'text-foreground/55'
                             : wordCount < minWords
                               ? 'text-amber-600 dark:text-amber-500'
                               : 'text-red-600 dark:text-red-400'
@@ -580,14 +754,23 @@ export function WritingView() {
                       {wordCount} words
                     </span>
                     <FooterSeparator />
-                    <span className="text-xs tabular-nums text-muted-foreground">
+                    <span className="text-xs tabular-nums text-foreground/55">
                       target {minWords}–{maxWords}
                     </span>
                     <FooterSeparator />
+                    <ToolbarIconButton
+                      label="Next task"
+                      onClick={() => handleNewPrompt()}
+                      disabled={questionLoading || promptLoading}
+                    >
+                      <RefreshCw
+                        className={cn('h-3.5 w-3.5', questionLoading && 'animate-spin')}
+                      />
+                    </ToolbarIconButton>
                     <Button
                       type="button"
                       onClick={handleSubmit}
-                      disabled={submit.isPending || !text.trim() || showExample}
+                      disabled={submit.isPending || !canSubmit || showExample}
                       size="sm"
                       className={cn(
                         'h-9 rounded-lg px-4 text-xs font-medium',
@@ -607,6 +790,7 @@ export function WritingView() {
                   </div>
                 </div>
               </div>
+              )}
             </div>
           </>
         )}

@@ -10,6 +10,8 @@ export type TefStats = {
   totalQuestions: number;
   streakDays: number;
   xp: number;
+  readingXp?: number;
+  writingXp?: number;
 };
 
 export type TefProfile = {

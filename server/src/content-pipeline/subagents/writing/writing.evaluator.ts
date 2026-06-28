@@ -20,9 +20,10 @@ Return JSON with exactly these fields:
 - suggestions: array of 3–5 English strings
 
 Scoring rules:
-1. Use prompt.minWords and prompt.maxWords as the ONLY word-count requirements for this task.
-   Section A targets ~80–120 words; Section B targets ~200–280 words when set on the prompt.
-   Do NOT compare length to CEFR-level word bands or level-based length expectations.
+1. Check prompt.taskMode:
+   - "sentences": evaluate each short sentence separately; do NOT expect a full essay or TEF Section B length.
+   - "full": use prompt.minWords and prompt.maxWords as the ONLY word-count requirements.
+2. Use prompt.minWords and prompt.maxWords as word-count requirements when taskMode is "full".
 2. Do NOT penalize vocabulary, language_accuracy, or content_coherence for word count.
 3. Score task_fulfillment for instructions, tone, register, and task type only — NOT for word count.
    Word-count compliance is scored separately by the system after your response.

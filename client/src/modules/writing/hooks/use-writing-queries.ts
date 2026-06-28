@@ -32,8 +32,8 @@ export function useRefreshWritingPromptMutation() {
   return useMutation({
     mutationFn: (params?: { topic?: string; section?: 'A' | 'B' }) =>
       fetchWritingPrompt({ ...params, refresh: true }),
-    onSuccess: (_data, params) => {
-      queryClient.invalidateQueries({ queryKey: writingKeys.prompt(params?.topic) });
+    onSuccess: (data, params) => {
+      queryClient.setQueryData(writingKeys.prompt(params?.topic), data);
       queryClient.invalidateQueries({ queryKey: writingKeys.profile() });
     },
   });

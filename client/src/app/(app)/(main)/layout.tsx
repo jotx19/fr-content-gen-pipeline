@@ -13,14 +13,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     pathname.startsWith('/learn/writing/results');
 
   const isLanding = pathname === '/';
-  const navOverlaysContent = pathname === '/learn';
 
   return (
     <div className={cn('flex flex-col', isSignIn || isLesson ? 'h-dvh' : 'min-h-dvh')}>
       {!isLesson && !isSignIn && !isLanding && (
         <>
           <Navbar />
-          {!navOverlaysContent && <NavbarSpacer />}
+          {pathname === '/learn' ? (
+            <div className="h-20 shrink-0 md:h-6" aria-hidden />
+          ) : (
+            <NavbarSpacer />
+          )}
         </>
       )}
       <main

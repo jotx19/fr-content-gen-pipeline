@@ -443,24 +443,23 @@ export function WritingView() {
                     </span>
                   </span>
 
-                  <div className="flex items-center gap-0.5">
-                    <Button
+                  <Badge
+                    asChild
+                    variant="purple"
+                    className={cn(showExample && 'ring-2 ring-[#7130FF]/25')}
+                  >
+                    <button
                       type="button"
-                      size="sm"
                       onClick={handleExample}
                       disabled={example.isPending}
-                      className={cn(
-                        'h-8 rounded-md border border-white/80 bg-white/90 px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-white',
-                        'dark:border-white/20 dark:bg-white/15 dark:text-white dark:hover:bg-white/25',
-                        showExample && 'ring-1 ring-white/80 dark:ring-white/25'
-                      )}
+                      className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {example.isPending ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : null}
                       {showExample ? 'Hide example' : 'Generate with AI'}
-                    </Button>
-                  </div>
+                    </button>
+                  </Badge>
                 </div>
               </header>
 

@@ -28,7 +28,12 @@ export function LandingNav() {
           ))}
         </nav>
 
-        <BrandLogo href="/" iconSize={30} className="md:col-start-2 md:justify-self-center" />
+        <BrandLogo
+          href="/"
+          iconSize={30}
+          iconRounded="2.5xl"
+          className="md:col-start-2 md:justify-self-center"
+        />
 
         <div className="flex items-center justify-end gap-2 md:col-start-3">
           <ThemeToggleButton />

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, ClipboardList, Loader2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, ClipboardList, Loader2 } from '@/components/icons';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';

@@ -1,9 +1,8 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from '@/components/icons';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 export function useThemeToggle() {
@@ -39,16 +38,5 @@ export function ThemeToggleButton({ className }: { className?: string }) {
         <Moon className="h-4 w-4" />
       )}
     </button>
-  );
-}
-
-export function ThemeToggleMenuItem() {
-  const { isDark, toggle, mounted } = useThemeToggle();
-
-  return (
-    <DropdownMenuItem onClick={toggle} className="cursor-pointer">
-      {mounted && isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      {mounted && isDark ? 'Light mode' : 'Dark mode'}
-    </DropdownMenuItem>
   );
 }

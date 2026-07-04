@@ -1,8 +1,8 @@
-import type { LucideIcon } from 'lucide-react';
+import type { AppIcon } from '@/components/icons';
 import { inter } from '@/lib/fonts';
 
 type FeatureCardProps = {
-  icon: LucideIcon;
+  icon: AppIcon;
   title: string;
   description: string;
 };

@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react';
-import { BarChart3, BookOpen, Target } from 'lucide-react';
+import type { AppIcon } from '@/components/icons';
+import { BarChart3, BookOpen, Target } from '@/components/icons';
 
 export const LANDING_FEATURES = [
   {
@@ -20,5 +20,5 @@ export const LANDING_FEATURES = [
 ] as const satisfies ReadonlyArray<{
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: AppIcon;
 }>;

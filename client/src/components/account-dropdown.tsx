@@ -8,8 +8,8 @@ import {
   Palette,
   PenLine,
   Sun,
-  type LucideIcon,
-} from 'lucide-react';
+  type AppIcon,
+} from '@/components/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useThemeToggle } from '@/components/theme-toggle';
@@ -60,7 +60,7 @@ function MenuRow({
   trailing,
   destructive = false,
 }: {
-  icon: LucideIcon;
+  icon: AppIcon;
   title: string;
   trailing?: React.ReactNode;
   destructive?: boolean;

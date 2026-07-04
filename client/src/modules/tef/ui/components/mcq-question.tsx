@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react';
+import { Check, X } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { bricolage } from '@/lib/fonts';
 import { cn } from '@/lib/utils';

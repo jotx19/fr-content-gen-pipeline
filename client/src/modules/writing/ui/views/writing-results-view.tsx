@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { ArrowUp, PenLine } from 'lucide-react';
+import { ArrowUp, PenLine } from '@/components/icons';
 import { bricolage } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import { WritingCriteriaList } from '@/modules/writing/ui/components/writing-criteria-list';

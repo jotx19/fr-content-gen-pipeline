@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
-import { BarChart3, BookOpen, Loader2, Target } from 'lucide-react';
+import { BarChart3, BookOpen, Loader2, Target } from '@/components/icons';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { BrandLogo } from '@/components/logo';

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/components/icons';
 import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { BrandLogo } from '@/components/logo';
 import { ThemeToggleButton } from '@/components/theme-toggle';

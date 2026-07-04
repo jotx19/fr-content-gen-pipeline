@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronDown, Copy, Info, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Copy, Info, Loader2, RefreshCw, Trash2 } from '@/components/icons';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

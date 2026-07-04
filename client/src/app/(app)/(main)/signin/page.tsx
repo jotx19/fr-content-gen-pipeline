@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/components/icons';
 import { SignInView } from '@/modules/auth/ui/views/sign-in-view';
 
 export default function SignInPage() {

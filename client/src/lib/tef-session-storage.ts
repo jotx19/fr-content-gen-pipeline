@@ -1,4 +1,5 @@
 const PLACEMENT_KEY = 'fringo-placement-progress';
+const READING_XP_KEY = 'fringo-last-reading-xp';
 
 export type PlacementProgress = {
   questions: { id?: string; question: string; options: string[]; skillTag?: string }[];
@@ -24,4 +25,21 @@ export function savePlacementProgress(data: PlacementProgress) {
 export function clearPlacementProgress() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(PLACEMENT_KEY);
+}
+
+export function loadLastReadingXp(): number | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(READING_XP_KEY);
+    if (raw == null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastReadingXp(xp: number) {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(READING_XP_KEY, String(xp));
 }

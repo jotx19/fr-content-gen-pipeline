@@ -7,15 +7,21 @@ import { cn } from '@/lib/utils';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignIn = pathname === '/signin';
-  const isLesson =
-    pathname.startsWith('/learn/lesson') ||
+  const isLessonScreen = pathname.startsWith('/learn/lesson');
+  const isResultsScreen =
     pathname.startsWith('/learn/results') ||
     pathname.startsWith('/learn/writing/results');
+  const isLesson = isLessonScreen || isResultsScreen;
 
   const isLanding = pathname === '/';
 
   return (
-    <div className={cn('flex flex-col', isSignIn || isLesson ? 'h-dvh' : 'min-h-dvh')}>
+    <div
+      className={cn(
+        'flex flex-col',
+        isSignIn || isLessonScreen ? 'h-dvh' : 'min-h-dvh',
+      )}
+    >
       {!isLesson && !isSignIn && !isLanding && (
         <>
           <Navbar />
@@ -31,7 +37,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           'flex flex-1 flex-col',
           pathname === '/' && 'overflow-y-auto',
           isSignIn && 'h-dvh overflow-hidden',
-          isLesson && 'h-dvh overflow-hidden'
+          isLessonScreen && 'h-dvh overflow-hidden',
+          isResultsScreen && 'min-h-0 overflow-y-auto',
         )}
       >
         {children}

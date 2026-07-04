@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Download, Pause, Volume2 } from 'lucide-react';
+import { BookOpen, Download, Pause, Volume2 } from '@/components/icons';
 
 export function LandingHeroCard() {
   return (
@@ -21,7 +21,7 @@ export function LandingHeroCard() {
           aria-label="Play lesson"
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/90 text-neutral-900"
         >
-          <Pause className="h-3.5 w-3.5" fill="currentColor" />
+          <Pause className="h-3.5 w-3.5" strokeWidth={2} />
         </button>
         <div className="min-w-0 flex-1">
           <div className="h-1 overflow-hidden rounded-full bg-white/20">

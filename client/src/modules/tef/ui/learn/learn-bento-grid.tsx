@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowRight, ChartNoAxesCombined, Loader2, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useSpring,
+  useTransform,
+} from "framer-motion";
+import { ArrowRight, ChartNoAxesCombined, Loader2, Plus } from "@/components/icons";
 import {
   Tooltip,
   TooltipContent,
@@ -10,6 +16,10 @@ import {
 } from "@/components/ui/tooltip";
 import { bricolage, inter } from "@/lib/fonts";
 import { BrandLogo } from "@/components/logo";
+import {
+  loadLastReadingXp,
+  saveLastReadingXp,
+} from "@/lib/tef-session-storage";
 import { cn } from "@/lib/utils";
 
 export type LearnBentoData = {
@@ -37,6 +47,192 @@ type LearnBentoGridProps = {
 const panelBg = "bg-[#FCFCFC] dark:bg-[#1C1C1C]";
 const streakGold = "bg-[#C9A227] dark:bg-[#A8860D]";
 const streakGoldText = "text-[#C9A227] dark:text-[#A8860D]";
+
+const goldenXpDigitClass = cn(
+  bricolage.className,
+  "text-[2rem] font-semibold leading-none tracking-tight text-[#C9A227] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_-1px_0_rgba(0,0,0,0.12)] dark:text-[#A8860D] dark:[text-shadow:0_1px_0_rgba(255,255,255,0.08),0_-1px_0_rgba(0,0,0,0.4)] sm:text-[2.75rem] md:text-[3rem]",
+);
+
+type ExitItem = {
+  id: number;
+  char: string;
+  exitY: number;
+};
+
+let digitAnimId = 0;
+
+function DigitCell({
+  char,
+  isDigit,
+  className,
+  enterStiffness = 170,
+  enterDamping = 10,
+  exitStiffness = 170,
+  exitDamping = 15,
+  direction = "dynamic",
+  enterY = 32,
+  enterBlur = 52,
+  enterScale = 0.7,
+}: {
+  char: string;
+  isDigit: boolean;
+  className?: string;
+  enterStiffness?: number;
+  enterDamping?: number;
+  exitStiffness?: number;
+  exitDamping?: number;
+  direction?: "dynamic" | "up" | "down";
+  enterY?: number;
+  enterBlur?: number;
+  enterScale?: number;
+}) {
+  const [exitQueue, setExitQueue] = useState<ExitItem[]>([]);
+  const prevCharRef = useRef(char);
+  const isFirstRender = useRef(true);
+
+  const springConfig = { stiffness: enterStiffness, damping: enterDamping };
+  const y = useSpring(0, springConfig);
+  const opacity = useSpring(1, springConfig);
+  const scale = useSpring(1, springConfig);
+  const blur = useSpring(0, springConfig);
+  const filter = useTransform(blur, (v) => `blur(${v}px)`);
+
+  useEffect(() => {
+    if (!isDigit) return;
+
+    const prev = prevCharRef.current;
+    prevCharRef.current = char;
+
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (char === prev || !/\d/.test(prev)) return;
+
+    const up =
+      direction === "dynamic" ? Number(char) > Number(prev) : direction === "up";
+
+    const id = digitAnimId++;
+    setExitQueue((q) => {
+      const next = [...q, { id, char: prev, exitY: up ? -enterY : enterY }];
+      return next.length > 3 ? next.slice(-3) : next;
+    });
+
+    y.jump(up ? enterY : -enterY);
+    opacity.jump(0);
+    scale.jump(enterScale);
+    blur.jump(enterBlur);
+
+    y.set(0);
+    opacity.set(1);
+    scale.set(1);
+    blur.set(0);
+  }, [char, isDigit, direction, enterY, enterBlur, enterScale, y, opacity, scale, blur]);
+
+  if (!isDigit) {
+    return <span className={className}>{char}</span>;
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative grid place-items-center [&>*]:col-start-1 [&>*]:row-start-1",
+        className,
+      )}
+    >
+      <AnimatePresence>
+        {exitQueue.map(({ id, char: exitChar, exitY }) => (
+          <motion.span
+            key={id}
+            aria-hidden
+            className={className}
+            initial={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+            animate={{ opacity: 0, scale: 0.7, filter: "blur(10px)", y: exitY }}
+            transition={{
+              type: "spring",
+              stiffness: exitStiffness,
+              damping: exitDamping,
+            }}
+            onAnimationComplete={() =>
+              setExitQueue((q) => q.filter((item) => item.id !== id))
+            }
+          >
+            {exitChar}
+          </motion.span>
+        ))}
+      </AnimatePresence>
+      <motion.span className={className} style={{ opacity, scale, filter, y }}>
+        {char}
+      </motion.span>
+    </div>
+  );
+}
+
+function AnimateDigits({
+  value,
+  gap = 2,
+  className,
+  digitClassName,
+  animationDelay = 80,
+}: {
+  value: string;
+  gap?: number;
+  className?: string;
+  digitClassName?: string;
+  animationDelay?: number;
+}) {
+  const [displayedValue, setDisplayedValue] = useState(value);
+  const pendingQueue = useRef<string[]>([]);
+  const isAnimating = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const displayedRef = useRef(value);
+
+  const processQueue = () => {
+    if (pendingQueue.current.length === 0) {
+      isAnimating.current = false;
+      return;
+    }
+
+    isAnimating.current = true;
+    const next = pendingQueue.current.shift()!;
+    displayedRef.current = next;
+    setDisplayedValue(next);
+
+    timerRef.current = setTimeout(processQueue, animationDelay);
+  };
+
+  useEffect(() => {
+    if (value === displayedRef.current) return;
+
+    pendingQueue.current.push(value);
+
+    if (!isAnimating.current) {
+      processQueue();
+    }
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const chars = displayedValue.split("");
+
+  return (
+    <div className={cn("flex items-center tabular-nums", className)} style={{ gap }}>
+      {chars.map((char, i) => (
+        <DigitCell
+          key={i}
+          char={char}
+          isDigit={/\d/.test(char)}
+          className={digitClassName}
+        />
+      ))}
+    </div>
+  );
+}
 
 function HeroArrowIcon() {
   return (
@@ -74,14 +270,34 @@ function EmbossedStat({
 }
 
 function GoldenXpStat({ xp }: { xp: number }) {
+  const [displayXp, setDisplayXp] = useState(() => loadLastReadingXp() ?? xp);
+
+  useEffect(() => {
+    const previous = loadLastReadingXp() ?? xp;
+    setDisplayXp(previous);
+
+    if (previous === xp) {
+      saveLastReadingXp(xp);
+      return;
+    }
+
+    const timer = setTimeout(() => setDisplayXp(xp), 650);
+    return () => clearTimeout(timer);
+  }, [xp]);
+
+  useEffect(() => {
+    if (displayXp !== xp) return;
+    saveLastReadingXp(xp);
+  }, [displayXp, xp]);
+
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-0.5">
-        <p
-          className={`${bricolage.className} text-[2rem] font-semibold leading-none tracking-tight text-[#C9A227] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_-1px_0_rgba(0,0,0,0.12)] dark:text-[#A8860D] dark:[text-shadow:0_1px_0_rgba(255,255,255,0.08),0_-1px_0_rgba(0,0,0,0.4)] sm:text-[2.75rem] md:text-[3rem]`}
-        >
-          {xp}
-        </p>
+        <AnimateDigits
+          value={String(displayXp)}
+          digitClassName={goldenXpDigitClass}
+          animationDelay={100}
+        />
         <Plus
           className={cn("mb-1 h-5 w-5", streakGoldText)}
           strokeWidth={2.25}

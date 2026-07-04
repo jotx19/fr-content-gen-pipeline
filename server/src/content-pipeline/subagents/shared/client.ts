@@ -63,6 +63,7 @@ export async function callStructuredSubagent({
   guardrailsKind,
   maxAttempts = 2,
   models: modelsOverride,
+  maxTokens = config.tefReadingLlmMaxTokens,
 }) {
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not configured');
@@ -94,7 +95,7 @@ Respond with ONLY valid JSON matching the requested schema. No markdown fences, 
           stream: false,
           model,
           skipThrottle: true,
-          maxTokens: config.tefLlmMaxTokens,
+          maxTokens,
         });
       } catch (err) {
         lastError = err.message;

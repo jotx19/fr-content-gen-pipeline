@@ -35,11 +35,20 @@ export function LearnHomeView() {
 
   useEffect(() => {
     if (profile?.level && !profile.practiceReady) prefetch.mutate();
-  }, [profile?.level, profile?.practiceReady]);
+  }, [profile?.level, profile?.practiceReady, prefetch]);
 
   useEffect(() => {
     if (!profile?.level || profile.practiceReady) return;
-    const timer = setInterval(() => refetch(), 3000);
+    let pollCount = 0;
+    const maxPolls = 30;
+    const timer = setInterval(() => {
+      pollCount += 1;
+      if (pollCount >= maxPolls) {
+        clearInterval(timer);
+        return;
+      }
+      refetch();
+    }, 4000);
     return () => clearInterval(timer);
   }, [profile?.level, profile?.practiceReady, refetch]);
 

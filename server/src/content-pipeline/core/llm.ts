@@ -55,8 +55,16 @@ function isRetryableStatus(status) {
 }
 
 function parseAffordableTokens(detail) {
-  const match = String(detail).match(/can only afford (\d+)/i);
+  const match = String(detail).match(/(?:can )?only afford (\d+)/i);
   return match ? Number(match[1]) : null;
+}
+
+function creditRetryMaxTokens(currentTokens, detail) {
+  const affordable = parseAffordableTokens(detail);
+  if (affordable != null) {
+    return Math.max(128, Math.min(currentTokens - 1, affordable - 32));
+  }
+  return Math.max(256, Math.floor(currentTokens * 0.75));
 }
 
 function isInsufficientCreditsError(status, detail) {
@@ -69,7 +77,7 @@ function finalErrorMessage(status, detail) {
   if (status === 402 || isInsufficientCreditsError(status, detail)) {
     return (
       'OpenRouter credits are too low for this request. ' +
-      'Add credits at openrouter.ai/settings/credits or lower TEF_LLM_MAX_TOKENS in .env. ' +
+      'Add credits at openrouter.ai/settings/credits or lower TEF_READING_LLM_MAX_TOKENS / TEF_WRITING_LLM_MAX_TOKENS in .env. ' +
       `Details: ${detail}`
     );
   }
@@ -211,10 +219,7 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
         lastDetail = parseApiError(errText);
 
         if (tokens && isInsufficientCreditsError(res.status, lastDetail)) {
-          const affordable = parseAffordableTokens(lastDetail);
-          const nextTokens = affordable
-            ? Math.max(512, affordable - 64)
-            : Math.max(512, Math.floor(tokens * 0.75));
+          const nextTokens = creditRetryMaxTokens(tokens, lastDetail);
 
           if (nextTokens < tokens) {
             console.warn(

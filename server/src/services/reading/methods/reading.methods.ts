@@ -12,6 +12,7 @@ import { config } from '../../../config.js';
 import { getLatestEvaluation, getEvaluationHistory } from '../../../app/services/userService.js';
 import { READING_MODULE } from '../schemas/reading.mongo.js';
 import type { TefModule } from '../../../app/db/schemas/tefEvaluation.schema.js';
+import { pickReadingPracticeTemplate } from '../prompts/readingPracticeTemplates.js';
 
 const TOPIC_BY_SKILL: Record<string, string> = {
   grammaire: 'formal French grammar',
@@ -135,17 +136,42 @@ async function persistEvaluation(
   return evalDoc;
 }
 
+function shouldUseReadingTemplatesOnly() {
+  return process.env.TEF_READING_USE_TEMPLATES === 'true';
+}
+
 async function generatePracticeBatch(userId: string, { level, weakAreas }: { level: string; weakAreas: string[] }) {
   const topic = pickTopic(weakAreas);
-  const { questions } = await runGenerationGraph({
-    userId,
-    action: 'practice',
-    level,
-    weakAreas,
-    topic,
-    subagentName: 'mcqGenerator',
-    subagentInput: { level, weakAreas, topic, count: config.tefPracticeCount },
-  });
+  const count = config.tefPracticeCount;
+  let questions;
+
+  if (shouldUseReadingTemplatesOnly()) {
+    questions = pickReadingPracticeTemplate(`${userId}:${level}:${topic}`, count);
+    console.log(`[reading] practice batch from templates (${questions.length} q) for ${userId.slice(0, 8)}`);
+  } else {
+    try {
+      const { questions: generated } = await runGenerationGraph({
+        userId,
+        action: 'practice',
+        level,
+        weakAreas,
+        topic,
+        subagentName: 'mcqGenerator',
+        subagentInput: { level, weakAreas, topic, count },
+      });
+      questions = generated;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[reading] practice LLM failed (${message}) — using template fallback`
+      );
+      questions = pickReadingPracticeTemplate(`${userId}:${level}:${topic}`, count);
+    }
+  }
+
+  if (!questions?.length) {
+    throw new Error('Could not generate practice questions');
+  }
 
   const pendingPractice = { questions, topic, createdAt: new Date() };
   await TefProfile.findOneAndUpdate(

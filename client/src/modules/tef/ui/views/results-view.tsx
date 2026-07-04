@@ -15,6 +15,8 @@ import { useLessonStore } from '@/store/lessonStore';
 import { Badge } from '@/components/ui/badge';
 
 const panelClass = 'rounded-2xl bg-[#FCFCFC] dark:bg-[#1C1C1C]';
+const mutedTextClass = 'text-black/50 dark:text-white/50';
+const subtleIconClass = 'text-black/45 dark:text-white/45';
 
 const springIn = {
   type: 'spring' as const,
@@ -90,7 +92,7 @@ function SkillBreakdownRow({
       <div className="flex items-center justify-between gap-3">
         <span className={`${inter.className} text-sm font-medium capitalize`}>{skillTag}</span>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-xs tabular-nums text-muted-foreground">
+          <span className={cn('text-xs tabular-nums', mutedTextClass)}>
             {correct}/{total}
           </span>
           <span
@@ -184,7 +186,7 @@ function AnimatedXpEarned({
                 'flex min-w-0 flex-1 items-center gap-2.5 text-sm',
                 adjustment === 'levelUp' && 'text-primary',
                 adjustment === 'levelDown' && 'text-amber-600 dark:text-amber-500',
-                adjustment === 'same' && 'text-muted-foreground',
+                adjustment === 'same' && mutedTextClass,
               )}
               initial={{ opacity: 0, y: 12, filter: 'blur(6px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -216,7 +218,7 @@ function AnimatedXpEarned({
                       transition={{ delay: 0.58 }}
                       aria-hidden
                     >
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.25} />
+                      <ArrowRight className={cn('h-3.5 w-3.5', subtleIconClass)} strokeWidth={2.25} />
                     </motion.span>
                     <motion.span
                       key={level}
@@ -246,6 +248,7 @@ export function ResultsView() {
   const diagnostic = useLessonStore((s) => s.lastDiagnostic);
   const { data: profile } = useTefProfileQuery();
   const [skillsOpen, setSkillsOpen] = useState(true);
+  const [focusOpen, setFocusOpen] = useState(false);
 
   useEffect(() => {
     if (!diagnostic) router.replace('/learn');
@@ -274,7 +277,7 @@ export function ResultsView() {
                 className={`${bricolage.className} pointer-events-none absolute inset-x-0 top-[14%] z-10 text-5xl font-semibold tabular-nums sm:text-6xl`}
               >
                 {pct}
-                <span className="text-sm text-muted-foreground">%</span>
+                <span className={cn('text-sm', mutedTextClass)}>%</span>
               </p>
             )}
             <SuccessLottie className="absolute inset-0" />
@@ -299,18 +302,18 @@ export function ResultsView() {
               >
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-black/5 dark:bg-white/8">
-                    <ChartBarIncreasing className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+                    <ChartBarIncreasing className={cn('h-4 w-4', subtleIconClass)} strokeWidth={2} />
                   </span>
                   <div>
                     <h2 className={`${bricolage.className} text-base font-semibold`}>
                       Skills breakdown
                     </h2>
-                    <p className="text-xs text-muted-foreground">
+                    <p className={cn('text-xs', mutedTextClass)}>
                       {skillBreakdown.length} skill{skillBreakdown.length === 1 ? '' : 's'} assessed
                     </p>
                   </div>
                 </div>
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={cn('flex items-center gap-1.5 text-xs', mutedTextClass)}>
                   {skillsOpen ? 'Hide' : 'Show'}
                   <ChevronDown
                     className={cn(
@@ -340,24 +343,49 @@ export function ResultsView() {
           )}
 
           {weakAreas.length > 0 && (
-            <section className="space-y-3 border-t border-black/8 pt-5 dark:border-white/10">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-black/5 dark:bg-white/8">
-                  <Award className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+            <section className="border-t border-black/8 pt-5 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setFocusOpen((open) => !open)}
+                aria-expanded={focusOpen}
+                className="flex w-full items-center justify-between gap-3 rounded-lg py-1 text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-black/5 dark:bg-white/8">
+                    <Award className={cn('h-4 w-4', subtleIconClass)} strokeWidth={2} />
+                  </span>
+                  <div>
+                    <h2 className={`${bricolage.className} text-base font-semibold`}>Focus next</h2>
+                    <p className={cn('text-xs', mutedTextClass)}>
+                      {weakAreas.length} area{weakAreas.length === 1 ? '' : 's'} to improve
+                    </p>
+                  </div>
+                </div>
+                <span className={cn('flex items-center gap-1.5 text-xs', mutedTextClass)}>
+                  {focusOpen ? 'Hide' : 'Show'}
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 shrink-0 transition-transform duration-200',
+                      focusOpen && 'rotate-180',
+                    )}
+                    strokeWidth={2.25}
+                  />
                 </span>
-                <h2 className={`${bricolage.className} text-base font-semibold`}>Focus next</h2>
-              </div>
-              <div className="flex flex-wrap gap-2 p-3">
-                {weakAreas.map((tag) => (
-                  <Badge
-                    variant="secondary"
-                    key={tag}
-                    className="text-sm capitalize border border-dashed border-black/6 dark:border-white/80 bg-transparent"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
+              </button>
+
+              {focusOpen && (
+                <div className="mt-4 flex flex-wrap gap-2 p-2">
+                  {weakAreas.map((tag) => (
+                    <Badge
+                      variant="outline"
+                      key={tag}
+                      className="border border-dashed border-black/10 bg-black/[0.02] text-sm capitalize text-black/70 dark:border-white/15 dark:bg-white/[0.04] dark:text-white/70"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </section>
           )}
         </div>

@@ -22,10 +22,15 @@ import {
 } from '../scoring/fillBlankScore.js';
 import {
   ensureFillBlankPrompt,
-  exampleAnswersFromPrompt,
 } from '../normalizeFillBlankPrompt.js';
+import { buildStaticWritingExample } from '../prompts/writingExampleTemplates.js';
+import {
+  scoreFullWritingSubmission,
+  scoreSentenceSubmission,
+} from '../scoring/writingOfflineEvaluate.js';
 import {
   adjustWritingLevelFromXp,
+  normalizeCefrLevel,
   seedWritingLevel,
   taskModeForWritingLevel,
   writingXpGain,
@@ -68,9 +73,26 @@ function stripPrivatePromptFields(prompt: Record<string, unknown>) {
 }
 
 function resolveWritingLevel(doc: Record<string, unknown>) {
-  const readingLevel = doc.level as string | null;
-  const writingLevel = (doc.writingLevel as string | null) ?? seedWritingLevel(readingLevel);
+  const readingLevel = normalizeCefrLevel(doc.level as string | null);
+  const writingLevel =
+    normalizeCefrLevel(doc.writingLevel as string | null) ?? seedWritingLevel(readingLevel);
   return { readingLevel, writingLevel };
+}
+
+function isStalePendingWritingPrompt(
+  storedPrompt: Record<string, unknown> | undefined,
+  writingLevel: string
+) {
+  if (!storedPrompt) return false;
+
+  const expectedTaskMode = taskModeForWritingLevel(writingLevel);
+  const storedTaskMode = storedPrompt.taskMode ? String(storedPrompt.taskMode) : '';
+  if (storedTaskMode && storedTaskMode !== expectedTaskMode) return true;
+
+  const promptLevel = normalizeCefrLevel(storedPrompt.level as string | null);
+  if (promptLevel && promptLevel !== writingLevel) return true;
+
+  return false;
 }
 
 async function getLastWritingSection(userId: string) {
@@ -85,6 +107,14 @@ function defaultTopicForSection(section: 'A' | 'B') {
   return section === 'A'
     ? 'daily life situation, short narrative, or brief message'
     : 'social or professional topic requiring a structured opinion';
+}
+
+function shouldUseWritingTemplatesOnly() {
+  return process.env.TEF_WRITING_USE_TEMPLATES === 'true';
+}
+
+function shouldUseLlmWritingExamples() {
+  return process.env.TEF_WRITING_USE_LLM_EXAMPLES === 'true';
 }
 
 function composeSentenceSubmission(
@@ -244,8 +274,9 @@ export async function getWritingPrompt(
     pending?.prompt &&
     !pending.prompt.fullParagraph &&
     !pending.prompt.blankTargets;
+  const staleForLevel = isStalePendingWritingPrompt(pending?.prompt, writingLevel);
 
-  if (pending?.prompt && !opts.refresh && !isLegacyFillBlank) {
+  if (pending?.prompt && !opts.refresh && !isLegacyFillBlank && !staleForLevel) {
     let storedPrompt = pending.prompt;
     if (storedPrompt.taskMode === 'fill_blanks' || taskMode === 'fill_blanks') {
       storedPrompt = ensureFillBlankPrompt(storedPrompt);
@@ -349,43 +380,57 @@ export async function submitWriting(
     submission = composeSentenceSubmission(sentencePrompts, body.sentences ?? {});
     wordCount = countWords(submission);
 
-    const llmEvaluation = await runContentPipeline({
-      service: PIPELINE_SERVICES.WRITING_EVALUATE,
-      userId,
-      input: {
-        prompt: {
-          ...prompt,
-          taskMode: 'sentences',
-          minWords: 4,
-          maxWords: 18,
+    try {
+      const llmEvaluation = await runContentPipeline({
+        service: PIPELINE_SERVICES.WRITING_EVALUATE,
+        userId,
+        input: {
+          prompt: {
+            ...prompt,
+            taskMode: 'sentences',
+            minWords: 4,
+            maxWords: 18,
+          },
+          submission,
+          wordCount,
+          level: writingLevel,
         },
-        submission,
-        wordCount,
-        level: writingLevel,
-      },
-    });
-    evaluation = llmEvaluation as Record<string, unknown>;
+      });
+      evaluation = llmEvaluation as Record<string, unknown>;
+    } catch (err) {
+      console.warn(
+        `[writing] sentence evaluation LLM failed (${err instanceof Error ? err.message : err}) — using offline scoring`
+      );
+      evaluation = scoreSentenceSubmission(sentencePrompts, body.sentences ?? {});
+    }
   } else {
     submission = String(body.text ?? '').trim();
     if (!submission) throw new Error('Write your answer before submitting');
     wordCount = countWords(submission);
 
-    const llmEvaluation = await runContentPipeline({
-      service: PIPELINE_SERVICES.WRITING_EVALUATE,
-      userId,
-      input: {
-        prompt,
-        submission,
+    try {
+      const llmEvaluation = await runContentPipeline({
+        service: PIPELINE_SERVICES.WRITING_EVALUATE,
+        userId,
+        input: {
+          prompt,
+          submission,
+          wordCount,
+          level: writingLevel,
+        },
+      });
+      evaluation = applyWordCountToEvaluation(
+        llmEvaluation,
         wordCount,
-        level: writingLevel,
-      },
-    });
-    evaluation = applyWordCountToEvaluation(
-      llmEvaluation,
-      wordCount,
-      prompt,
-      writingLevel
-    ) as Record<string, unknown>;
+        prompt,
+        writingLevel
+      ) as Record<string, unknown>;
+    } catch (err) {
+      console.warn(
+        `[writing] full evaluation LLM failed (${err instanceof Error ? err.message : err}) — using offline scoring`
+      );
+      evaluation = scoreFullWritingSubmission(submission, wordCount, prompt, writingLevel);
+    }
   }
 
   const criteria = evaluation.criteria as Record<string, unknown>[];
@@ -496,42 +541,41 @@ export async function getWritingExample(userId: string) {
     throw new Error('No active writing prompt — request a prompt first');
   }
 
-  const { writingLevel } = resolveWritingLevel(doc ?? {});
-  const taskMode = String(prompt.taskMode ?? taskModeForWritingLevel(writingLevel));
+  const staticExample = buildStaticWritingExample(prompt);
 
-  if (taskMode === 'fill_blanks') {
-    const fullPrompt = ensureFillBlankPrompt(prompt);
-    const blankAnswers = exampleAnswersFromPrompt(fullPrompt);
-    const exampleAnswer = composeFillBlankSubmission(
-      (fullPrompt.paragraphParts as { type: string; value?: string; id?: string }[]) ?? [],
-      blankAnswers
-    );
-
+  if (shouldUseWritingTemplatesOnly() || !shouldUseLlmWritingExamples()) {
     return {
-      promptId: fullPrompt.id,
-      exampleAnswer,
-      blankAnswers,
-      wordCount: Object.values(blankAnswers).join(' ').trim().split(/\s+/).filter(Boolean).length,
-      notes:
-        'Each blank uses a common A1 word form. Copy the pattern: short answers, correct verb tense, simple politeness.',
+      promptId: prompt.id,
+      ...staticExample,
     };
   }
 
-  const result = await runContentPipeline({
-    service: PIPELINE_SERVICES.WRITING_EXAMPLE_ANSWER,
-    userId,
-    input: {
-      prompt,
-      level: writingLevel,
-    },
-  });
+  try {
+    const { writingLevel } = resolveWritingLevel(doc ?? {});
+    const result = await runContentPipeline({
+      service: PIPELINE_SERVICES.WRITING_EXAMPLE_ANSWER,
+      userId,
+      input: {
+        prompt,
+        level: writingLevel,
+      },
+    });
 
-  return {
-    promptId: prompt.id,
-    exampleAnswer: result.exampleAnswer,
-    wordCount: result.wordCount,
-    notes: result.notes ?? null,
-  };
+    return {
+      promptId: prompt.id,
+      exampleAnswer: result.exampleAnswer,
+      wordCount: result.wordCount,
+      notes: result.notes ?? null,
+    };
+  } catch (err) {
+    console.warn(
+      `[writing] example LLM failed (${err instanceof Error ? err.message : err}) — using template fallback`
+    );
+    return {
+      promptId: prompt.id,
+      ...staticExample,
+    };
+  }
 }
 
 export async function getWritingEvaluations(userId: string, limit = 20) {

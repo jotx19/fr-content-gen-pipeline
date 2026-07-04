@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
 import { getTefModel } from '../../core/llm.js';
+import { config } from '../../../config.js';
 import { applyWordCountToEvaluation } from '../../../services/writing/scoring/writingWordCount.js';
 import {
   normalizeWritingEvaluationOutput,
@@ -55,6 +56,7 @@ export default {
       normalize: normalizeWritingEvaluationOutput,
       maxAttempts: 3,
       models: [getTefModel()],
+      maxTokens: config.tefWritingLlmMaxTokens,
     });
 
     return applyWordCountToEvaluation(

@@ -99,6 +99,7 @@ export type WritingExampleResponse = {
   wordCount: number;
   notes: string | null;
   blankAnswers?: Record<string, string>;
+  sentenceAnswers?: Record<string, string>;
 };
 
 export type WritingSubmitPayload = {

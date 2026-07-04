@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
 import { getTefModel } from '../../core/llm.js';
+import { config } from '../../../config.js';
 import { writingPromptOutputSchema } from './writing.schemas.js';
 import {
   applySectionWordLimits,
@@ -12,8 +13,13 @@ import { taskModeForWritingLevel } from '../../../services/writing/scoring/writi
 import { ensureFillBlankPrompt } from '../../../services/writing/normalizeFillBlankPrompt.js';
 import {
   pickFillBlankTemplate,
+  pickFullWritingTemplate,
   pickSentenceTemplate,
 } from '../../../services/writing/prompts/writingPromptTemplates.js';
+
+function shouldUseWritingTemplatesOnly() {
+  return process.env.TEF_WRITING_USE_TEMPLATES === 'true';
+}
 
 function buildFullPromptSystem(sectionKey) {
   const section = tefWritingSectionConfig(sectionKey);
@@ -50,21 +56,37 @@ export default {
     const config = tefWritingSectionConfig(section);
     const topic = payload.topic ?? 'daily life in Canada';
 
-    const data = await callStructuredSubagent({
-      systemPrompt: buildFullPromptSystem(section),
-      userPayload: { level, section, topic, minWords: config.minWords, maxWords: config.maxWords },
-      schema: writingPromptOutputSchema,
-      maxAttempts: 1,
-      models: [getTefModel()],
-    });
+    if (shouldUseWritingTemplatesOnly()) {
+      return {
+        prompt: pickFullWritingTemplate(section, level, seed, previousPromptId),
+      };
+    }
 
-    const rawPrompt = {
-      ...data.prompt,
-      level,
-      taskMode: 'full',
-      examSection: isTefWritingSection(data.prompt?.examSection) ? data.prompt.examSection : section,
-    };
+    try {
+      const data = await callStructuredSubagent({
+        systemPrompt: buildFullPromptSystem(section),
+        userPayload: { level, section, topic, minWords: config.minWords, maxWords: config.maxWords },
+        schema: writingPromptOutputSchema,
+        maxAttempts: 1,
+        models: [getTefModel()],
+        maxTokens: config.tefWritingLlmMaxTokens,
+      });
 
-    return { prompt: applySectionWordLimits(rawPrompt, rawPrompt.examSection) };
+      const rawPrompt = {
+        ...data.prompt,
+        level,
+        taskMode: 'full',
+        examSection: isTefWritingSection(data.prompt?.examSection) ? data.prompt.examSection : section,
+      };
+
+      return { prompt: applySectionWordLimits(rawPrompt, rawPrompt.examSection) };
+    } catch (err) {
+      console.warn(
+        `[writingPrompt] LLM unavailable (${err instanceof Error ? err.message : err}) — using template fallback`
+      );
+      return {
+        prompt: pickFullWritingTemplate(section, level, seed, previousPromptId),
+      };
+    }
   },
 };

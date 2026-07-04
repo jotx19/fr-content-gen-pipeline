@@ -14,6 +14,8 @@ describe('writingXp', () => {
     assert.equal(taskModeForWritingLevel('A1'), 'fill_blanks');
     assert.equal(taskModeForWritingLevel('A2'), 'sentences');
     assert.equal(taskModeForWritingLevel('B1'), 'full');
+    assert.equal(taskModeForWritingLevel('B2'), 'full');
+    assert.equal(taskModeForWritingLevel('b2'), 'full');
   });
 
   it('levels up writing from XP thresholds', () => {

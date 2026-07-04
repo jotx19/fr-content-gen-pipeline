@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
+import { config } from '../../../config.js';
 import { writingExampleOutputSchema } from './writing.schemas.js';
 
 const EXAMPLE_SYSTEM = `Write a model answer for a TEF Canada expression écrite prompt.
@@ -28,6 +29,7 @@ export default {
       },
       schema: writingExampleOutputSchema,
       maxAttempts: 2,
+      maxTokens: config.tefWritingLlmMaxTokens,
     });
   },
 };

@@ -96,6 +96,20 @@ function ToolbarIconButton({
 
 const writingSections: TefWritingSectionKey[] = ['A', 'B'];
 
+const situationBoxClass =
+  'rounded-xl bg-white/70 px-3 py-3 text-sm leading-relaxed text-foreground/55 dark:bg-white/10';
+
+function WritingSituationBlock({ text }: { text: string }) {
+  return (
+    <div className={situationBoxClass}>
+      <p className="text-xs font-medium uppercase tracking-wide text-foreground/50 dark:text-white/50">
+        Situation
+      </p>
+      <p className="mt-1.5 text-foreground">{text}</p>
+    </div>
+  );
+}
+
 function countWords(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -146,7 +160,7 @@ export function WritingView() {
     return countWords(text);
   }, [text, showExample, exampleTypedText]);
   const prompt = promptData?.prompt;
-  const taskMode = prompt?.taskMode ?? profile?.taskMode ?? 'full';
+  const taskMode = profile?.taskMode ?? prompt?.taskMode ?? 'full';
 
   useEffect(() => {
     if (!prompt?.id) return;
@@ -228,6 +242,7 @@ export function WritingView() {
       setExampleTypedText('');
       setExampleTypingDone(false);
       if (taskMode === 'fill_blanks') setBlankAnswers({});
+      if (taskMode === 'sentences') setSentenceAnswers({});
       return;
     }
 
@@ -237,7 +252,7 @@ export function WritingView() {
     setExampleSession((n) => n + 1);
 
     const showExampleNotes = (notes: string | null | undefined) => {
-      if (taskMode === 'fill_blanks' && notes?.trim()) {
+      if (notes?.trim()) {
         toast.message(notes.trim(), { duration: 6000 });
       }
     };
@@ -248,11 +263,25 @@ export function WritingView() {
       return;
     }
 
+    if (exampleData?.sentenceAnswers && Object.keys(exampleData.sentenceAnswers).length > 0) {
+      setSentenceAnswers(exampleData.sentenceAnswers);
+      showExampleNotes(exampleData.notes);
+      return;
+    }
+
     try {
       const data = await example.mutateAsync();
       setExampleData(data);
       if (data.blankAnswers && Object.keys(data.blankAnswers).length > 0) {
         setBlankAnswers(data.blankAnswers);
+      }
+      if (data.sentenceAnswers && Object.keys(data.sentenceAnswers).length > 0) {
+        setSentenceAnswers(data.sentenceAnswers);
+      }
+      if (taskMode === 'full' && data.exampleAnswer) {
+        setExampleTypedText('');
+        setExampleTypingDone(false);
+        setExampleSession((n) => n + 1);
       }
       showExampleNotes(data.notes);
     } catch (err) {
@@ -347,7 +376,7 @@ export function WritingView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-3 sm:px-6">
         {promptLoading ? (
           <div className="space-y-4">
             <Skeleton className={cn('h-24 w-full rounded-2xl', surfaceClass)} />
@@ -362,76 +391,75 @@ export function WritingView() {
           </div>
         ) : (
           <>
-            <div className="mb-4 flex items-center gap-1.5">
-              {taskMode === 'full' ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      disabled={questionLoading}
-                      className="group inline-flex items-center gap-1.5 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 data-[state=open]:[&_svg]:rotate-180"
-                      aria-label="Switch writing section"
-                    >
-                      <h2 className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}>
-                        {displaySectionLabel}
-                      </h2>
-                      <ChevronDown className="h-4 w-4 shrink-0 text-foreground/55 transition-transform duration-200" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="min-w-[8.5rem] p-1">
-                    {writingSections.map((key) => (
-                      <DropdownMenuItem
-                        key={key}
-                        disabled={questionLoading}
-                        onClick={() => {
-                          if (key !== currentSection) handleNewPrompt(key);
-                        }}
-                        className="cursor-pointer px-3 py-2 text-sm font-medium"
-                      >
-                        {TEF_WRITING_SECTIONS[key].label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <h2 className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}>
-                  {taskMode === 'fill_blanks' ? 'Fill in the blanks' : 'Write sentences'}
-                </h2>
-              )}
-
-              {taskMode === 'full' && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-foreground/55 transition-colors hover:text-foreground"
-                    aria-label="Section information"
-                  >
-                    <Info className="h-3.5 w-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  align="start"
-                  className="max-w-[260px] text-left text-xs leading-relaxed"
-                >
-                  <p>{sectionMeta?.description}</p>
-                  <p className="mt-1.5 text-background/75">
-                    {sectionMeta?.label ?? 'Section A'}{' '}
-                    <span className="text-background/50">|</span> {prompt.minWords}–{prompt.maxWords}{' '}
-                    words
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-              )}
-            </div>
-
             {/* Header + question — full navbar width */}
             <div className={cn('w-full overflow-hidden rounded-2xl', surfaceClass)}>
-              <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 py-4">
-                <h1 className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}>
-                  Writing
-                </h1>
+              <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 py-3">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  {taskMode === 'full' ? (
+                    <>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={questionLoading}
+                            className="group inline-flex items-center gap-1.5 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 data-[state=open]:[&_svg]:rotate-180"
+                            aria-label="Switch writing section"
+                          >
+                            <h1
+                              className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}
+                            >
+                              {displaySectionLabel}
+                            </h1>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-foreground/55 transition-transform duration-200" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="min-w-[8.5rem] p-1">
+                          {writingSections.map((key) => (
+                            <DropdownMenuItem
+                              key={key}
+                              disabled={questionLoading}
+                              onClick={() => {
+                                if (key !== currentSection) handleNewPrompt(key);
+                              }}
+                              className="cursor-pointer px-3 py-2 text-sm font-medium"
+                            >
+                              {TEF_WRITING_SECTIONS[key].label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-foreground/55 transition-colors hover:text-foreground"
+                            aria-label="Section information"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          align="start"
+                          className="max-w-[260px] text-left text-xs leading-relaxed"
+                        >
+                          <p>{sectionMeta?.description}</p>
+                          <p className="mt-1.5 text-background/75">
+                            {sectionMeta?.label ?? 'Section A'}{' '}
+                            <span className="text-background/50">|</span> {prompt.minWords}–{prompt.maxWords}{' '}
+                            words
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </>
+                  ) : (
+                    <h1
+                      className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}
+                    >
+                      {taskMode === 'fill_blanks' ? 'Fill blanks' : 'Write sentences'}
+                    </h1>
+                  )}
+                </div>
 
                 <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                   <span className="inline-flex items-center gap-1.5 rounded-md bg-white/50 px-2 py-1 text-[11px] tabular-nums text-foreground/45 backdrop-blur-sm dark:bg-white/[0.06] dark:text-white/45">
@@ -500,22 +528,9 @@ export function WritingView() {
                   </button>
 
                   {questionOpen && (
-                    <div className="mt-3 space-y-3">
+                    <div className="space-y-2">
                       <p className="text-sm leading-relaxed text-foreground/55">{prompt.instructions}</p>
-                      {taskMode === 'fill_blanks' && prompt.prompt && (
-                        <div className="rounded-xl bg-white/70 px-4 py-3 text-sm leading-relaxed text-foreground/55 dark:bg-white/10">
-                          <p className="text-xs font-medium uppercase tracking-wide text-foreground/50 dark:text-white/50">
-                            Situation
-                          </p>
-                          <p className="mt-1.5 text-foreground">{prompt.prompt}</p>
-                        </div>
-                      )}
-                      {taskMode === 'full' && (
-                        <p className="text-sm leading-relaxed text-foreground">{prompt.prompt}</p>
-                      )}
-                      {taskMode === 'sentences' && prompt.prompt && (
-                        <p className="text-sm leading-relaxed text-foreground">{prompt.prompt}</p>
-                      )}
+                      {prompt.prompt && <WritingSituationBlock text={prompt.prompt} />}
                     </div>
                   )}
                   </>

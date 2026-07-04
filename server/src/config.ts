@@ -9,7 +9,20 @@ export const config = {
   appName: process.env.APP_NAME || 'TEF Canada Coach',
   tefPlacementCount: Number(process.env.TEF_PLACEMENT_COUNT) || 5,
   tefPracticeCount: Number(process.env.TEF_PRACTICE_COUNT) || 3,
-  tefLlmMaxTokens: Number(process.env.TEF_LLM_MAX_TOKENS) || 1200,
+  /** MCQ batches need more output tokens than short writing eval JSON. */
+  tefReadingLlmMaxTokens:
+    Number(process.env.TEF_READING_LLM_MAX_TOKENS) ||
+    Number(process.env.TEF_LLM_MAX_TOKENS) ||
+    1200,
+  tefWritingLlmMaxTokens:
+    Number(process.env.TEF_WRITING_LLM_MAX_TOKENS) ||
+    Number(process.env.TEF_LLM_MAX_TOKENS) ||
+    800,
+  /** @deprecated use tefReadingLlmMaxTokens / tefWritingLlmMaxTokens */
+  tefLlmMaxTokens:
+    Number(process.env.TEF_LLM_MAX_TOKENS) ||
+    Number(process.env.TEF_READING_LLM_MAX_TOKENS) ||
+    1200,
   useEvaluator: process.env.TEF_USE_EVALUATOR === 'true',
   useWebsearch: process.env.TEF_USE_WEBSEARCH !== 'false',
   authSecret: process.env.AUTH_SECRET?.trim() || '',

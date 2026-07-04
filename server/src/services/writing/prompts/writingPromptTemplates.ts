@@ -1,6 +1,11 @@
 // @ts-nocheck
 import { createHash } from 'crypto';
 import { applyFullParagraphPrompt } from '../fillBlankFromParagraph.js';
+import {
+  applySectionWordLimits,
+  tefWritingSectionConfig,
+  type TefWritingSectionKey,
+} from '../../../content-pipeline/subagents/writing/tefWritingSections.js';
 
 function templateId(prefix: string, index: number) {
   return `${prefix}-${index + 1}`;
@@ -114,6 +119,80 @@ export const A2_SENTENCE_TEMPLATES = [
   },
 ];
 
+/** B1+ Section A — no LLM required (works when OpenRouter credits are low). */
+export const SECTION_A_FULL_TEMPLATES = [
+  {
+    id: templateId('sec-a', 0),
+    title: 'Invitation à une fête',
+    instructions:
+      'Rédigez un message de réponse à cette invitation. Confirmez votre présence et posez une question pratique (80–120 mots).',
+    prompt:
+      'Votre amie Clara vous invite à fêter son anniversaire samedi prochain à 19 h chez elle. Vous acceptez avec plaisir et souhaitez savoir ce que vous pouvez apporter.',
+    taskType: 'message',
+    register: 'neutre',
+    topic: 'birthday invitation',
+  },
+  {
+    id: templateId('sec-a', 1),
+    title: 'Continuer une histoire',
+    instructions:
+      'Continuez ce récit en décrivant ce qui se passe ensuite et ce que le personnage ressent (80–120 mots).',
+    prompt:
+      'Marc sort de la gare et découvre que son téléphone n\'a plus de batterie. Il doit retrouver son ami dans un quartier qu\'il ne connaît pas.',
+    taskType: 'letter',
+    register: 'neutre',
+    topic: 'story continuation',
+  },
+  {
+    id: templateId('sec-a', 2),
+    title: 'Réaction à une annonce',
+    instructions:
+      'Écrivez un court courriel pour obtenir des renseignements sur cette annonce (80–120 mots).',
+    prompt:
+      'Vous avez vu une annonce pour des cours de français du soir dans votre quartier. Écrivez à l\'organisme pour demander les horaires, le prix et le niveau requis.',
+    taskType: 'email',
+    register: 'neutre',
+    topic: 'course inquiry',
+  },
+];
+
+/** B1+ Section B — opinion / argumentative tasks. */
+export const SECTION_B_FULL_TEMPLATES = [
+  {
+    id: templateId('sec-b', 0),
+    title: 'Le télétravail',
+    instructions:
+      'Rédigez un texte argumenté pour ou contre le télétravail régulier (200–280 mots). Structurez votre réponse (introduction, arguments, conclusion).',
+    prompt:
+      'De plus en plus de travailleurs télétravaillent plusieurs jours par semaine. Selon vous, est-ce une évolution positive ou négative pour la société? Justifiez votre opinion.',
+    taskType: 'essay',
+    register: 'formel',
+    topic: 'remote work',
+  },
+  {
+    id: templateId('sec-b', 1),
+    title: 'Réseaux sociaux et jeunes',
+    instructions:
+      'Exprimez et défendez votre point de vue sur l\'influence des réseaux sociaux (200–280 mots).',
+    prompt:
+      'Les réseaux sociaux occupent une place centrale dans la vie des jeunes. Pensez-vous qu\'ils ont plutôt un effet bénéfique ou nocif? Appuyez votre réponse avec des exemples.',
+    taskType: 'article',
+    register: 'formel',
+    topic: 'social media',
+  },
+  {
+    id: templateId('sec-b', 2),
+    title: 'Transports en commun gratuits',
+    instructions:
+      'Rédigez un texte formel présentant les avantages et les limites d\'une politique de transport gratuit en ville (200–280 mots).',
+    prompt:
+      'Certaines villes envisagent de rendre les transports en commun gratuits pour tous. Soutenez-vous cette mesure? Expliquez votre position de manière structurée.',
+    taskType: 'essay',
+    register: 'formel',
+    topic: 'public transit',
+  },
+];
+
 function pickIndex(templates: unknown[], seed: string) {
   if (!templates.length) return 0;
   const hash = createHash('sha256').update(seed).digest();
@@ -171,4 +250,42 @@ export function pickSentenceTemplate(seed = '', previousTemplateId?: string | nu
     minWords: 0,
     maxWords: 0,
   };
+}
+
+function pickFromPool(
+  pool: { id: string }[],
+  seed: string,
+  previousTemplateId?: string | null
+) {
+  let index = pickIndex(pool, seed || String(Date.now()));
+
+  if (previousTemplateId && pool.length > 1) {
+    const prevIndex = pool.findIndex((t) => String(previousTemplateId).startsWith(t.id));
+    if (prevIndex >= 0 && index === prevIndex) {
+      index = (prevIndex + 1) % pool.length;
+    }
+  }
+
+  return pool[index];
+}
+
+export function pickFullWritingTemplate(
+  section: TefWritingSectionKey,
+  level: string,
+  seed = '',
+  previousTemplateId?: string | null
+) {
+  const pool = section === 'B' ? SECTION_B_FULL_TEMPLATES : SECTION_A_FULL_TEMPLATES;
+  const base = pickFromPool(pool, seed, previousTemplateId);
+  const built = {
+    ...base,
+    id: `${base.id}-${Date.now().toString(36)}`,
+    level,
+    taskMode: 'full',
+    examSection: section,
+    register: base.register ?? (section === 'B' ? 'formel' : 'neutre'),
+    minWords: tefWritingSectionConfig(section).minWords,
+    maxWords: tefWritingSectionConfig(section).maxWords,
+  };
+  return applySectionWordLimits(built, section);
 }

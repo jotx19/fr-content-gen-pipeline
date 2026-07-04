@@ -11,9 +11,15 @@ export const WRITING_XP_THRESHOLDS: Record<string, number> = {
   C2: 850,
 };
 
+export function normalizeCefrLevel(level: string | null | undefined) {
+  if (level == null || String(level).trim() === '') return null;
+  return String(level).trim().toUpperCase();
+}
+
 export function taskModeForWritingLevel(level: string): 'fill_blanks' | 'sentences' | 'full' {
-  if (level === 'A1') return 'fill_blanks';
-  if (level === 'A2') return 'sentences';
+  const normalized = normalizeCefrLevel(level) ?? 'A1';
+  if (normalized === 'A1') return 'fill_blanks';
+  if (normalized === 'A2') return 'sentences';
   return 'full';
 }
 

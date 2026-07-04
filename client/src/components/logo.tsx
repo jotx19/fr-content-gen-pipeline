@@ -30,7 +30,7 @@ type LogoIconProps = LogoProps & {
 };
 
 const ROUNDED_CLASS: Record<NonNullable<LogoIconProps['rounded']>, string> = {
-  md: 'rounded-md',
+  md: 'rounded-sm',
   lg: 'rounded-lg',
   xl: 'rounded-xl',
   '2xl': 'rounded-2xl',

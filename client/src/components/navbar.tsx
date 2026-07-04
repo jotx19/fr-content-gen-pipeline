@@ -58,7 +58,12 @@ export function Navbar() {
           ))}
         </nav>
 
-        <BrandLogo href="/" iconSize={30} className="md:col-start-2 md:justify-self-center" />
+        <BrandLogo
+          href="/"
+          iconSize={30}
+          iconRounded="md"
+          className="md:col-start-2 md:justify-self-center"
+        />
 
         <div className="flex justify-end md:col-start-3">
           {isAuthenticated && user ? (

@@ -31,7 +31,6 @@ export function LandingNav() {
         <BrandLogo
           href="/"
           iconSize={30}
-          iconRounded="2.5xl"
           className="md:col-start-2 md:justify-self-center"
         />
 

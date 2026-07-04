@@ -26,26 +26,29 @@ export function Logo({ className, size = 32 }: LogoProps) {
 }
 
 type LogoIconProps = LogoProps & {
-  rounded?: 'full' | 'xl' | '2xl' | '2.5xl' | '3xl';
+  rounded?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
 };
 
-const LOGO_RADIUS: Record<Exclude<LogoIconProps['rounded'], 'full' | undefined>, number> = {
-  xl: 0.26,
-  '2xl': 0.34,
-  '2.5xl': 0.38,
-  '3xl': 0.42,
+const ROUNDED_CLASS: Record<NonNullable<LogoIconProps['rounded']>, string> = {
+  md: 'rounded-md',
+  lg: 'rounded-lg',
+  xl: 'rounded-xl',
+  '2xl': 'rounded-2xl',
+  full: 'rounded-full',
 };
 
-export function LogoIcon({ className, size = 32, rounded = '2.5xl' }: LogoIconProps) {
-  const borderRadius =
-    rounded === 'full' ? '9999px' : `${Math.round(size * LOGO_RADIUS[rounded])}px`;
-
+export function LogoIcon({ className, size = 32, rounded = 'md' }: LogoIconProps) {
   return (
     <span
-      className={cn('inline-flex shrink-0 items-center justify-center text-black', className)}
-      style={{ width: size, height: size, backgroundColor: BRAND.colors.lime, borderRadius }}
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center',
+        ROUNDED_CLASS[rounded],
+        'bg-[#DFFF4F] text-black',
+        className
+      )}
+      style={{ width: size, height: size }}
     >
-      <Logo size={Math.round(size * 0.68)} />
+      <Logo size={Math.round(size * 0.58)} />
     </span>
   );
 }
@@ -67,7 +70,7 @@ export function BrandLogo({
   showIcon = true,
   iconSize = 32,
   textClassName,
-  iconRounded = '2.5xl',
+  iconRounded = 'md',
 }: BrandLogoProps) {
   const content = (
     <>

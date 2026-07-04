@@ -3,6 +3,7 @@ import { callLLM, getTefModelCandidates } from '../../core/llm.js';
 import { buildTefSystemPrompt } from '../../core/persona.js';
 import { guardMcqBatch, guardPlacementBatch } from '../../core/guardrails.js';
 import { sanitizeLlmOutput, sanitizeMcqBatch } from '../../core/sanitize.js';
+import { config } from '../../../config.js';
 
 /**
  * Parse JSON from model output, tolerating fences and trailing commentary.
@@ -93,7 +94,7 @@ Respond with ONLY valid JSON matching the requested schema. No markdown fences, 
           stream: false,
           model,
           skipThrottle: true,
-          maxTokens: 1800,
+          maxTokens: config.tefLlmMaxTokens,
         });
       } catch (err) {
         lastError = err.message;

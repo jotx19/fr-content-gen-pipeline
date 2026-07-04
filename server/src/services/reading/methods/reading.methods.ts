@@ -176,14 +176,19 @@ async function ensurePracticeBatch(userId: string, doc: Record<string, unknown>)
 export function prefetchPractice(userId: string) {
   requireMongo();
 
-  TefProfile.findOne({ userId })
-    .lean()
-    .then((doc) => {
-      if (!doc?.level || (doc.pendingPractice as { questions?: unknown[] })?.questions?.length) return;
+  void (async () => {
+    try {
+      const doc = await TefProfile.findOne({ userId }).lean();
+      if (!doc?.level || (doc.pendingPractice as { questions?: unknown[] })?.questions?.length) {
+        return;
+      }
       if (hasInFlight(userId)) return;
-      return ensurePracticeBatch(userId, doc);
-    })
-    .catch((err) => console.warn('[reading] prefetch failed:', err.message));
+      await ensurePracticeBatch(userId, doc);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('[reading] prefetch failed:', message);
+    }
+  })();
 }
 
 export async function getUserProfile(userId: string) {

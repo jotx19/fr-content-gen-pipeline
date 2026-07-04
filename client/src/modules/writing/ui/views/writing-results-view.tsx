@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { ArrowUp, PenLine } from '@/components/icons';
+import { ArrowDown, ArrowUp, PenLine } from '@/components/icons';
 import { bricolage } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import { WritingCriteriaList } from '@/modules/writing/ui/components/writing-criteria-list';
@@ -51,7 +51,12 @@ export function WritingResultsView() {
               adjustment === 'same' && 'border-border bg-card text-muted-foreground'
             )}
           >
-            {adjustment === 'levelUp' && <ArrowUp className="mt-0.5 h-4 w-4 shrink-0" />}
+            {adjustment === 'levelUp' && (
+              <ArrowUp className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.25} />
+            )}
+            {adjustment === 'levelDown' && (
+              <ArrowDown className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.25} />
+            )}
             <div>
               {adjustment === 'levelUp' && <p className="font-medium">Writing level up → {newLevel}</p>}
               {adjustment === 'levelDown' && (

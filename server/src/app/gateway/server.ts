@@ -41,6 +41,11 @@ export async function buildServer() {
 }
 
 export async function startServer() {
+  process.on('unhandledRejection', (reason) => {
+    const message = reason instanceof Error ? reason.message : String(reason);
+    console.warn('[tef-agent] unhandled rejection (logged, not exiting):', message);
+  });
+
   await connectDB();
   await ensureCollection().catch(() => {});
   loadSubagents();

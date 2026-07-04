@@ -54,7 +54,25 @@ function isRetryableStatus(status) {
   return status === 429 || status === 502 || status === 503;
 }
 
+function parseAffordableTokens(detail) {
+  const match = String(detail).match(/can only afford (\d+)/i);
+  return match ? Number(match[1]) : null;
+}
+
+function isInsufficientCreditsError(status, detail) {
+  if (status === 402) return true;
+  const text = String(detail).toLowerCase();
+  return text.includes('requires more credits') || text.includes('can only afford');
+}
+
 function finalErrorMessage(status, detail) {
+  if (status === 402 || isInsufficientCreditsError(status, detail)) {
+    return (
+      'OpenRouter credits are too low for this request. ' +
+      'Add credits at openrouter.ai/settings/credits or lower TEF_LLM_MAX_TOKENS in .env. ' +
+      `Details: ${detail}`
+    );
+  }
   if (status === 429) {
     return (
       'OpenRouter rate limit reached. Wait 1–2 minutes and try again, ' +
@@ -154,8 +172,9 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
   apiMessages.push(...messages);
 
   const model = getModel(modelOverride);
+  let tokens = maxTokens;
   const body = { model, messages: apiMessages, stream };
-  if (maxTokens) body.max_tokens = maxTokens;
+  if (tokens) body.max_tokens = tokens;
 
   let lastStatus = 0;
   let lastDetail = '';
@@ -172,7 +191,7 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
         res = await fetch(OPENROUTER_URL, {
           method: 'POST',
           headers: getHeaders(),
-          body: JSON.stringify(body),
+          body: JSON.stringify({ ...body, max_tokens: tokens || body.max_tokens }),
           signal: controller.signal,
         });
       } finally {
@@ -190,6 +209,23 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
         const errText = await res.text();
         lastStatus = res.status;
         lastDetail = parseApiError(errText);
+
+        if (tokens && isInsufficientCreditsError(res.status, lastDetail)) {
+          const affordable = parseAffordableTokens(lastDetail);
+          const nextTokens = affordable
+            ? Math.max(512, affordable - 64)
+            : Math.max(512, Math.floor(tokens * 0.75));
+
+          if (nextTokens < tokens) {
+            console.warn(
+              `[llm] credit limit hit (wanted ${tokens}, retrying with ${nextTokens} max_tokens)`
+            );
+            tokens = nextTokens;
+            body.max_tokens = nextTokens;
+            continue;
+          }
+        }
+
         throw new Error(finalErrorMessage(res.status, lastDetail));
       }
 

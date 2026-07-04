@@ -33,7 +33,7 @@ export function LandingNav() {
           iconSize={30}
           className="md:col-start-2 md:justify-self-center"
         />
-
+ 
         <div className="flex items-center justify-end gap-2 md:col-start-3">
           <ThemeToggleButton />
           <Link

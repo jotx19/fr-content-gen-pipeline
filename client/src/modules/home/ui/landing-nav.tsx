@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { ArrowRight } from '@/components/icons';
+import { LANDING_NAV_ITEMS } from '@/components/nav-items';
 import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { BrandLogo } from '@/components/logo';
 import { ThemeToggleButton } from '@/components/theme-toggle';
-import { LANDING_NAV_LEFT } from '@/modules/home/config/landing-content';
 import { useAuthStore } from '@/store/authStore';
 
 export function LandingNav() {
@@ -17,11 +17,11 @@ export function LandingNav() {
 
       <header className="pointer-events-auto relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 md:grid md:h-[4.5rem] md:grid-cols-[1fr_auto_1fr] md:justify-normal">
         <nav className="hidden items-center gap-6 md:flex">
-          {LANDING_NAV_LEFT.map((item) => (
+          {LANDING_NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm text-foreground/70 transition-colors hover:text-foreground/90 dark:text-white/70 dark:hover:text-white/90"
             >
               {item.label}
             </Link>

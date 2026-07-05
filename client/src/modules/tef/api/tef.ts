@@ -4,6 +4,7 @@ import type {
   CheckAnswerResponse,
   OnboardStartResponse,
   PracticeBatch,
+  PracticePrefetchResponse,
   TefDiagnostic,
   TefProfile,
 } from '../types/tef';
@@ -39,7 +40,11 @@ export async function submitPractice(userAnswers: number[]) {
 }
 
 export async function prefetchPractice() {
-  await axiosInstance.post('/tef/practice/prefetch', {}).catch(() => {});
+  const { data } = await axiosInstance.post<PracticePrefetchResponse>(
+    '/tef/practice/prefetch',
+    {}
+  );
+  return data;
 }
 
 export async function checkAnswer(payload: {

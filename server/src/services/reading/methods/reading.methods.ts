@@ -13,6 +13,7 @@ import { getLatestEvaluation, getEvaluationHistory } from '../../../app/services
 import { READING_MODULE } from '../schemas/reading.mongo.js';
 import type { TefModule } from '../../../app/db/schemas/tefEvaluation.schema.js';
 import { pickReadingPracticeTemplate } from '../prompts/readingPracticeTemplates.js';
+import { pickPlacementTemplate } from '../prompts/readingPlacementTemplates.js';
 
 const TOPIC_BY_SKILL: Record<string, string> = {
   grammaire: 'formal French grammar',
@@ -183,6 +184,30 @@ async function generatePracticeBatch(userId: string, { level, weakAreas }: { lev
   return pendingPractice;
 }
 
+async function generatePlacementQuestions(userId: string, count: number) {
+  if (shouldUseReadingTemplatesOnly()) {
+    const questions = pickPlacementTemplate(userId, count);
+    console.log(`[reading] placement from templates (${questions.length} q) for ${userId.slice(0, 8)}`);
+    return questions;
+  }
+
+  try {
+    const { questions } = await runGenerationGraph({
+      userId,
+      action: 'placement',
+      topic: 'TEF Canada placement assessment',
+      subagentName: 'placement',
+      subagentInput: { count },
+    });
+    if (questions?.length) return questions;
+    throw new Error('Placement generator returned no questions');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[reading] placement LLM failed (${message}) — using template fallback`);
+    return pickPlacementTemplate(userId, count);
+  }
+}
+
 async function ensurePracticeBatch(userId: string, doc: Record<string, unknown>) {
   const pending = doc.pendingPractice as { questions?: unknown[] } | undefined;
   if (pending?.questions?.length) return pending;
@@ -199,22 +224,56 @@ async function ensurePracticeBatch(userId: string, doc: Record<string, unknown>)
   );
 }
 
-export function prefetchPractice(userId: string) {
+export type PracticePrefetchStatus =
+  | 'already_ready'
+  | 'in_flight'
+  | 'started'
+  | 'cooldown'
+  | 'no_profile'
+  | 'no_level';
+
+export type PracticePrefetchResult = {
+  ok: boolean;
+  status: PracticePrefetchStatus;
+};
+
+const PREFETCH_COOLDOWN_MS = Number(process.env.TEF_PREFETCH_COOLDOWN_MS) || 30_000;
+const lastPrefetchAt = new Map<string, number>();
+
+/** Idempotent practice prefetch — safe to call from UI polling; ignores duplicate requests. */
+export async function prefetchPractice(userId: string): Promise<PracticePrefetchResult> {
   requireMongo();
 
-  void (async () => {
-    try {
-      const doc = await TefProfile.findOne({ userId }).lean();
-      if (!doc?.level || (doc.pendingPractice as { questions?: unknown[] })?.questions?.length) {
-        return;
-      }
-      if (hasInFlight(userId)) return;
-      await ensurePracticeBatch(userId, doc);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn('[reading] prefetch failed:', message);
-    }
-  })();
+  if (hasInFlight(userId)) {
+    return { ok: true, status: 'in_flight' };
+  }
+
+  const now = Date.now();
+  const last = lastPrefetchAt.get(userId) ?? 0;
+  if (now - last < PREFETCH_COOLDOWN_MS) {
+    return { ok: true, status: 'cooldown' };
+  }
+
+  const doc = await TefProfile.findOne({ userId }).lean();
+  if (!doc) {
+    return { ok: false, status: 'no_profile' };
+  }
+  if (!doc.level) {
+    return { ok: false, status: 'no_level' };
+  }
+  if ((doc.pendingPractice as { questions?: unknown[] })?.questions?.length) {
+    return { ok: true, status: 'already_ready' };
+  }
+
+  lastPrefetchAt.set(userId, now);
+
+  void ensurePracticeBatch(userId, doc as Record<string, unknown>).catch((err) => {
+    lastPrefetchAt.delete(userId);
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn('[reading] prefetch failed:', message);
+  });
+
+  return { ok: true, status: 'started' };
 }
 
 export async function getUserProfile(userId: string) {
@@ -234,13 +293,12 @@ export async function getUserEvaluations(userId: string, limit = 20, module?: Te
 export async function startOnboard(userId: string) {
   requireMongo();
 
-  const { questions } = await runGenerationGraph({
-    userId,
-    action: 'placement',
-    topic: 'TEF Canada placement assessment',
-    subagentName: 'placement',
-    subagentInput: { count: config.tefPlacementCount },
-  });
+  const count = config.tefPlacementCount;
+  const questions = await generatePlacementQuestions(userId, count);
+
+  if (!questions?.length) {
+    throw new Error('Could not generate placement questions');
+  }
 
   await TefProfile.findOneAndUpdate(
     { userId },
@@ -314,7 +372,7 @@ export async function submitOnboard(userId: string, userAnswers: number[]) {
     summary,
   });
 
-  prefetchPractice(userId);
+  void prefetchPractice(userId);
 
   storeSessionMemory(userId, {
     kind: 'placement',
@@ -433,7 +491,7 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     topic: pending?.topic ?? null,
   });
 
-  prefetchPractice(userId);
+  void prefetchPractice(userId);
 
   storeSessionMemory(userId, {
     kind: 'practice',

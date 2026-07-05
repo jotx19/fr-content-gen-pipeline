@@ -12,12 +12,20 @@ import {
 } from '../api/tef';
 import { tefKeys } from './keys';
 
-export function useTefProfileQuery(enabled = true) {
+export function useTefProfileQuery(
+  enabled = true,
+  options?: { pollWhilePreparing?: boolean }
+) {
   return useQuery({
     queryKey: tefKeys.profile(),
     queryFn: fetchTefProfile,
     enabled,
     retry: false,
+    refetchInterval: (query) => {
+      if (!options?.pollWhilePreparing) return false;
+      const profile = query.state.data;
+      return profile?.level && !profile.practiceReady ? 4000 : false;
+    },
   });
 }
 
@@ -58,7 +66,15 @@ export function useSubmitPracticeMutation() {
 }
 
 export function usePrefetchPractice() {
-  return useMutation({ mutationFn: prefetchPractice });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: prefetchPractice,
+    onSuccess: (result) => {
+      if (result.status === 'already_ready') {
+        queryClient.invalidateQueries({ queryKey: tefKeys.profile() });
+      }
+    },
+  });
 }
 
 export function useCheckAnswerMutation() {

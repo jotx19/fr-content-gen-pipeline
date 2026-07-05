@@ -86,8 +86,8 @@ export async function practiceSubmit(req: AuthedRequest, reply: FastifyReply) {
 
 export async function practicePrefetch(req: AuthedRequest, reply: FastifyReply) {
   try {
-    prefetchPractice(req.userId);
-    return reply.send({ ok: true, prefetching: true });
+    const result = await prefetchPractice(req.userId);
+    return reply.send(result);
   } catch (err) {
     return mapError(reply, err);
   }

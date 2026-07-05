@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowRight } from '@/components/icons';
+import { APP_NAV_ITEMS } from '@/components/nav-items';
 import { AccountDropdownContent } from '@/components/account-dropdown';
 import { BrandLogo } from '@/components/logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,10 +13,7 @@ import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
-const APP_NAV_LEFT = [
-  { label: 'Home', href: '/' },
-  { label: 'Learn', href: '/learn' },
-] as const;
+const APP_NAV_LEFT = APP_NAV_ITEMS;
 
 export function Navbar() {
   const pathname = usePathname();
@@ -42,20 +40,33 @@ export function Navbar() {
 
       <header className="pointer-events-auto relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 md:grid md:h-[4.5rem] md:grid-cols-[1fr_auto_1fr] md:justify-normal">
         <nav className="hidden items-center gap-6 md:flex">
-          {APP_NAV_LEFT.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'text-sm transition-colors',
-                isActive(item.href)
-                  ? 'font-medium text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {APP_NAV_LEFT.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'inline-flex items-center gap-2 text-sm transition-colors',
+                  active
+                    ? 'font-medium text-foreground/90 dark:text-white/90'
+                    : 'text-foreground/70 hover:text-foreground/90 dark:text-white/70 dark:hover:text-white/90'
+                )}
+              >
+                <Icon
+                  className={cn(
+                    'h-4 w-4 shrink-0',
+                    active
+                      ? 'text-foreground/90 dark:text-white/90'
+                      : 'text-foreground/70 dark:text-white/70'
+                  )}
+                  strokeWidth={2}
+                />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <BrandLogo
@@ -74,7 +85,7 @@ export function Navbar() {
                   className="rounded-full outline-none ring-offset-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   aria-label="Account menu"
                 >
-                  <Avatar className="h-9 w-9 border border-border sm:h-10 sm:w-10">
+                  <Avatar className="h-9 w-9 border border-black/10 dark:border-white/15 sm:h-10 sm:w-10">
                     <AvatarImage src={user.picture ?? undefined} alt={user.name} />
                     <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
                   </Avatar>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   usePrefetchPractice,
@@ -29,28 +29,22 @@ export function LearnHomeView() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const setMode = useLessonStore((s) => s.setMode);
-  const { data: profile, isLoading, isError, refetch } = useTefProfileQuery();
+  const { data: profile, isLoading, isError } = useTefProfileQuery(true, {
+    pollWhilePreparing: true,
+  });
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));
-  const prefetch = usePrefetchPractice();
+  const { mutate: requestPrefetch } = usePrefetchPractice();
+  const prefetchRequestedRef = useRef(false);
 
   useEffect(() => {
-    if (profile?.level && !profile.practiceReady) prefetch.mutate();
-  }, [profile?.level, profile?.practiceReady, prefetch]);
-
-  useEffect(() => {
-    if (!profile?.level || profile.practiceReady) return;
-    let pollCount = 0;
-    const maxPolls = 30;
-    const timer = setInterval(() => {
-      pollCount += 1;
-      if (pollCount >= maxPolls) {
-        clearInterval(timer);
-        return;
-      }
-      refetch();
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [profile?.level, profile?.practiceReady, refetch]);
+    if (profile?.practiceReady) {
+      prefetchRequestedRef.current = false;
+      return;
+    }
+    if (!profile?.level || prefetchRequestedRef.current) return;
+    prefetchRequestedRef.current = true;
+    requestPrefetch();
+  }, [profile?.level, profile?.practiceReady, requestPrefetch]);
 
   const handleStartPlacement = () => {
     clearPlacementProgress();

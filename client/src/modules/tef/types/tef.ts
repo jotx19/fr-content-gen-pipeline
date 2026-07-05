@@ -55,6 +55,19 @@ export type TefDiagnostic = {
 
 export type OnboardStartResponse = { questions: PublicQuestion[] };
 
+export type PracticePrefetchStatus =
+  | 'already_ready'
+  | 'in_flight'
+  | 'started'
+  | 'cooldown'
+  | 'no_profile'
+  | 'no_level';
+
+export type PracticePrefetchResponse = {
+  ok: boolean;
+  status: PracticePrefetchStatus;
+};
+
 export type CheckAnswerResponse = {
   correct: boolean;
   correctIndex: number;

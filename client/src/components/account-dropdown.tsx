@@ -17,24 +17,23 @@ import type { AuthUser } from '@/modules/auth/types/auth';
 import { cn } from '@/lib/utils';
 
 const panelClass = cn(
-  'w-52 rounded-2xl border p-1 shadow-sm',
-  'border-zinc-200/80 bg-white text-zinc-800',
-  'dark:border-white/5 dark:bg-[#171717] dark:text-neutral-100 dark:shadow-none'
+  'w-52 rounded-2xl border p-1 shadow-sm backdrop-blur-md',
+  'border-black/10 bg-white/90 text-foreground',
+  'dark:border-white/15 dark:bg-white/10 dark:text-white dark:shadow-none'
 );
 
 const itemClass = cn(
   'cursor-pointer gap-2 !rounded-md px-1.5 py-1 text-sm transition-colors',
-  'hover:bg-zinc-100 dark:hover:bg-white/5',
-  'focus:bg-zinc-100 dark:focus:bg-white/5',
-  'data-[highlighted]:bg-zinc-100 dark:data-[highlighted]:bg-white/5'
+  'hover:bg-black/5 focus:bg-black/5 data-[highlighted]:bg-black/5',
+  'dark:hover:bg-white/10 dark:focus:bg-white/10 dark:data-[highlighted]:bg-white/10'
 );
 
 const iconBoxClass = cn(
   'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
-  'bg-zinc-100 dark:bg-[#262626]'
+  'bg-black/5 dark:bg-white/10'
 );
-const iconClass = 'h-[18px] w-[18px] text-zinc-600 dark:text-white';
-const trailingIconClass = 'h-3.5 w-3.5 shrink-0 text-zinc-400 dark:text-neutral-400';
+const iconClass = 'h-[18px] w-[18px] text-foreground/70 dark:text-white/80';
+const trailingIconClass = 'h-3.5 w-3.5 shrink-0 text-foreground/55 dark:text-white/55';
 const destructiveItemClass = cn(
   itemClass,
   'text-red-600 dark:text-red-400',
@@ -76,7 +75,7 @@ function MenuRow({
       <span
         className={cn(
           'min-w-0 flex-1 font-medium',
-          destructive ? 'text-red-600 dark:text-red-400' : 'text-zinc-900 dark:text-white'
+          destructive ? 'text-red-600 dark:text-red-400' : 'text-foreground/90 dark:text-white/90'
         )}
       >
         {title}
@@ -102,14 +101,14 @@ export function AccountDropdownContent({ user, initials, onLogout }: AccountDrop
           </Avatar>
         </div>
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-sm font-medium text-zinc-900 dark:text-neutral-100">{firstName}</p>
+          <p className="truncate text-sm font-medium text-foreground/90 dark:text-white/90">{firstName}</p>
           {user.email && (
-            <p className="truncate text-xs text-zinc-500 dark:text-neutral-500">{user.email}</p>
+            <p className="truncate text-xs text-foreground/60 dark:text-white/60">{user.email}</p>
           )}
         </div>
       </div>
 
-      <DropdownMenuSeparator className="my-0.5 bg-zinc-200 dark:bg-white/6" />
+      <DropdownMenuSeparator className="my-0.5 bg-black/10 dark:bg-white/10" />
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/learn">

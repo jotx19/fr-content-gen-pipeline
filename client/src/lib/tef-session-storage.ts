@@ -1,5 +1,6 @@
 const PLACEMENT_KEY = 'fringo-placement-progress';
 const READING_XP_KEY = 'fringo-last-reading-xp';
+const READING_SCORE_KEY = 'fringo-last-reading-score';
 
 export type PlacementProgress = {
   questions: { id?: string; question: string; options: string[]; skillTag?: string }[];
@@ -42,4 +43,21 @@ export function loadLastReadingXp(): number | null {
 export function saveLastReadingXp(xp: number) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(READING_XP_KEY, String(xp));
+}
+
+export function loadLastReadingScore(): number | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(READING_SCORE_KEY);
+    if (raw == null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastReadingScore(score: number) {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(READING_SCORE_KEY, String(score));
 }

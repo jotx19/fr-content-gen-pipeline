@@ -20,7 +20,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div
       className={cn(
         'flex flex-col',
-        isSignIn || isLessonScreen ? 'h-dvh' : 'min-h-dvh',
+        isSignIn || isLesson ? 'h-dvh' : 'min-h-dvh',
       )}
     >
       {!isLesson && !isSignIn && !isLanding && (
@@ -39,7 +39,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           pathname === '/' && 'overflow-y-auto',
           isSignIn && 'h-dvh overflow-hidden',
           isLessonScreen && 'h-dvh overflow-hidden',
-          isResultsScreen && 'min-h-0 overflow-y-auto',
+          isResultsScreen && 'h-dvh min-h-0 overflow-hidden',
         )}
       >
         {children}

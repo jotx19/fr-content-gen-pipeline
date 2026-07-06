@@ -21,6 +21,7 @@ import {
   saveLastReadingXp,
 } from "@/lib/tef-session-storage";
 import { cn } from "@/lib/utils";
+import { DitherAreaChartFromScore } from "@/components/ui/dither-area-chart";
 
 export type LearnBentoData = {
   firstName?: string;
@@ -518,14 +519,23 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
           panelBg,
         )}
       >
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           <h3
-            className={`${bricolage.className} text-xl font-semibold text-neutral-900 dark:text-white sm:text-2xl`}
+            className={`${bricolage.className} shrink-0 text-xl font-semibold text-neutral-900 dark:text-white sm:text-2xl`}
           >
             Last session
           </h3>
+
+          <div className="flex min-h-[100px] flex-1 items-center py-3 sm:min-h-[120px] sm:py-4">
+            <DitherAreaChartFromScore
+              lastScore={lastScore}
+              className="w-full"
+              height={112}
+            />
+          </div>
+
           {lastScore != null ? (
-            <div className="mt-auto flex items-end justify-between gap-4 pt-6">
+            <div className="flex shrink-0 items-end justify-between gap-4">
               <div>
                 <p className="text-5xl font-extrabold leading-none text-[#58cc02] sm:text-6xl">
                   {lastScore}%
@@ -544,7 +554,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
             </div>
           ) : (
             <p
-              className={`${inter.className} mt-auto pt-6 text-sm leading-relaxed text-neutral-500 dark:text-white/70`}
+              className={`${inter.className} shrink-0 text-sm leading-relaxed text-neutral-500 dark:text-white/70`}
             >
               {placementMode
                 ? "Complete placement to see your first score here."

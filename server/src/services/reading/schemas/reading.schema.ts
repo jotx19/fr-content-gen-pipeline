@@ -16,5 +16,10 @@ export const evaluationHistoryQuerySchema = z.object({
   module: z.enum(TEF_MODULES).optional(),
 });
 
+export const selfSelectLevelSchema = z.object({
+  level: z.string().min(1),
+});
+
 export type SubmitAnswersBody = z.infer<typeof submitAnswersSchema>;
 export type CheckAnswerBody = z.infer<typeof checkAnswerSchema>;
+export type SelfSelectLevelBody = z.infer<typeof selfSelectLevelSchema>;

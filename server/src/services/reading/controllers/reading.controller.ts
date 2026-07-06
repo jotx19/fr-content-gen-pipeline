@@ -8,8 +8,9 @@ import {
   onSubmitAnswers,
   prefetchPractice,
   checkSessionAnswer,
+  setLevelManually,
 } from '../methods/reading.methods.js';
-import type { SubmitAnswersBody, CheckAnswerBody } from '../schemas/reading.schema.js';
+import type { SubmitAnswersBody, CheckAnswerBody, SelfSelectLevelBody } from '../schemas/reading.schema.js';
 import type { TefModule } from '../../../app/db/schemas/tefEvaluation.schema.js';
 
 type AuthedRequest = FastifyRequest & { userId: string };
@@ -105,5 +106,19 @@ export async function checkAnswer(req: AuthedRequest, reply: FastifyReply) {
     return reply.send(data);
   } catch (err) {
     return mapError(reply, err);
+  }
+}
+
+export async function levelSelfSelect(req: AuthedRequest, reply: FastifyReply) {
+  try {
+    const body = req.body as SelfSelectLevelBody;
+    const data = await setLevelManually(req.userId, body.level);
+    return reply.send(data);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal server error';
+    if (message.includes('Invalid CEFR level')) {
+      return reply.status(400).send({ error: message });
+    }
+    return reply.status(500).send({ error: message });
   }
 }

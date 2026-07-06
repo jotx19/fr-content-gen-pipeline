@@ -7,6 +7,7 @@ import {
   prefetchPractice,
   startOnboard,
   submitOnboard,
+  selfSelectLevel,
   submitPractice,
   checkAnswer,
 } from '../api/tef';
@@ -40,6 +41,17 @@ export function usePracticeQuery(enabled = false) {
 
 export function useStartOnboardMutation() {
   return useMutation({ mutationFn: startOnboard });
+}
+
+export function useSelfSelectLevelMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: selfSelectLevel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tefKeys.profile() });
+      prefetchPractice();
+    },
+  });
 }
 
 export function useSubmitOnboardMutation() {

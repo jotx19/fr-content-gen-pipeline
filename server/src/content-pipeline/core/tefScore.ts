@@ -65,6 +65,14 @@ export function publicQuestions(questions) {
   }));
 }
 
+/** Normalize and validate a CEFR level string. Returns null if invalid. */
+export function normalizeCefrLevel(level) {
+  if (level == null || String(level).trim() === '') return null;
+  const normalized = String(level).trim().toUpperCase();
+  if (!CEFR_LEVELS.includes(normalized)) return null;
+  return normalized;
+}
+
 /** Estimate CEFR level from placement accuracy (deterministic). */
 export function levelFromPlacement(overallAccuracy) {
   const a = overallAccuracy;

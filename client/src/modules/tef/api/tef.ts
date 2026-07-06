@@ -29,6 +29,14 @@ export async function submitOnboard(userAnswers: number[]) {
   return data;
 }
 
+export async function selfSelectLevel(level: string) {
+  const { data } = await axiosInstance.post<{ level: string; onboardMethod: string }>(
+    '/tef/level/self-select',
+    { level }
+  );
+  return data;
+}
+
 export async function fetchPractice() {
   const { data } = await axiosInstance.get<PracticeBatch>('/tef/practice');
   return data;

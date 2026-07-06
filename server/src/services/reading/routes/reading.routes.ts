@@ -5,6 +5,7 @@ import {
   submitAnswersSchema,
   evaluationHistoryQuerySchema,
   checkAnswerSchema,
+  selfSelectLevelSchema,
 } from '../schemas/reading.schema.js';
 
 export async function readingRoutes(app: FastifyInstance) {
@@ -29,5 +30,9 @@ export async function readingRoutes(app: FastifyInstance) {
   app.post('/api/tef/check-answer', auth, async (req, reply) => {
     const body = checkAnswerSchema.parse(req.body);
     return reading.checkAnswer({ ...req, body } as never, reply);
+  });
+  app.post('/api/tef/level/self-select', auth, async (req, reply) => {
+    const body = selfSelectLevelSchema.parse(req.body);
+    return reading.levelSelfSelect({ ...req, body } as never, reply);
   });
 }

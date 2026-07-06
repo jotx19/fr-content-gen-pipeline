@@ -24,6 +24,7 @@ const tefProfileSchema = new mongoose.Schema(
       writingXp: { type: Number, default: 0 },
     },
     onboardedAt: { type: Date, default: null },
+    onboardMethod: { type: String, enum: ['placement', 'self_selected'], default: null },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

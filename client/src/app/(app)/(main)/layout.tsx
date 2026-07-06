@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { Navbar, NavbarSpacer } from '@/components/navbar';
 import { cn } from '@/lib/utils';
+import { OnboardingGate } from '@/modules/tef/ui/components/onboarding-gate';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,6 +44,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       >
         {children}
       </main>
+      <OnboardingGate />
     </div>
   );
 }

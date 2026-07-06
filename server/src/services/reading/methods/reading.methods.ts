@@ -5,6 +5,7 @@ import {
   publicQuestions,
   levelFromPlacement,
   buildEnglishSummary,
+  normalizeCefrLevel,
 } from '../../../content-pipeline/core/tefScore.js';
 import { storeSessionMemory } from '../../../content-pipeline/memory/rag.js';
 import { getInFlight, setInFlight, hasInFlight } from '../../../content-pipeline/agent/session.js';
@@ -530,6 +531,38 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     summary,
     profile,
   };
+}
+
+export async function setLevelManually(userId: string, level: string) {
+  requireMongo();
+
+  const normalized = normalizeCefrLevel(level);
+  if (!normalized) {
+    throw new Error('Invalid CEFR level');
+  }
+
+  await TefProfile.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        level: normalized,
+        confidence: 0.6,
+        onboardedAt: new Date(),
+        onboardMethod: 'self_selected',
+        weakAreas: [],
+        summary: `Self-selected level: ${normalized}`,
+        updatedAt: new Date(),
+        pendingPlacement: null,
+        pendingPractice: null,
+      },
+      $setOnInsert: { createdAt: new Date(), accuracyHistory: [], stats: {} },
+    },
+    { upsert: true }
+  );
+
+  await prefetchPractice(userId);
+
+  return { level: normalized, onboardMethod: 'self_selected' };
 }
 
 export async function checkSessionAnswer(

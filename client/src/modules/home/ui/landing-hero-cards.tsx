@@ -5,12 +5,11 @@ import { useEffect, useRef, useState, type PointerEvent, type RefObject } from '
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-/** Illustrations from https://popsy.co/illustrations (free, attribution to popsy.co) */
 const CARDS = [
   {
-    bg: '#6BCF55',
-    src: '/landing-cards/practice.svg',
-    alt: 'Studying',
+    bg: '#CC6E22',
+    src: '/landing-cards/h.png',
+    alt: 'Reading practice',
     rotate: -13,
     spread: -1,
     offsetY: 8,
@@ -18,9 +17,9 @@ const CARDS = [
     zIndex: 1,
   },
   {
-    bg: '#58B4FF',
-    src: '/landing-cards/listen.svg',
-    alt: 'Listening',
+    bg: '#6A4BC7',
+    src: '/landing-cards/k.png',
+    alt: 'Writing practice',
     rotate: -4,
     spread: -0.33,
     offsetY: -2,
@@ -28,9 +27,9 @@ const CARDS = [
     zIndex: 2,
   },
   {
-    bg: '#B8E55A',
-    src: '/landing-cards/write.svg',
-    alt: 'Writing at desk',
+    bg: '#3D58C4',
+    src: '/landing-cards/a.png',
+    alt: 'Learn with Fringo',
     rotate: 4,
     spread: 0.33,
     offsetY: 2,
@@ -38,9 +37,9 @@ const CARDS = [
     zIndex: 3,
   },
   {
-    bg: '#F7C4CB',
-    src: '/landing-cards/progress.svg',
-    alt: 'Success',
+    bg: '#B83838',
+    src: '/landing-cards/s.png',
+    alt: 'Track your progress',
     rotate: 12,
     spread: 1,
     offsetY: 8,
@@ -118,62 +117,63 @@ export function LandingHeroCards({ className }: { className?: string }) {
           onPointerLeave={() => setMouse({ x: 0, y: 0 })}
           aria-hidden
         >
-        {CARDS.map((card) => {
-          const spreadFactor =
-            isMobile && Math.abs(card.spread) === 0.33 ? (card.spread > 0 ? 0.48 : -0.48) : card.spread;
-          const offsetX = spreadFactor * spreadPx;
+          {CARDS.map((card) => {
+            const spreadFactor =
+              isMobile && Math.abs(card.spread) === 0.33 ? (card.spread > 0 ? 0.48 : -0.48) : card.spread;
+            const offsetX = spreadFactor * spreadPx;
 
-          return (
-            <motion.div
-              key={card.src}
-              className="absolute left-1/2 top-1/2 h-[8rem] w-[5.5rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[0.95rem] shadow-[0_16px_40px_rgba(15,15,15,0.12),0_6px_14px_rgba(15,15,15,0.06)] sm:h-[12.5rem] sm:w-[10rem] sm:rounded-[1.25rem] sm:shadow-[0_22px_55px_rgba(15,15,15,0.14),0_8px_18px_rgba(15,15,15,0.07)] lg:h-[14rem] lg:w-[11rem] lg:rounded-[1.35rem]"
-              style={{
-                backgroundColor: card.bg,
-                zIndex: card.zIndex,
-                transformOrigin: 'center center',
-              }}
-              initial={false}
-              animate={
-                reduced
-                  ? {
-                      x: offsetX,
-                      y: card.offsetY,
-                      rotate: card.rotate,
-                    }
-                  : {
-                      x: offsetX + mouse.x * 22 * card.depth,
-                      y: card.offsetY + mouse.y * 14 * card.depth,
-                      rotate: card.rotate + mouse.x * 3.5,
-                      rotateX: mouse.y * -8,
-                      rotateY: mouse.x * 8,
-                    }
-              }
-              transition={{ type: 'spring', stiffness: 130, damping: 22, mass: 0.75 }}
-            >
+            return (
               <motion.div
-                className="relative h-full w-full p-1 sm:p-2.5 lg:p-3"
+                key={card.src}
+                className="absolute left-1/2 top-1/2 h-[8rem] w-[5.5rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[0.95rem] shadow-[0_16px_40px_rgba(15,15,15,0.12),0_6px_14px_rgba(15,15,15,0.06)] sm:h-[12.5rem] sm:w-[10rem] sm:rounded-[1.25rem] sm:shadow-[0_22px_55px_rgba(15,15,15,0.14),0_8px_18px_rgba(15,15,15,0.07)] lg:h-[14rem] lg:w-[11rem] lg:rounded-[1.35rem]"
+                style={{
+                  backgroundColor: card.bg,
+                  zIndex: card.zIndex,
+                  transformOrigin: 'center center',
+                }}
+                initial={false}
                 animate={
                   reduced
-                    ? {}
+                    ? {
+                        x: offsetX,
+                        y: card.offsetY,
+                        rotate: card.rotate,
+                      }
                     : {
-                        x: mouse.x * 4 * card.depth,
-                        y: mouse.y * 2.5 * card.depth,
+                        x: offsetX + mouse.x * 22 * card.depth,
+                        y: card.offsetY + mouse.y * 14 * card.depth,
+                        rotate: card.rotate + mouse.x * 3.5,
+                        rotateX: mouse.y * -8,
+                        rotateY: mouse.x * 8,
                       }
                 }
-                transition={{ type: 'spring', stiffness: 170, damping: 24 }}
+                transition={{ type: 'spring', stiffness: 130, damping: 22, mass: 0.75 }}
               >
-                <Image
-                  src={card.src}
-                  alt={card.alt}
-                  fill
-                  sizes="(min-width: 1024px) 176px, (min-width: 640px) 160px, 88px"
-                  className="scale-[1.04] object-contain object-center sm:scale-[1.06]"
-                  draggable={false}
-                />
+                <motion.div
+                  className="relative flex h-full w-full items-center justify-center p-3 sm:p-4 lg:p-5"
+                  animate={
+                    reduced
+                      ? {}
+                      : {
+                          x: mouse.x * 4 * card.depth,
+                          y: mouse.y * 2.5 * card.depth,
+                        }
+                  }
+                  transition={{ type: 'spring', stiffness: 170, damping: 24 }}
+                >
+                  <Image
+                    src={card.src}
+                    alt={card.alt}
+                    fill
+                    sizes="(min-width: 1024px) 176px, (min-width: 640px) 160px, 88px"
+                    className="scale-[0.78] object-contain object-center drop-shadow-sm sm:scale-[0.82]"
+                    draggable={false}
+                    priority
+                  />
+                </motion.div>
               </motion.div>
-            </motion.div>
-          );
-        })}
+            );
+          })}
         </div>
       </div>
     </div>

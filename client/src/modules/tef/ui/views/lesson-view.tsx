@@ -13,6 +13,7 @@ import {
   loadPlacementProgress,
   savePlacementProgress,
 } from '@/lib/tef-session-storage';
+import { playMcqCorrectSound, playMcqWrongSound } from '@/lib/mcq-sounds';
 import { McqQuestion } from '@/modules/tef/ui/components/mcq-question';
 import {
   useCheckAnswerMutation,
@@ -177,6 +178,11 @@ export function LessonView() {
       });
       setChecked(true);
       setShake(!result.correct);
+      if (result.correct) {
+        playMcqCorrectSound();
+      } else {
+        playMcqWrongSound();
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not check answer');
     }

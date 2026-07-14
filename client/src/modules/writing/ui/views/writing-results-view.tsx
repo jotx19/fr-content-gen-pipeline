@@ -330,7 +330,7 @@ function AnimatedCriteriaPanel({
               <span className={cn('text-sm font-semibold sm:text-base', pal.label)}>/100</span>
             </p>
             {current?.feedback && (
-              <p className={cn(`${inter.className} text-[11px] leading-relaxed sm:text-xs`, pal.label)}>
+              <p className={cn(`${inter.className} line-clamp-2 text-[11px] leading-relaxed sm:text-xs`, pal.label)}>
                 {current.feedback}
               </p>
             )}
@@ -501,8 +501,8 @@ export function WritingResultsView() {
         </div>
       </motion.header>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto sm:justify-stretch sm:overflow-visible">
-        <div className="flex flex-col gap-3 sm:grid sm:min-h-0 sm:flex-1 sm:grid-cols-2 sm:grid-rows-[1fr_1fr_1.15fr] sm:gap-3">
+      <div className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 sm:grid sm:grid-cols-2 sm:grid-rows-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)] sm:gap-3">
           <div className="grid shrink-0 grid-cols-2 gap-3 sm:contents">
             <BentoCard
               palette={palette.sky}
@@ -628,7 +628,7 @@ export function WritingResultsView() {
             visible={revealIndex >= 2}
             delay={0.14}
             onClick={criteria.length > 1 ? cycleCriterion : undefined}
-            className="min-h-[18rem] sm:col-span-2 sm:row-start-3 sm:min-h-0"
+            className="min-h-[16rem] sm:col-span-2 sm:row-start-3 sm:min-h-0"
           >
             <CardHeader
               icon={Star}
@@ -651,28 +651,29 @@ export function WritingResultsView() {
                 palette={palette.rose}
               />
             )}
-            <AnimatedCriteriaPanel
-              criteria={criteria}
-              suggestions={suggestions}
-              activeIndex={activeCriterion}
-              visible={revealIndex >= 3}
-              palette={palette.rose}
-            />
-          </BentoCard>
-
-          {summary && revealIndex >= 3 && (
-            <motion.p
-              className={cn(
-                `${inter.className} shrink-0 rounded-2xl border border-black/6 bg-black/[0.02] px-3.5 py-2.5 text-xs leading-relaxed sm:col-span-2`,
-                palette.rose.label,
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <AnimatedCriteriaPanel
+                criteria={criteria}
+                suggestions={suggestions}
+                activeIndex={activeCriterion}
+                visible={revealIndex >= 3}
+                palette={palette.rose}
+              />
+              {summary && (
+                <motion.p
+                  className={cn(
+                    `${inter.className} mt-auto shrink-0 border-t border-black/8 pt-2 text-[10px] leading-relaxed sm:text-[11px] dark:border-white/10`,
+                    palette.rose.label,
+                  )}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: revealIndex >= 3 ? 1 : 0 }}
+                  transition={{ duration: 0.35, delay: 0.1 }}
+                >
+                  {summary}
+                </motion.p>
               )}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={springIn}
-            >
-              {summary}
-            </motion.p>
-          )}
+            </div>
+          </BentoCard>
         </div>
       </div>
     </div>

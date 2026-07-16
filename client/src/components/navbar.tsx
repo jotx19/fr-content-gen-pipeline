@@ -91,11 +91,7 @@ export function Navbar() {
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
-              <AccountDropdownContent
-                user={user}
-                initials={initials}
-                onLogout={() => logout.mutate()}
-              />
+              <AccountDropdownContent onLogout={() => logout.mutate()} />
             </DropdownMenu>
           ) : (
             <Link

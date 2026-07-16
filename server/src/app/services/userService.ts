@@ -51,6 +51,8 @@ export type PublicUser = {
   email: string;
   name: string;
   picture: string | null;
+  createdAt?: string | null;
+  lastLoginAt?: string | null;
 };
 
 export function toPublicUser(user) {
@@ -59,6 +61,12 @@ export function toPublicUser(user) {
     email: user.email,
     name: user.name,
     picture: user.picture ?? null,
+    createdAt: user.createdAt
+      ? new Date(user.createdAt).toISOString()
+      : null,
+    lastLoginAt: user.lastLoginAt
+      ? new Date(user.lastLoginAt).toISOString()
+      : null,
   };
 }
 

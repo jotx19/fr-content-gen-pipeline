@@ -1,132 +1,10 @@
-custom styling for buttons tailwind;
-group-active:scale-[0.95]
-
-cmd
-Exact lines from the prompt for that screenshot:
-
-### Section that renders it
-
-```tsx
-{/* Features section */}
-<section className="px-[20px] pt-[120px] pb-[120px]">
-  {/* Section header */}
-  <SectionHeader />
-
-
-
-  <FeatureCards />
-
-</section>
-```
-
-### `SectionHeader` (headline + Start free area)
-
-```tsx
-function SectionHeader() {
-  return (
-    <div className="flex flex-col md:flex-row items-start justify-between mb-[80px] gap-8">
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="flex flex-col gap-10 w-full md:max-w-[690px]"
-      >
-        <WordsReveal
-          as="h2"
-          className="text-4xl leading-tight text-neutral-100 font-normal"
-          text="Create space for tools that matters. now create designs from scratch to stunning design with code in few seconds"
-        />
-        <div className="flex items-center gap-4">
-          <button className="bg-white text-black rounded-xl px-5 py-4 text-[15px] font-medium hover:bg-neutral-200 transition-colors">
-            Join beta now
-          </button>
-          <span className="md:hidden text-base text-neutral-500">Make things fast</span>
-        </div>
-      </motion.div>
-      <motion.p
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8, ease: "easeOut", delay: 0.15 }}
-        className="hidden md:block text-xl text-neutral-500 text-right shrink-0"
-      >
-        Make things fast
-      </motion.p>
-    </div>
-  );
-}
-```
-
-### `FeatureCards` (the 3 cards)
-
-```tsx
-function FeatureCards() {
-  const cardAnim = (delay: number) => ({
-    initial: { opacity: 0, y: 50 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-80px" },
-    transition: { duration: 0.7, delay, ease: "easeOut" as const },
-  });
-  const [countActive, setCountActive] = useState(false);
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
-      {/* Card 1 */}
-      <motion.div
-        {...cardAnim(0.1)}
-        className="relative h-[520px] rounded-3xl overflow-hidden bg-neutral-950 flex flex-col items-center text-center pt-12 px-6"
-        style={{ backgroundImage: "radial-gradient(ellipse at 31% -7%, rgba(255,255,255,0.05), transparent)" }}
-      >
-        ...
-      </motion.div>
-
-      {/* Card 2 */}
-      <motion.div
-        {...cardAnim(0.3)}
-        className="relative h-[520px] rounded-3xl overflow-hidden bg-neutral-900 flex flex-col items-center text-center pt-12 px-6"
-      >
-        ...
-      </motion.div>
-
-      {/* Card 3 */}
-      <motion.div
-        {...cardAnim(0.5)}
-        onViewportEnter={() => setCountActive(true)}
-        className="relative h-[520px] rounded-3xl overflow-hidden"
-        style={{ backgroundColor: "#D0C9B9" }}
-      >
-        ...
-      </motion.div>
-    </div>
-  );
-}
-```
-
-### PAGE STRUCTURE note (same section)
-
-```
-3) Features section (px-[20px] py-[120px]):
-   - SectionHeader: H2 word-reveal "Create space for tools that matters..."
-   - FeatureCards 3-col grid gap-[30px], each h-[520px] rounded-3xl:
-       Card1 bg neutral-950 ...
-       Card2 bg neutral-900 ...
-       Card3 bg #D0C9B9 ...
-```
-
-Your screenshot is Fringo-rewritten content in this same block. In the repo it’s currently in:
-
-- `client/src/modules/home/ui/landing-helpers.tsx` → `SectionHeader`, `FeatureCards`
-- `client/src/modules/home/ui/landing-page.tsx` → the `<section id="features">` that calls them
-
-If you want the **full original `FeatureCards` body** (all 3 cards with original E-Endless text), say so and I’ll paste that block end-to-end.
-
 'use client';
 
 import type * as React from 'react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate, useInView as useInViewFM } from 'framer-motion';
+import { interTight } from '@/lib/fonts';
 import {
   blueArrowUrl,
   checkMarkUrl,
@@ -135,8 +13,9 @@ import {
   heroCardReading,
   heroCardWriting,
   heroImage,
-  threeDotUrl,
 } from '@/modules/home/ui/landing-assets';
+
+const featuresFont = interTight.className;
 
 export function ToolIcon({ src, className, style }: { src: string; className?: string; style?: React.CSSProperties }) {
   return (
@@ -420,27 +299,25 @@ export function WordsReveal({
 
 export function SectionHeader({ ctaHref }: { ctaHref: string }) {
   return (
-    <div className="mb-[80px] flex flex-col items-start justify-between gap-8 md:flex-row">
+    <div className={`${featuresFont} mb-10 flex flex-col items-start justify-between gap-6 sm:mb-14 md:mb-16 md:flex-row`}>
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="flex w-full flex-col gap-10 md:max-w-[690px]"
-      >
+        className="flex w-full flex-col gap-10 md:max-w-[690px]"      >
         <WordsReveal
           as="h2"
-          className="text-4xl leading-tight font-normal text-neutral-100"
-          text="Everything you need to improve — placement, daily MCQs, and TEF writing feedback that actually teaches."
-        />
+          className={`${featuresFont} text-3xl leading-tight font-normal text-foreground sm:text-4xl`}
+          text="Everything you need to improve placement, daily MCQs, and writing feedback that actually teaches."        />
         <div className="flex items-center gap-4">
           <Link
             href={ctaHref}
-            className="rounded-xl bg-white px-5 py-4 text-[15px] font-medium text-black transition-colors hover:bg-neutral-200"
+            className="rounded-xl bg-foreground px-5 py-3.5 text-[15px] font-medium text-background transition-opacity hover:opacity-90"
           >
             Start free
           </Link>
-          <span className="text-base text-neutral-500 md:hidden">Learn at your pace</span>
+          <span className="text-sm text-muted-foreground md:hidden">Learn at your pace</span>
         </div>
       </motion.div>
       <motion.p
@@ -448,7 +325,7 @@ export function SectionHeader({ ctaHref }: { ctaHref: string }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.8, ease: 'easeOut', delay: 0.15 }}
-        className="hidden shrink-0 text-right text-xl text-neutral-500 md:block"
+        className="hidden shrink-0 text-right text-lg text-muted-foreground md:block"
       >
         Learn at your pace
       </motion.p>
@@ -611,7 +488,7 @@ export function PricingPlan({
 
 function MiniBars({ values, color }: { values: number[]; color: string }) {
   return (
-    <div className="flex h-16 w-full items-end gap-1.5">
+    <div className="flex h-24 w-full items-end gap-1.5">
       {values.map((v, i) => (
         <motion.div
           key={i}
@@ -629,91 +506,86 @@ function MiniBars({ values, color }: { values: number[]; color: string }) {
 
 export function FeatureCards() {
   const cardAnim = (delay: number) => ({
-    initial: { opacity: 0, y: 50 },
+    initial: { opacity: 0, y: 40 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, margin: '-80px' },
-    transition: { duration: 0.7, delay, ease: 'easeOut' as const },
+    transition: { duration: 0.65, delay, ease: 'easeOut' as const },
   });
   const [countActive, setCountActive] = useState(false);
 
+  const cardShell =
+    'relative flex h-[380px] flex-col overflow-hidden rounded-[1.75rem] px-6 pt-8 sm:h-[420px] lg:h-[440px]';
+
   return (
-    <div className="grid grid-cols-1 gap-[30px] lg:grid-cols-3">
+    <div className={`${featuresFont} grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3`}>
       <motion.div
         {...cardAnim(0.1)}
-        className="relative flex h-[520px] flex-col items-center overflow-hidden rounded-3xl bg-neutral-950 px-6 pt-12 text-center"
-        style={{ backgroundImage: 'radial-gradient(ellipse at 31% -7%, rgba(255,255,255,0.05), transparent)' }}
+        className={`${cardShell} bg-neutral-950`}
+        style={{ backgroundImage: 'radial-gradient(ellipse at 30% 0%, rgba(255,255,255,0.04), transparent 55%)' }}
       >
-        <WordsReveal as="h3" className="text-4xl leading-tight text-neutral-100" text="Adaptive placement in minutes" delay={0.2} />
         <WordsReveal
-          as="p"
-          className="mt-6 max-w-[320px] text-base text-neutral-100 opacity-40"
-          text="Answer a short reading set. Fringo estimates your CEFR level and matches lesson difficulty from day one."
-          delay={0.5}
-          step={0.04}
-          duration={0.6}
+          as="h3"
+          className={`${featuresFont} text-[1.65rem] leading-snug text-neutral-100 sm:text-[1.85rem]`}
+          text="Adaptive placement"
+          delay={0.15}
         />
-        <div className="absolute right-5 bottom-8 left-5 rounded-2xl bg-[#1E2D38] p-4">
-          <p className="mb-3 text-left text-xs font-semibold text-[#9EC5DE]">Accuracy trend</p>
+        <p className="mt-3 max-w-[240px] text-sm leading-relaxed text-neutral-100/40">
+          Short reading set. CEFR level matched from day one.
+        </p>
+        <div className="mt-auto pb-7">
+          <p className="mb-2 text-xs text-neutral-100/35">Accuracy</p>
           <MiniBars values={[42, 48, 55, 58, 64, 72, 81]} color="#6BA3C4" />
-          <p className="mt-3 text-left text-3xl font-bold text-[#DDEEF8]">
+          <p className="mt-3 text-3xl font-medium tracking-tight text-neutral-100">
             <CountUpInView end={81} />%
           </p>
         </div>
       </motion.div>
 
-      <motion.div
-        {...cardAnim(0.3)}
-        className="relative flex h-[520px] flex-col items-center overflow-hidden rounded-3xl bg-neutral-900 px-6 pt-12 text-center"
-      >
-        <WordsReveal as="h3" className="text-4xl leading-tight text-neutral-100" text="Daily MCQs that hit weak skills" delay={0.4} />
+      <motion.div {...cardAnim(0.2)} className={`${cardShell} bg-neutral-900`}>
         <WordsReveal
-          as="p"
-          className="mt-6 max-w-[340px] text-base text-neutral-100 opacity-40"
-          text="Short quiz lessons with instant right/wrong feedback, skill tags, and streakable practice sessions."
-          delay={0.7}
-          step={0.04}
-          duration={0.6}
+          as="h3"
+          className={`${featuresFont} text-[1.65rem] leading-snug text-neutral-100 sm:text-[1.85rem]`}
+          text="Daily MCQs"
+          delay={0.25}
         />
+        <p className="mt-3 max-w-[240px] text-sm leading-relaxed text-neutral-100/40">
+          Instant feedback on the skills you need most.
+        </p>
         <motion.div
-          className="absolute bottom-0 left-1/2 h-[240px] w-1/2"
-          initial={{ opacity: 0, y: 80 }}
+          className="absolute bottom-0 left-1/2 h-[180px] w-[48%] sm:h-[200px]"
+          initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.9, ease: 'easeOut', delay: 0.5 }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.35 }}
           style={{ x: '-50%' }}
         >
-          <img src={heroCardReading} alt="" className="h-full w-full rounded-t-2xl object-contain object-bottom" />
+          <img src={heroCardReading} alt="" className="h-full w-full object-contain object-bottom opacity-90" />
         </motion.div>
       </motion.div>
 
       <motion.div
-        {...cardAnim(0.5)}
+        {...cardAnim(0.3)}
         onViewportEnter={() => setCountActive(true)}
-        className="relative h-[520px] overflow-hidden rounded-3xl"
+        className={cardShell}
         style={{ backgroundColor: '#D0C9B9' }}
       >
-        <div className="flex items-start justify-between p-6 pb-0">
-          <div>
-            <WordsReveal as="p" className="text-2xl text-neutral-900 opacity-40" text="Writing XP" delay={0.6} step={0.08} />
-            <WordsReveal
-              as="h3"
-              className="mt-1 text-[36px] leading-tight font-normal text-neutral-900 [font-family:'Inter_Tight',sans-serif]"
-              text="Level up toward B2 and beyond"
-              delay={0.85}
-              step={0.07}
-            />
-          </div>
-          <img src={threeDotUrl} alt="" className="mt-3 shrink-0" />
-        </div>
-        <div className="absolute right-6 bottom-[88px] left-6">
+        <p className="text-sm text-neutral-900/45">Writing XP</p>
+        <WordsReveal
+          as="h3"
+          className={`${featuresFont} mt-2 text-[1.65rem] leading-snug font-normal text-neutral-900 sm:text-[1.85rem]`}
+          text="Level up toward B2"
+          delay={0.35}
+          step={0.06}
+        />
+        <div className="mt-auto pb-7">
           <MiniBars values={[28, 35, 42, 50, 58, 66, 78]} color="#3D3010" />
-        </div>
-        <div className="absolute bottom-0 left-0 flex h-[80px] w-full items-end gap-2 px-6 pb-4">
-          <span className="text-4xl leading-none text-neutral-900">
-            +
-            <CountUp end={67} duration={1800} active={countActive} />
-          </span>
-          <span className="pb-1 text-base leading-none text-neutral-900/80">XP this session</span>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-3xl leading-none tracking-tight text-neutral-900">
+              +
+              <CountUp end={67} duration={1600} active={countActive} />
+            </span>
+            <span className="text-sm text-neutral-900/55">XP</span>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -749,4 +621,3 @@ export function PracticeShowcase() {
 }
 
 export { heroImage };
-

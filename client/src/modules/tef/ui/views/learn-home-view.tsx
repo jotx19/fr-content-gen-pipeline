@@ -12,6 +12,7 @@ import { LearnBentoGrid } from '@/modules/tef/ui/learn/learn-bento-grid';
 import { useAuthStore } from '@/store/authStore';
 import { useLessonStore } from '@/store/lessonStore';
 import { clearPlacementProgress } from '@/lib/tef-session-storage';
+import { overallLevelAndConfidence } from '@/modules/tef/lib/overall-progress';
 
 function LearnSkeleton() {
   return (
@@ -75,15 +76,23 @@ export function LearnHomeView() {
     ? Math.round((profile.lastEvaluation.overallAccuracy ?? 0) * 100)
     : writingProfile?.lastEvaluation?.overallScore ?? null;
 
+  const readingXp = profile?.stats?.readingXp ?? profile?.stats?.xp ?? 0;
+  const writingXp = writingProfile?.writingXp ?? profile?.stats?.writingXp ?? 0;
+  const overall = overallLevelAndConfidence({
+    readingXp,
+    writingXp,
+    lastScorePct: placementMode ? null : lastScore,
+  });
+
   const bentoData = {
     firstName,
-    level: profile?.level ?? '?',
-    confidence: profile?.confidence,
+    level: placementMode ? '?' : overall.level,
+    confidence: placementMode ? null : overall.confidence,
     summary: placementMode
       ? undefined
       : summary,
     streak: profile?.stats?.streakDays ?? 0,
-    xp: profile?.stats?.readingXp ?? profile?.stats?.xp ?? 0,
+    xp: readingXp + writingXp,
     lastScore: placementMode ? null : lastScore,
     lastKind: profile?.lastEvaluation?.kind,
     lastLevel: profile?.lastEvaluation?.levelAfter ?? profile?.level,

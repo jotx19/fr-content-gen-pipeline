@@ -8,18 +8,17 @@ import {
   Palette,
   PenLine,
   Sun,
+  User,
   type AppIcon,
 } from '@/components/icons';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useThemeToggle } from '@/components/theme-toggle';
-import type { AuthUser } from '@/modules/auth/types/auth';
 import { cn } from '@/lib/utils';
 
 const panelClass = cn(
-  'w-52 rounded-2xl border p-1 shadow-sm backdrop-blur-md',
+  'w-52 rounded-2xl border p-1 shadow-sm backdrop-blur-xl',
   'border-black/10 bg-white/90 text-foreground',
-  'dark:border-white/15 dark:bg-white/10 dark:text-white dark:shadow-none'
+  'dark:border-white/15 dark:bg-black/10 dark:text-white dark:shadow-none'
 );
 
 const itemClass = cn(
@@ -48,8 +47,6 @@ const destructiveIconClass = 'h-[18px] w-[18px] text-red-600 dark:text-red-400';
 const iconStroke = 2;
 
 type AccountDropdownContentProps = {
-  user: AuthUser;
-  initials: string;
   onLogout: () => void;
 };
 
@@ -85,30 +82,16 @@ function MenuRow({
   );
 }
 
-export function AccountDropdownContent({ user, initials, onLogout }: AccountDropdownContentProps) {
+export function AccountDropdownContent({ onLogout }: AccountDropdownContentProps) {
   const { isDark, toggle, mounted } = useThemeToggle();
-  const firstName = user.name.split(' ')[0] ?? user.name;
 
   return (
     <DropdownMenuContent align="end" sideOffset={8} className={panelClass}>
-      <div className="flex items-center gap-2 px-1.5 py-1">
-        <div className={iconBoxClass}>
-          <Avatar className="h-[18px] w-[18px]">
-            <AvatarImage src={user.picture ?? undefined} alt={user.name} />
-            <AvatarFallback className="bg-violet-600 text-[9px] font-medium text-white">
-              {initials.slice(0, 1)}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-sm font-medium text-foreground/90 dark:text-white/90">{firstName}</p>
-          {user.email && (
-            <p className="truncate text-xs text-foreground/60 dark:text-white/60">{user.email}</p>
-          )}
-        </div>
-      </div>
-
-      <DropdownMenuSeparator className="my-0.5 bg-black/10 dark:bg-white/10" />
+      <DropdownMenuItem asChild className={itemClass}>
+        <Link href="/profile">
+          <MenuRow icon={User} title="Profile" />
+        </Link>
+      </DropdownMenuItem>
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/learn">
@@ -137,6 +120,8 @@ export function AccountDropdownContent({ user, initials, onLogout }: AccountDrop
           }
         />
       </DropdownMenuItem>
+
+      <DropdownMenuSeparator className="my-0.5 bg-black/10 dark:bg-white/10" />
 
       <DropdownMenuItem onClick={onLogout} className={cn(destructiveItemClass, 'flex w-full items-center gap-2')}>
         <MenuRow icon={LogOut} title="Log out" destructive />

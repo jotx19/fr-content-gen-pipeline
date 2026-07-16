@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { bricolage } from '@/lib/fonts';
-import { BRAND } from '@/lib/brand';
-import { LANDING_FEATURES } from '@/modules/home/config/landing-features';
-import { LandingFeatureCard } from '@/modules/home/ui/landing-feature-card';
+import { bricolage, interTight } from '@/lib/fonts';
+import { FeatureCards, SectionHeader, StatsSection } from '@/modules/home/ui/landing-helpers';
 import { LandingHeroCards } from '@/modules/home/ui/landing-hero-cards';
 import { LandingNav } from '@/modules/home/ui/landing-nav';
 import { useAuthStore } from '@/store/authStore';
@@ -29,7 +27,7 @@ export function LandingPage() {
             <span className="block">confidence.</span>
           </h1>
 
-          <p className="mt-3 max-w-md text-[11px] leading-relaxed text-muted-foreground sm:mt-4 sm:max-w-lg sm:text-xs">
+          <p className="mt-3 max-w-md text-[11px] leading-relaxed text-foreground/70 sm:mt-4 sm:max-w-lg sm:text-xs">
             Adaptive placement, daily practice, and full progress reports everything you need to
             reach your French goals. Start free and learn at your own pace.
           </p>
@@ -51,50 +49,18 @@ export function LandingPage() {
 
           <LandingHeroCards className="mt-6 w-full sm:mt-10" />
         </section>
+      </div>
 
-        {/* hero image — optional visual below copy */}
-        {/* <section className="relative mt-4 overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]">
-          <div className="relative aspect-[16/10] w-full sm:aspect-[16/9]">
-            <Image
-              src="/hero.png"
-              alt=""
-              fill
-              priority
-              className="object-cover object-center"
-              sizes="(min-width: 1024px) 1152px, 100vw"
-            />
-          </div>
-        </section> */}
+      {/* features — interTight.className required so h2/h3 beat global font-serif */}
+      <section id="features" className={`${interTight.className} bg-background px-5`}>
+        <div className="mx-auto max-w-6xl">
+          <SectionHeader ctaHref={ctaHref} />
+          <FeatureCards />
+        </div>
+      </section>
 
-        {/* features */}
-        <section id="features" className="mt-20 sm:mt-24">
-          <h2 className={`${bricolage.className} mb-8 text-2xl font-semibold sm:text-3xl`}>
-            Everything you need to improve
-          </h2>
-          <div className="grid gap-5 sm:grid-cols-3">
-            {LANDING_FEATURES.map((feature) => (
-              <LandingFeatureCard
-                key={feature.title}
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section id="pricing" className="mt-16 border-t border-border pt-12 text-center">
-          <p className={`${bricolage.className} text-xl font-semibold sm:text-2xl`}>
-            Start learning with {BRAND.name}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">Free to start. No credit card required.</p>
-          <Link
-            href={ctaHref}
-            className="mt-6 inline-flex h-11 items-center rounded-full bg-foreground px-7 text-sm font-medium text-background hover:opacity-90"
-          >
-            {isAuthenticated ? 'Continue learning' : 'Get started free'}
-          </Link>
-        </section>
+      <div className={interTight.className}>
+        <StatsSection />
       </div>
     </div>
   );

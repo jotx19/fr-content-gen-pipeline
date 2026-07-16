@@ -1,4 +1,4 @@
-import { Bricolage_Grotesque, Inter, Playfair_Display } from 'next/font/google';
+import { Bricolage_Grotesque, Inter, Inter_Tight, Playfair_Display } from 'next/font/google';
 
 export const inter = Inter({
   variable: '--font-sans',
@@ -9,6 +9,14 @@ export const inter = Inter({
 
 export const playfair = Playfair_Display({
   variable: '--font-playfair',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+
+/** Opt-in only — add `font-inter-tight` where needed */
+export const interTight = Inter_Tight({
+  variable: '--font-inter-tight-face',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',

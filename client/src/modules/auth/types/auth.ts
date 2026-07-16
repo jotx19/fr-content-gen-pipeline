@@ -3,6 +3,8 @@ export type AuthUser = {
   email: string;
   name: string;
   picture: string | null;
+  createdAt?: string | null;
+  lastLoginAt?: string | null;
 };
 
 export type AuthMeResponse = {

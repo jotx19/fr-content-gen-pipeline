@@ -34,6 +34,8 @@ import {
   Target01Icon,
   Tick01Icon,
   Undo02Icon,
+  User02Icon,
+  Calendar03Icon,
   VolumeHighIcon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
@@ -112,5 +114,7 @@ export const Sun = createIcon(Sun03Icon);
 export const Target = createIcon(Target01Icon);
 export const Trash2 = createIcon(Delete02Icon);
 export const Undo2 = createIcon(Undo02Icon);
+export const User = createIcon(User02Icon);
+export const Calendar = createIcon(Calendar03Icon);
 export const Volume2 = createIcon(VolumeHighIcon);
 export const X = createIcon(Cancel01Icon);

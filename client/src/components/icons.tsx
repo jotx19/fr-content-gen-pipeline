@@ -7,6 +7,7 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   ArrowUp01Icon,
+  ArrowUpDownIcon,
   Award01Icon,
   BarChartIcon,
   BookOpen01Icon,
@@ -24,6 +25,7 @@ import {
   InformationCircleIcon,
   Loading03Icon,
   Logout01Icon,
+  Menu01Icon,
   Moon02Icon,
   PaintBrush01Icon,
   PauseIcon,
@@ -87,6 +89,7 @@ export const Plus = Add;
 export const ArrowLeft = createIcon(ArrowLeft01Icon);
 export const ArrowRight = createIcon(ArrowRight01Icon);
 export const ArrowUp = createIcon(ArrowUp01Icon);
+export const ArrowUpDown = createIcon(ArrowUpDownIcon);
 export const ArrowDown = createIcon(ArrowDown01Icon);
 export const Award = createIcon(Award01Icon);
 export const BarChart3 = createIcon(BarChartIcon);
@@ -104,6 +107,7 @@ export const Home = createIcon(Home01Icon);
 export const Info = createIcon(InformationCircleIcon);
 export const Loader2 = createIcon(Loading03Icon);
 export const LogOut = createIcon(Logout01Icon);
+export const Menu = createIcon(Menu01Icon);
 export const Moon = createIcon(Moon02Icon);
 export const Palette = createIcon(PaintBrush01Icon);
 export const Pause = createIcon(PauseIcon);

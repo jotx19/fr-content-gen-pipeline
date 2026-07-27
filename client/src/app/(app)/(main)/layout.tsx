@@ -15,6 +15,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isLesson = isLessonScreen || isResultsScreen;
 
   const isLanding = pathname === '/';
+  const isSitePage =
+    pathname === '/contact' ||
+    pathname === '/terms' ||
+    pathname === '/privacy';
 
   return (
     <div
@@ -23,7 +27,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         isSignIn || isLesson ? 'h-dvh' : 'min-h-dvh',
       )}
     >
-      {!isLesson && !isSignIn && !isLanding && (
+      {!isLesson && !isSignIn && !isLanding && !isSitePage && (
         <>
           <Navbar />
           {pathname === '/learn' ? (
@@ -33,17 +37,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           )}
         </>
       )}
-      <main
-        className={cn(
-          'flex flex-1 flex-col',
-          pathname === '/' && 'overflow-y-auto',
-          isSignIn && 'h-dvh overflow-hidden',
-          isLessonScreen && 'h-dvh overflow-hidden',
-          isResultsScreen && 'h-dvh min-h-0 overflow-hidden',
-        )}
-      >
-        {children}
-      </main>
+      {isSitePage ? (
+        children
+      ) : (
+        <main
+          className={cn(
+            'flex flex-1 flex-col',
+            pathname === '/' && 'overflow-y-auto',
+            isSignIn && 'h-dvh overflow-hidden',
+            isLessonScreen && 'h-dvh overflow-hidden',
+            isResultsScreen && 'h-dvh min-h-0 overflow-hidden',
+          )}
+        >
+          {children}
+        </main>
+      )}
       <OnboardingGate />
     </div>
   );

@@ -21,7 +21,6 @@ import {
   saveLastReadingXp,
 } from "@/lib/tef-session-storage";
 import { cn } from "@/lib/utils";
-import { DitherAreaChartFromScore } from "@/components/ui/dither-area-chart";
 
 export type LearnBentoData = {
   firstName?: string;
@@ -30,9 +29,6 @@ export type LearnBentoData = {
   summary?: string;
   streak: number;
   xp: number;
-  lastScore?: number | null;
-  lastKind?: string;
-  lastLevel?: string;
   practiceReady?: boolean;
   placementMode?: boolean;
   onStartPractice?: () => void;
@@ -385,9 +381,6 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
     summary,
     streak,
     xp,
-    lastScore,
-    lastKind,
-    lastLevel,
     practiceReady,
     placementMode,
     onStartPractice,
@@ -511,88 +504,101 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
         <BentoXpStreakPanel xp={xp} streak={streak} />
       </div>
 
-      {/* Right — last session + actions */}
+      {/* Right — reading & writing (equal halves) */}
       <div
         className={cn(
-          "col-span-2 flex min-h-[280px] flex-col justify-between rounded-[28px] p-6 ring-1 ring-black/[0.04] sm:min-h-[320px] sm:rounded-[32px] sm:p-8 dark:ring-white/[0.06]",
+          "col-span-2 flex min-h-[280px] flex-col rounded-[28px] p-5 ring-1 ring-black/[0.04] sm:min-h-[320px] sm:rounded-[32px] sm:p-6 dark:ring-white/[0.06]",
           "md:col-span-5 md:col-start-8 md:row-span-2 md:row-start-1 md:h-full md:min-h-0",
           panelBg,
         )}
       >
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 pb-4 sm:pb-5">
           <h3
-            className={`${bricolage.className} shrink-0 text-xl font-semibold text-neutral-900 dark:text-white sm:text-2xl`}
+            className={`${bricolage.className} text-xl font-semibold text-neutral-900 dark:text-white sm:text-2xl`}
           >
-            Last session
+            Practice
           </h3>
-
-          <div className="flex min-h-[100px] flex-1 items-center py-3 sm:min-h-[120px] sm:py-4">
-            <DitherAreaChartFromScore
-              lastScore={lastScore}
-              className="w-full"
-              height={112}
-            />
-          </div>
-
-          {lastScore != null ? (
-            <div className="flex shrink-0 items-end justify-between gap-4">
-              <div>
-                <p className="text-5xl font-extrabold leading-none text-[#58cc02] sm:text-6xl">
-                  {lastScore}%
-                </p>
-                <p
-                  className={`${inter.className} mt-2 text-sm font-semibold capitalize text-neutral-500 dark:text-white/70`}
-                >
-                  {lastKind ?? "practice"}
-                </p>
-              </div>
-              <span
-                className={`${inter.className} mb-1 shrink-0 rounded-full bg-neutral-100 px-3.5 py-1.5 text-xs font-bold text-neutral-700 dark:bg-white/10 dark:text-white`}
-              >
-                {lastLevel ?? level}
-              </span>
-            </div>
-          ) : (
-            <p
-              className={`${inter.className} shrink-0 text-sm leading-relaxed text-neutral-500 dark:text-white/70`}
-            >
-              {placementMode
-                ? "Complete placement to see your first score here."
-                : "Finish a lesson to track your progress."}
-            </p>
-          )}
+          <p
+            className={`${inter.className} mt-2 max-w-[20rem] text-sm leading-relaxed text-neutral-500 dark:text-white/70`}
+          >
+            {placementMode
+              ? "Take placement first, then jump into reading and writing."
+              : "Jump into a reading lesson or written expression whenever you’re ready."}
+          </p>
         </div>
 
-        <div
-          className={`${inter.className} mt-8 space-y-2.5 border-t border-neutral-100 pt-5 dark:border-white/10`}
-        >
-          {!placementMode && (
+        <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
+          {placementMode ? (
             <button
               type="button"
-              onClick={onStartPractice}
-              disabled={!practiceReady}
-              className="flex w-full items-center justify-between rounded-2xl bg-neutral-50 px-4 py-3 text-left text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-100 disabled:opacity-50 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
-            >
-              <span>
-                {practiceReady ? "Start reading lesson" : "Preparing lesson…"}
-              </span>
-              {practiceReady ? (
-                <ArrowRight className="h-4 w-4" />
-              ) : (
-                <Loader2 className="h-4 w-4 animate-spin" />
+              onClick={onStartPlacement}
+              className={cn(
+                "flex h-full min-h-[140px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-opacity hover:opacity-90 sm:rounded-[26px] sm:px-6 sm:py-6",
+                "bg-neutral-900 text-white dark:bg-white dark:text-[#1C1C1C]",
               )}
+            >
+              <span
+                className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl`}
+              >
+                Placement
+              </span>
+              <span className="inline-flex items-center gap-2 text-sm font-medium opacity-80">
+                Start placement
+                <ArrowRight className="h-4 w-4" />
+              </span>
             </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onStartPractice}
+                disabled={!practiceReady}
+                className={cn(
+                  "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-colors sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
+                  "bg-neutral-50 text-neutral-900 hover:bg-neutral-100 disabled:opacity-50",
+                  "dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
+                )}
+              >
+                <span
+                  className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.75rem]`}
+                >
+                  Reading
+                </span>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 dark:text-white/70">
+                  {practiceReady ? (
+                    <>
+                      Start lesson
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Preparing…
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </>
+                  )}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onStartWriting}
+                className={cn(
+                  "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-opacity hover:opacity-90 sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
+                  "bg-neutral-900 text-white dark:bg-white dark:text-[#1C1C1C]",
+                )}
+              >
+                <span
+                  className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.75rem]`}
+                >
+                  Writing
+                </span>
+                <span className="inline-flex items-center gap-2 text-sm font-medium opacity-80">
+                  Expression écrite
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={placementMode ? onStartPlacement : onStartWriting}
-            className="flex w-full items-center justify-between rounded-2xl bg-neutral-900 px-4 py-3 text-left text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-[#1C1C1C]"
-          >
-            <span>
-              {placementMode ? "Start placement" : "Expression écrite"}
-            </span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
         </div>
       </div>
     </section>

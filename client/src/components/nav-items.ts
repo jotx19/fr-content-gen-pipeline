@@ -12,7 +12,5 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
 ];
 
 export const LANDING_NAV_ITEMS = [
-  { label: 'Features', href: '#features' },
   { label: 'Learn', href: '/learn' },
-  { label: 'Pricing', href: '#pricing' },
 ] as const;

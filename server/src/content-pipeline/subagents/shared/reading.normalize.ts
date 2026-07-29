@@ -66,6 +66,28 @@ export function normalizeOptions(options) {
   return cleaned.slice(0, 4);
 }
 
+/** Fisher–Yates shuffle options; keep correctIndex pointing at the same answer. */
+export function shuffleMcqOptions(question) {
+  if (!question || !Array.isArray(question.options) || question.options.length < 2) {
+    return question;
+  }
+
+  const options = [...question.options];
+  let correctIndex = Math.min(
+    options.length - 1,
+    Math.max(0, Number(question.correctIndex) || 0)
+  );
+
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+    if (correctIndex === i) correctIndex = j;
+    else if (correctIndex === j) correctIndex = i;
+  }
+
+  return { ...question, options, correctIndex };
+}
+
 export function normalizePlacementOutput(parsed) {
   return normalizePlacementBatch(parsed);
 }
@@ -77,14 +99,14 @@ export function normalizePlacementBatch(parsed) {
     .map((q, i) => {
       const options = normalizeOptions(q?.options);
       if (!options || !q?.question) return null;
-      return {
+      return shuffleMcqOptions({
         id: String(q.id || `q${i + 1}`),
         question: String(q.question).trim(),
         options,
         correctIndex: Math.min(3, Math.max(0, Number(q.correctIndex) || 0)),
         skillTag: normalizeSkillTag(q.skillTag),
         ...(q.explanation ? { explanation: String(q.explanation).trim() } : {}),
-      };
+      });
     })
     .filter(Boolean);
 
@@ -99,13 +121,13 @@ export function normalizeMcqBatch(parsed) {
       .map((q, i) => {
         const options = normalizeOptions(q?.options);
         if (!options || !q?.question) return null;
-        return {
+        return shuffleMcqOptions({
           question: String(q.question).trim(),
           options,
           correctIndex: Math.min(3, Math.max(0, Number(q.correctIndex) || 0)),
           explanation: String(q.explanation ?? '').trim() || 'See correct answer.',
           skillTag: normalizeSkillTag(q.skillTag),
-        };
+        });
       })
       .filter(Boolean),
   };

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, ClipboardList, Loader2 } from '@/components/icons';
+import { BookOpen, ClipboardList, Loader2 } from '@/components/icons';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,33 +22,86 @@ import {
   useSubmitOnboardMutation,
   useSubmitPracticeMutation,
 } from '@/modules/tef/hooks/use-tef-queries';
-import type { PublicQuestion } from '@/modules/tef/types/tef';
+import type { PublicQuestion, PublicReadingModule } from '@/modules/tef/types/tef';
 import { useLessonStore } from '@/store/lessonStore';
 
 const panelClass = 'bg-[#FCFCFC] dark:bg-[#1C1C1C]';
 
-function segmentTone({
-  index,
+type FlatItem = {
+  question: PublicQuestion;
+  moduleIndex: number;
+  itemIndexInModule: number;
+};
+
+function modulesFromBatch(
+  modules: PublicReadingModule[] | undefined,
+  questions: PublicQuestion[]
+): PublicReadingModule[] {
+  if (modules?.length) return modules;
+  if (!questions.length) return [];
+  return [
+    {
+      id: 'mod-legacy',
+      type: 'mcq_set',
+      title: 'Practice',
+      items: questions,
+    },
+  ];
+}
+
+function flattenModules(modules: PublicReadingModule[]): FlatItem[] {
+  const flat: FlatItem[] = [];
+  modules.forEach((mod, moduleIndex) => {
+    (mod.items ?? []).forEach((question, itemIndexInModule) => {
+      flat.push({ question, moduleIndex, itemIndexInModule });
+    });
+  });
+  return flat;
+}
+
+function moduleSegmentTone({
+  moduleIndex,
+  currentModuleIndex,
+  itemStart,
+  itemEnd,
   currentIdx,
   checked,
-  answer,
-  correctIndex,
+  answers,
+  correctIndices,
 }: {
-  index: number;
+  moduleIndex: number;
+  currentModuleIndex: number;
+  itemStart: number;
+  itemEnd: number;
   currentIdx: number;
   checked: boolean;
-  answer: number | null;
-  correctIndex: number | null;
+  answers: (number | null)[];
+  correctIndices: (number | null)[];
 }) {
-  if (index > currentIdx) return 'bg-black/8 dark:bg-white/10';
-  if (index < currentIdx) {
-    if (correctIndex != null && answer != null) {
-      return answer === correctIndex ? 'bg-primary' : 'bg-destructive/80';
+  if (moduleIndex > currentModuleIndex) return 'bg-black/8 dark:bg-white/10';
+
+  const finished =
+    moduleIndex < currentModuleIndex ||
+    (moduleIndex === currentModuleIndex && checked && currentIdx === itemEnd - 1);
+
+  if (finished || moduleIndex < currentModuleIndex) {
+    let anyWrong = false;
+    let anyAnswered = false;
+    for (let i = itemStart; i < itemEnd; i++) {
+      if (correctIndices[i] != null && answers[i] != null) {
+        anyAnswered = true;
+        if (answers[i] !== correctIndices[i]) anyWrong = true;
+      }
     }
-    return 'bg-primary/70';
+    if (!anyAnswered) return 'bg-primary/70';
+    return anyWrong ? 'bg-destructive/80' : 'bg-primary';
   }
-  if (checked && correctIndex != null && answer != null) {
-    return answer === correctIndex ? 'bg-primary' : 'bg-destructive/80';
+
+  // Current module in progress
+  if (checked && correctIndices[currentIdx] != null && answers[currentIdx] != null) {
+    return answers[currentIdx] === correctIndices[currentIdx]
+      ? 'bg-primary'
+      : 'bg-destructive/80';
   }
   return 'bg-primary/45';
 }
@@ -67,7 +120,7 @@ export function LessonView() {
 
   const practiceQuery = usePracticeQuery(mode === 'practice');
 
-  const [questions, setQuestions] = useState<PublicQuestion[]>([]);
+  const [modules, setModules] = useState<PublicReadingModule[]>([]);
   const [topic, setTopic] = useState<string | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [correctIndices, setCorrectIndices] = useState<(number | null)[]>([]);
@@ -79,10 +132,23 @@ export function LessonView() {
   const placementInitRef = useRef(false);
   const practiceInitRef = useRef(false);
 
+  const flatItems = useMemo(() => flattenModules(modules), [modules]);
+  const questions = useMemo(() => flatItems.map((f) => f.question), [flatItems]);
+
+  const moduleRanges = useMemo(() => {
+    let cursor = 0;
+    return modules.map((mod) => {
+      const start = cursor;
+      const end = cursor + (mod.items?.length ?? 0);
+      cursor = end;
+      return { start, end };
+    });
+  }, [modules]);
+
   useEffect(() => {
     placementInitRef.current = false;
     practiceInitRef.current = false;
-    setQuestions([]);
+    setModules([]);
     setTopic(null);
     setAnswers([]);
     setCorrectIndices([]);
@@ -103,7 +169,8 @@ export function LessonView() {
         const saved = loadPlacementProgress();
         if (saved.questions?.length && !isFresh) {
           if (cancelled) return;
-          setQuestions(saved.questions);
+          const mods = modulesFromBatch(undefined, saved.questions);
+          setModules(mods);
           setAnswers(saved.answers ?? new Array(saved.questions.length).fill(null));
           setCorrectIndices(new Array(saved.questions.length).fill(null));
           setCurrentIdx(saved.currentIdx ?? 0);
@@ -115,7 +182,8 @@ export function LessonView() {
         if (cancelled) return;
         if (!data.questions?.length) throw new Error('No questions returned');
 
-        setQuestions(data.questions);
+        const mods = modulesFromBatch(undefined, data.questions);
+        setModules(mods);
         setAnswers(new Array(data.questions.length).fill(null));
         setCorrectIndices(new Array(data.questions.length).fill(null));
         setCurrentIdx(0);
@@ -146,13 +214,17 @@ export function LessonView() {
       return;
     }
 
-    if (!practiceQuery.isSuccess || !practiceQuery.data?.questions?.length) return;
+    if (!practiceQuery.isSuccess) return;
+    const data = practiceQuery.data;
+    const mods = modulesFromBatch(data.modules, data.questions ?? []);
+    if (!mods.length) return;
 
     practiceInitRef.current = true;
-    setQuestions(practiceQuery.data.questions);
-    setTopic(practiceQuery.data.topic ?? null);
-    setAnswers(new Array(practiceQuery.data.questions.length).fill(null));
-    setCorrectIndices(new Array(practiceQuery.data.questions.length).fill(null));
+    const flat = flattenModules(mods);
+    setModules(mods);
+    setTopic(data.topic ?? null);
+    setAnswers(new Array(flat.length).fill(null));
+    setCorrectIndices(new Array(flat.length).fill(null));
     setCurrentIdx(0);
     setLoading(false);
   }, [mode, practiceQuery.isSuccess, practiceQuery.isError, practiceQuery.data, router]);
@@ -230,9 +302,34 @@ export function LessonView() {
 
   const isPlacement = mode === 'placement';
   const isLast = questions.length > 0 && currentIdx === questions.length - 1;
-  const progressPct = questions.length
-    ? Math.round(((currentIdx + (checked ? 1 : 0)) / questions.length) * 100)
+  const currentFlat = flatItems[currentIdx];
+  const currentModule =
+    currentFlat != null ? modules[currentFlat.moduleIndex] : undefined;
+  const currentModuleIndex = currentFlat?.moduleIndex ?? 0;
+  const itemsInModule = currentModule?.items?.length ?? 0;
+  const itemInModule = (currentFlat?.itemIndexInModule ?? 0) + 1;
+
+  const completedModules = modules.reduce((acc, _, mi) => {
+    const range = moduleRanges[mi];
+    if (!range) return acc;
+    if (mi < currentModuleIndex) return acc + 1;
+    if (mi === currentModuleIndex && checked && currentIdx === range.end - 1) {
+      return acc + 1;
+    }
+    return acc;
+  }, 0);
+
+  const progressPct = modules.length
+    ? Math.round(
+        ((completedModules +
+          (currentModule && !isLast
+            ? (itemInModule - (checked ? 0 : 1)) / Math.max(itemsInModule, 1)
+            : 0)) /
+          modules.length) *
+          100
+      )
     : 0;
+
   const busy =
     submitOnboard.isPending || submitPractice.isPending || checkAnswer.isPending;
   const currentQuestion = questions[currentIdx];
@@ -254,79 +351,210 @@ export function LessonView() {
     );
   }
 
+  const renderStatusLine = () =>
+    isPlacement ? (
+      <>
+        Question{' '}
+        <span className="font-medium tabular-nums text-foreground">{currentIdx + 1}</span>
+        <span className="text-muted-foreground/70"> / {questions.length}</span>
+      </>
+    ) : (
+      <>
+        Module{' '}
+        <span className="font-medium tabular-nums text-foreground">
+          {currentModuleIndex + 1}
+        </span>
+        <span className="text-muted-foreground/70"> / {modules.length}</span>
+        {currentModule?.title ? (
+          <span className="text-muted-foreground/70"> <br/> {currentModule.title}</span>
+        ) : null}
+        {itemsInModule > 1 ? (
+          <span className="text-muted-foreground/70">
+            {' '}
+            <br/> Item {itemInModule}/{itemsInModule}
+          </span>
+        ) : null}
+      </>
+    );
+
+  const renderProgressSegments = () => (
+    <div
+      className="flex gap-1"
+      aria-label={
+        isPlacement
+          ? `Question progress: ${currentIdx + 1} of ${questions.length}`
+          : `Module progress: ${currentModuleIndex + 1} of ${modules.length}`
+      }
+    >
+      {(isPlacement ? questions : modules).map((_, index) => {
+        if (isPlacement) {
+          return (
+            <div
+              key={index}
+              className={cn(
+                'h-1.5 min-w-0 flex-1 rounded-full transition-colors duration-300',
+                index > currentIdx && 'bg-black/8 dark:bg-white/10',
+                index < currentIdx &&
+                  (correctIndices[index] != null && answers[index] != null
+                    ? answers[index] === correctIndices[index]
+                      ? 'bg-primary'
+                      : 'bg-destructive/80'
+                    : 'bg-primary/70'),
+                index === currentIdx &&
+                  (checked && correctIndices[index] != null && answers[index] != null
+                    ? answers[index] === correctIndices[index]
+                      ? 'bg-primary'
+                      : 'bg-destructive/80'
+                    : 'bg-primary/45'),
+                index === currentIdx &&
+                  'ring-1 ring-primary/25 ring-offset-1 ring-offset-[#FCFCFC] dark:ring-offset-[#1C1C1C]',
+              )}
+            />
+          );
+        }
+
+        const range = moduleRanges[index]!;
+        return (
+          <div
+            key={modules[index]?.id ?? index}
+            className={cn(
+              'h-1.5 min-w-0 flex-1 rounded-full transition-colors duration-300',
+              moduleSegmentTone({
+                moduleIndex: index,
+                currentModuleIndex,
+                itemStart: range.start,
+                itemEnd: range.end,
+                currentIdx,
+                checked,
+                answers,
+                correctIndices,
+              }),
+              index === currentModuleIndex &&
+                'ring-1 ring-primary/25 ring-offset-1 ring-offset-[#FCFCFC] dark:ring-offset-[#1C1C1C]',
+            )}
+            title={modules[index]?.title}
+          />
+        );
+      })}
+    </div>
+  );
+
+  const hideScrollbar =
+    '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
+
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col sm:max-w-3xl">
-      <header className="sticky top-0 z-10 px-4 pt-4 pb-3">
-        <div className={cn('rounded-2xl px-4 py-3.5', panelClass)}>
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"> 
-                <span className="uppercase tracking-wide">{modeLabel}</span>
-              </div>
-              <h1
-                className={`${bricolage.className} mt-1 truncate text-lg font-semibold leading-tight tracking-tight sm:text-xl uppercase`}
-                title={title}
-              >
-                {title}
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Question{' '}
-                <span className="font-medium tabular-nums text-foreground">{currentIdx + 1}</span>
-                <span className="text-muted-foreground/70"> / {questions.length}</span>
+    <div className="relative flex h-dvh w-full overflow-hidden">
+      <aside className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-[min(22rem,28vw)] items-start p-5 lg:flex xl:w-[min(24rem,24vw)]">
+        <div
+          className={cn(
+            'pointer-events-auto flex aspect-square w-full max-w-[20rem] flex-col justify-between rounded-[1.75rem] p-5 xl:max-w-[22rem] xl:p-6',
+            panelClass,
+          )}
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <ModeIcon className="h-3.5 w-3.5" strokeWidth={2} />
+              <span className="uppercase tracking-wide">{modeLabel}</span>
+            </div>
+            <h1
+              className={`${bricolage.className} mt-2 text-xl font-semibold leading-tight tracking-tight uppercase xl:text-2xl`}
+              title={title}
+            >
+              {title}
+            </h1>
+            <p className="mt-3 text-sm leading-snug text-muted-foreground">{renderStatusLine()}</p>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-end justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Progress
+              </p>
+              <p className={`${bricolage.className} text-2xl font-semibold tabular-nums`}>
+                {Math.min(100, Math.max(0, progressPct))}%
               </p>
             </div>
-
-            <div className="shrink-0 text-right">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Progress</p>
-              <p className={`${bricolage.className} text-lg font-semibold tabular-nums`}>{progressPct}%</p>
-            </div>
-          </div>
-
-          <div className="mt-3.5 flex gap-1" aria-label={`Question progress: ${currentIdx + 1} of ${questions.length}`}>
-            {questions.map((_, index) => (
-              <div
-                key={index}
-                className={cn(
-                  'h-1.5 min-w-0 flex-1 rounded-full transition-colors duration-300',
-                  segmentTone({
-                    index,
-                    currentIdx,
-                    checked,
-                    answer: answers[index],
-                    correctIndex: correctIndices[index],
-                  }),
-                  index === currentIdx && 'ring-1 ring-primary/25 ring-offset-1 ring-offset-[#FCFCFC] dark:ring-offset-[#1C1C1C]'
-                )}
-              />
-            ))}
+            {renderProgressSegments()}
           </div>
         </div>
-      </header>
+      </aside>
 
-      <main className="flex-1 px-4 py-5 pb-24">
-        {currentQuestion && (
-          <McqQuestion
-            question={currentQuestion}
-            selectedIndex={answers[currentIdx]}
-            onSelect={(idx) => {
-              if (checked) return;
-              setAnswers((prev) => {
-                const next = [...prev];
-                next[currentIdx] = idx;
-                if (isPlacement) persistPlacement(next, currentIdx);
-                return next;
-              });
-            }}
-            disabled={busy || checked}
-            showResult={checked}
-            correctIndex={correctIndices[currentIdx]}
-            shake={shake}
-          />
+      {/* Scrollable lesson column — centered, no scrollbar */}
+      <div
+        className={cn(
+          'flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto',
+          hideScrollbar,
         )}
-      </main>
+      >
+        {/* Mobile / tablet header — scrolls with content (not fixed) */}
+        <header className="shrink-0 px-4 pt-4 pb-3 lg:hidden">
+          <div className={cn('rounded-2xl px-4 py-3.5', panelClass)}>
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <ModeIcon className="h-3.5 w-3.5" strokeWidth={2} />
+                  <span className="uppercase tracking-wide">{modeLabel}</span>
+                </div>
+                <h1
+                  className={`${bricolage.className} mt-1 text-sm font-semibold leading-snug tracking-tight sm:text-base uppercase`}
+                  title={title}
+                >
+                  {title}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">{renderStatusLine()}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Progress
+                </p>
+                <p className={`${bricolage.className} text-lg font-semibold tabular-nums`}>
+                  {Math.min(100, Math.max(0, progressPct))}%
+                </p>
+              </div>
+            </div>
+            <div className="mt-3.5">{renderProgressSegments()}</div>
+          </div>
+        </header>
 
-      <div className="fixed bottom-5 left-0 right-0 z-40 bg-transparent px-2.5 sm:px-4">
-        <div className="mx-auto flex w-full max-w-xl items-center gap-1.5 overflow-hidden rounded-4xl border border-black/8 bg-white/72 p-1.5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/65 md:rounded-full">
+        <main className="mx-auto w-full max-w-2xl flex-1 space-y-4 px-4 py-5 pb-28 sm:max-w-3xl">
+          {!isPlacement && currentModule?.passage ? (
+            <article
+              className={cn(
+                'rounded-2xl px-5 py-4 text-[15px] leading-relaxed whitespace-pre-wrap text-neutral-800 dark:text-white/85',
+                panelClass,
+              )}
+            >
+              <p className="mb-2 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                {currentModule.type === 'finding_info' ? 'Document' : 'Passage'}
+              </p>
+              {currentModule.passage}
+            </article>
+          ) : null}
+
+          {currentQuestion && (
+            <McqQuestion
+              question={currentQuestion}
+              selectedIndex={answers[currentIdx]}
+              onSelect={(idx) => {
+                if (checked) return;
+                setAnswers((prev) => {
+                  const next = [...prev];
+                  next[currentIdx] = idx;
+                  if (isPlacement) persistPlacement(next, currentIdx);
+                  return next;
+                });
+              }}
+              disabled={busy || checked}
+              showResult={checked}
+              correctIndex={correctIndices[currentIdx]}
+              shake={shake}
+            />
+          )}
+        </main>
+      </div>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 px-2.5 sm:px-4">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-xl items-center gap-1.5 overflow-hidden rounded-4xl border border-black/8 bg-white/72 p-1.5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/65 md:rounded-full">
           <Button
             type="button"
             variant="destructive"

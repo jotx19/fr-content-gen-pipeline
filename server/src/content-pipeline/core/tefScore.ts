@@ -57,11 +57,22 @@ export function scoreMcqBatch(questions, userAnswers) {
 
 /** Strip answer keys before sending questions to the client. */
 export function publicQuestions(questions) {
-  return questions.map((q, i) => ({
+  return (questions ?? []).map((q, i) => ({
     id: q.id || `q${i + 1}`,
     question: q.question,
     options: q.options,
     skillTag: q.skillTag,
+  }));
+}
+
+/** Strip answer keys from multi-module reading sessions. */
+export function publicReadingModules(modules) {
+  return (modules ?? []).map((mod, i) => ({
+    id: mod.id || `mod${i + 1}`,
+    type: mod.type,
+    title: mod.title,
+    passage: mod.passage ?? undefined,
+    items: publicQuestions(mod.items),
   }));
 }
 

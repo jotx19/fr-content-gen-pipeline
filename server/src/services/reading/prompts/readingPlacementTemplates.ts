@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createHash } from 'node:crypto';
+import { shuffleMcqOptions } from '../../../content-pipeline/subagents/shared/reading.normalize.js';
 
 /** Static TEF placement MCQs — used when OpenRouter credits are low or TEF_READING_USE_TEMPLATES=true */
 const PLACEMENT_QUESTIONS = [
@@ -99,7 +100,11 @@ export function pickPlacementTemplate(seed = '', count = 5) {
   const questions = [];
 
   for (let i = 0; i < size; i += 1) {
-    questions.push(PLACEMENT_QUESTIONS[(start + i) % PLACEMENT_QUESTIONS.length]);
+    questions.push(
+      shuffleMcqOptions({
+        ...PLACEMENT_QUESTIONS[(start + i) % PLACEMENT_QUESTIONS.length],
+      })
+    );
   }
 
   return questions;

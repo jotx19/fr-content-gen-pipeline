@@ -5,6 +5,16 @@ export type PublicQuestion = {
   skillTag?: string;
 };
 
+export type ReadingModuleType = 'passage_mcq' | 'finding_info' | 'mcq_set';
+
+export type PublicReadingModule = {
+  id: string;
+  type: ReadingModuleType | string;
+  title: string;
+  passage?: string;
+  items: PublicQuestion[];
+};
+
 export type TefStats = {
   totalSessions: number;
   totalQuestions: number;
@@ -36,6 +46,7 @@ export type PracticeBatch = {
   level: string;
   weakAreas: string[];
   topic?: string;
+  modules?: PublicReadingModule[];
   questions: PublicQuestion[];
   ready: boolean;
 };

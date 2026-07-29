@@ -3,6 +3,7 @@ import { TefProfile, TefEvaluation, isMongoReady } from '../../../app/db/mongo.j
 import { runGenerationGraph, runEvaluationGraph } from '../../../content-pipeline/agent/graph.js';
 import {
   publicQuestions,
+  publicReadingModules,
   levelFromPlacement,
   buildEnglishSummary,
   normalizeCefrLevel,
@@ -13,7 +14,10 @@ import { config } from '../../../config.js';
 import { getLatestEvaluation, getEvaluationHistory } from '../../../app/services/userService.js';
 import { READING_MODULE } from '../schemas/reading.mongo.js';
 import type { TefModule } from '../../../app/db/schemas/tefEvaluation.schema.js';
-import { pickReadingPracticeTemplate } from '../prompts/readingPracticeTemplates.js';
+import {
+  flattenReadingModules,
+  pickReadingPracticeSession,
+} from '../prompts/readingPracticeTemplates.js';
 import { pickPlacementTemplate } from '../prompts/readingPlacementTemplates.js';
 
 const TOPIC_BY_SKILL: Record<string, string> = {
@@ -31,9 +35,13 @@ function requireMongo() {
   }
 }
 
+function hasPendingPractice(pending: { questions?: unknown[]; modules?: unknown[] } | undefined) {
+  return Boolean(pending?.questions?.length || pending?.modules?.length);
+}
+
 function profileFromDoc(doc: Record<string, unknown> | null, lastEval?: Record<string, unknown> | null) {
   if (!doc?.level) return null;
-  const pending = doc.pendingPractice as { questions?: unknown[] } | undefined;
+  const pending = doc.pendingPractice as { questions?: unknown[]; modules?: unknown[] } | undefined;
   const stats = (doc.stats as Record<string, number>) ?? {};
   const readingXp = stats.readingXp ?? stats.xp ?? 0;
   return {
@@ -43,7 +51,7 @@ function profileFromDoc(doc: Record<string, unknown> | null, lastEval?: Record<s
     summary: doc.summary ?? '',
     onboardedAt:
       (doc.onboardedAt as Date)?.toISOString?.() ?? (doc.onboardedAt as string) ?? null,
-    practiceReady: Boolean(pending?.questions?.length),
+    practiceReady: hasPendingPractice(pending),
     stats: {
       totalSessions: stats.totalSessions ?? 0,
       totalQuestions: stats.totalQuestions ?? 0,
@@ -74,12 +82,33 @@ function pickTopic(weakAreas: string[] = []) {
 }
 
 function practiceResponse(doc: Record<string, unknown>) {
-  const pending = doc.pendingPractice as { questions: unknown[]; topic?: string };
+  const pending = doc.pendingPractice as {
+    questions?: unknown[];
+    modules?: unknown[];
+    topic?: string;
+  };
+  const modules = pending?.modules?.length
+    ? pending.modules
+    : pending?.questions?.length
+      ? [
+          {
+            id: 'mod-legacy',
+            type: 'mcq_set',
+            title: 'Practice',
+            items: pending.questions,
+          },
+        ]
+      : [];
+  const questions = pending?.questions?.length
+    ? pending.questions
+    : flattenReadingModules(modules);
+
   return {
     level: doc.level,
     weakAreas: doc.weakAreas ?? [],
     topic: pending?.topic ?? pickTopic((doc.weakAreas as string[]) ?? []),
-    questions: publicQuestions(pending.questions),
+    modules: publicReadingModules(modules),
+    questions: publicQuestions(questions),
     ready: true,
   };
 }
@@ -143,45 +172,26 @@ function shouldUseReadingTemplatesOnly() {
 }
 
 async function generatePracticeBatch(userId: string, { level, weakAreas }: { level: string; weakAreas: string[] }) {
-  const topic = pickTopic(weakAreas);
-  const count = config.tefPracticeCount;
-  let questions;
-
-  if (shouldUseReadingTemplatesOnly()) {
-    questions = pickReadingPracticeTemplate(`${userId}:${level}:${topic}`, count);
-    console.log(`[reading] practice batch from templates (${questions.length} q) for ${userId.slice(0, 8)}`);
-  } else {
-    try {
-      const { questions: generated } = await runGenerationGraph({
-        userId,
-        action: 'practice',
-        level,
-        weakAreas,
-        topic,
-        subagentName: 'mcqGenerator',
-        subagentInput: { level, weakAreas, topic, count },
-      });
-      questions = generated;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn(
-        `[reading] practice LLM failed (${message}) — using template fallback`
-      );
-      questions = pickReadingPracticeTemplate(`${userId}:${level}:${topic}`, count);
-    }
-  }
+  const topicHint = pickTopic(weakAreas);
+  // Multi-module TEF-style reading sessions (passage, finding info, grammar/vocab).
+  const session = pickReadingPracticeSession(`${userId}:${level}:${topicHint}`);
+  const modules = session.modules;
+  const questions = flattenReadingModules(modules);
+  const topic = session.topic || topicHint;
 
   if (!questions?.length) {
     throw new Error('Could not generate practice questions');
   }
 
-  const pendingPractice = { questions, topic, createdAt: new Date() };
+  const pendingPractice = { modules, questions, topic, createdAt: new Date() };
   await TefProfile.findOneAndUpdate(
     { userId },
     { $set: { pendingPractice, updatedAt: new Date() } }
   );
 
-  console.log(`[reading] practice batch ready (${questions.length} q) for ${userId.slice(0, 8)}`);
+  console.log(
+    `[reading] practice session ready (${modules.length} modules, ${questions.length} items) for ${userId.slice(0, 8)}`
+  );
   return pendingPractice;
 }
 
@@ -210,8 +220,9 @@ async function generatePlacementQuestions(userId: string, count: number) {
 }
 
 async function ensurePracticeBatch(userId: string, doc: Record<string, unknown>) {
-  const pending = doc.pendingPractice as { questions?: unknown[] } | undefined;
-  if (pending?.questions?.length) return pending;
+  const pending = doc.pendingPractice as { questions?: unknown[]; modules?: unknown[] } | undefined;
+  // Prefer multi-module sessions; regenerate legacy flat-only batches.
+  if (pending?.modules?.length) return pending;
 
   const existing = getInFlight(userId);
   if (existing) return existing;
@@ -262,7 +273,7 @@ export async function prefetchPractice(userId: string): Promise<PracticePrefetch
   if (!doc.level) {
     return { ok: false, status: 'no_level' };
   }
-  if ((doc.pendingPractice as { questions?: unknown[] })?.questions?.length) {
+  if ((doc.pendingPractice as { modules?: unknown[] } | undefined)?.modules?.length) {
     return { ok: true, status: 'already_ready' };
   }
 
@@ -420,7 +431,7 @@ export async function onRequestPractice(userId: string) {
     throw new Error('Complete placement before starting practice');
   }
 
-  if (!(doc.pendingPractice as { questions?: unknown[] })?.questions?.length) {
+  if (!(doc.pendingPractice as { modules?: unknown[] } | undefined)?.modules?.length) {
     await ensurePracticeBatch(userId, doc);
     doc = await TefProfile.findOne({ userId }).lean();
   }
@@ -436,8 +447,15 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     throw new Error('Complete placement before submitting practice');
   }
 
-  const pending = doc.pendingPractice as { questions?: unknown[]; topic?: string } | undefined;
-  const questions = pending?.questions;
+  const pending = doc.pendingPractice as {
+    questions?: unknown[];
+    modules?: unknown[];
+    topic?: string;
+  } | undefined;
+  const questions =
+    pending?.questions?.length
+      ? pending.questions
+      : flattenReadingModules(pending?.modules);
   if (!questions?.length) {
     throw new Error('No practice session found — start practice first');
   }
@@ -577,9 +595,16 @@ export async function checkSessionAnswer(
   const pending =
     kind === 'placement'
       ? (doc?.pendingPlacement as { questions?: unknown[] } | undefined)
-      : (doc?.pendingPractice as { questions?: unknown[] } | undefined);
+      : (doc?.pendingPractice as { questions?: unknown[]; modules?: unknown[] } | undefined);
 
-  const questions = pending?.questions;
+  const questions =
+    pending?.questions?.length
+      ? pending.questions
+      : kind === 'practice'
+        ? flattenReadingModules(
+            (pending as { modules?: unknown[] } | undefined)?.modules
+          )
+        : [];
   if (!questions?.length) {
     throw new Error(`No ${kind} session found — start a session first`);
   }

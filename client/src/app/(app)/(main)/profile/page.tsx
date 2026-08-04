@@ -1,5 +1,5 @@
-import { ProfileView } from '@/modules/tef/ui/views/profile-view';
+import { redirect } from 'next/navigation';
 
 export default function ProfilePage() {
-  return <ProfileView />;
+  redirect('/dashboard');
 }

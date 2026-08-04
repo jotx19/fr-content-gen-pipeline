@@ -21,16 +21,21 @@ import {
   DotIcon,
   Download01Icon,
   EnergyIcon,
+  FilterHorizontalIcon,
+  Globe02Icon,
   Home01Icon,
   InformationCircleIcon,
   Loading03Icon,
   Logout01Icon,
   Menu01Icon,
   Moon02Icon,
+  Notebook01Icon,
+  Notification03Icon,
   PaintBrush01Icon,
   PauseIcon,
   PencilIcon,
   RefreshIcon,
+  Settings01Icon,
   StarIcon,
   Sun03Icon,
   Target01Icon,
@@ -88,6 +93,7 @@ export const Add = createIcon(Add01Icon);
 export const Plus = Add;
 export const ArrowLeft = createIcon(ArrowLeft01Icon);
 export const ArrowRight = createIcon(ArrowRight01Icon);
+export const ChevronRight = createIcon(ArrowRight01Icon);
 export const ArrowUp = createIcon(ArrowUp01Icon);
 export const ArrowUpDown = createIcon(ArrowUpDownIcon);
 export const ArrowDown = createIcon(ArrowDown01Icon);
@@ -103,16 +109,21 @@ export const Copy = createIcon(Copy01Icon);
 export const Dot = createIcon(DotIcon);
 export const Download = createIcon(Download01Icon);
 export const Energy = createIcon(EnergyIcon);
+export const FilterHorizontal = createIcon(FilterHorizontalIcon);
+export const Globe = createIcon(Globe02Icon);
 export const Home = createIcon(Home01Icon);
 export const Info = createIcon(InformationCircleIcon);
 export const Loader2 = createIcon(Loading03Icon);
 export const LogOut = createIcon(Logout01Icon);
 export const Menu = createIcon(Menu01Icon);
 export const Moon = createIcon(Moon02Icon);
+export const Notebook = createIcon(Notebook01Icon);
+export const Notification = createIcon(Notification03Icon);
 export const Palette = createIcon(PaintBrush01Icon);
 export const Pause = createIcon(PauseIcon);
 export const PenLine = createIcon(PencilIcon);
 export const RefreshCw = createIcon(RefreshIcon);
+export const Settings = createIcon(Settings01Icon);
 export const Star = createIcon(StarIcon);
 export const Sun = createIcon(Sun03Icon);
 export const Target = createIcon(Target01Icon);

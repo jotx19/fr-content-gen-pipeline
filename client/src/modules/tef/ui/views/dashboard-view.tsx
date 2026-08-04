@@ -74,7 +74,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ProfileSkeleton() {
+function DashboardSkeleton() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pb-10 sm:px-6">
       <Skeleton className={cn(panel, 'h-40 w-full')} />
@@ -87,7 +87,7 @@ function ProfileSkeleton() {
   );
 }
 
-export function ProfileView() {
+export function DashboardView() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -100,8 +100,8 @@ export function ProfileView() {
     }
   }, [user, isAuthenticated, router]);
 
-  if (!user) return <ProfileSkeleton />;
-  if (isLoading) return <ProfileSkeleton />;
+  if (!user) return <DashboardSkeleton />;
+  if (isLoading) return <DashboardSkeleton />;
 
   const initials = user.name
     .split(' ')
@@ -140,14 +140,14 @@ export function ProfileView() {
     : null;
 
   return (
-    <div className="min-h-dvh pb-10">
+    <div className="min-h-dvh p-10">
       <div className="mx-auto w-full max-w-5xl space-y-4 px-4 sm:px-6">
         <section className={cn(panel, 'px-6 py-6 sm:px-8 sm:py-7')}>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-4">
               <Avatar className="h-16 w-16 shrink-0 sm:h-18 sm:w-18">
                 <AvatarImage src={user.picture ?? undefined} alt={user.name} />
-                <AvatarFallback className="bg-[#675549] text-lg font-semibold text-white">
+                <AvatarFallback className="bg-[#7B61FF] text-lg font-semibold text-white">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -169,11 +169,11 @@ export function ProfileView() {
               href="/learn"
               className={cn(
                 inter.className,
-                'inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-neutral-900 px-5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-neutral-900',
+                'inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-neutral-900 px-5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-neutral-900',
               )}
             >
               Back to Learn
-              <ArrowRight className="h-4 w-4" strokeWidth={2.25} />
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.25} />
             </Link>
           </div>
 

@@ -119,7 +119,7 @@ function AccountMobileMenu({
                   isActive('/learn') && !pathname.startsWith('/learn/writing') && 'text-white',
                 )}
               >
-                Learn
+                Home
               </Link>
             </MobileMenuRow>
             <MobileMenuRow>
@@ -293,7 +293,13 @@ export function Navbar() {
                     {avatar}
                   </button>
                 </DropdownMenuTrigger>
-                <AccountDropdownContent onLogout={() => logout.mutate()} />
+                <AccountDropdownContent
+                  onLogout={() => logout.mutate()}
+                  userName={user.name}
+                  userPicture={user.picture}
+                  side="bottom"
+                  align="end"
+                />
               </DropdownMenu>
             </>
           ) : (

@@ -230,7 +230,7 @@ export function LandingNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm text-foreground/70 transition-colors hover:text-foreground/90 dark:text-white/70 dark:hover:text-white/90"
+                className="text-sm text-black/70 transition-colors hover:text-black dark:text-white/70 dark:hover:text-white"
               >
                 {item.label}
               </Link>
@@ -247,7 +247,7 @@ export function LandingNav() {
         <div className="flex items-center justify-end md:col-start-3">
           <div
             className={cn(
-              'inline-flex h-9 items-stretch overflow-hidden rounded-full border',
+              'relative inline-flex h-9 items-stretch overflow-hidden rounded-full border',
               'border-black/12 bg-[#EDEDED] text-foreground',
               'dark:border-white/15 dark:bg-[#1A1A1A] dark:text-white',
             )}
@@ -272,14 +272,14 @@ export function LandingNav() {
             </button>
 
             <span
-              className="w-px shrink-0 self-stretch bg-black/15 dark:bg-white/20"
+              className="pointer-events-none absolute left-10 top-1/2 h-3/5 w-px -translate-y-1/2 bg-black/15 dark:bg-white/20"
               aria-hidden
             />
 
             <Link
               href={authHref}
               className={cn(
-                'inline-flex items-center px-4 text-[13px] font-medium transition-colors',
+                'inline-flex items-center px-3 text-[12px] font-medium transition-colors sm:px-4 sm:text-[13px]',
                 'bg-[#E4E4E4] hover:bg-[#DADADA]',
                 'dark:bg-background dark:hover:bg-[#333]',
               )}

@@ -6,8 +6,8 @@ export default function SignInPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex min-h-dvh items-center justify-center bg-[#0D0D0D]">
+          <Loader2 className="h-8 w-8 animate-spin text-white/40" />
         </div>
       }
     >

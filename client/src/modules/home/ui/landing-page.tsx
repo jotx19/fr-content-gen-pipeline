@@ -4,6 +4,7 @@ import { Footer } from '@/components/footer';
 
 import { LandingHeroSection } from './landing-hero-section';
 import { LandingNav } from './landing-nav';
+import { LandingSections } from './landing-sections';
 
 export function LandingPage() {
   return (
@@ -14,6 +15,7 @@ export function LandingPage() {
       <LandingNav />
       <div className="h-20 shrink-0 md:h-24" aria-hidden />
       <LandingHeroSection />
+      <LandingSections />
       <Footer />
     </div>
   );

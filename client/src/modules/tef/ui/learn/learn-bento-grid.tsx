@@ -253,7 +253,7 @@ function EmbossedStat({
     <div className="flex flex-col justify-end">
       <div className="mb-3 h-px w-full bg-[#DADADA] dark:bg-white/20" />
       <p
-        className={`${bricolage.className} text-[2.25rem] font-semibold leading-none tracking-tight text-[#DADADA] [text-shadow:0_1px_0_rgba(255,255,255,0.9),0_-1px_0_rgba(0,0,0,0.06)] dark:text-white/25 dark:[text-shadow:none] sm:text-[3.25rem] md:text-[3.75rem]`}
+        className={`${bricolage.className} text-[2.25rem] font-semibold leading-none tracking-tight dark: [text-shadow:0_1px_0_rgba(255,255,255,0.9),0_-1px_0_rgba(0,0,0,0.06)] dark:text-white/25 dark:[text-shadow:none] sm:text-[3.25rem] md:text-[3.75rem]`}
       >
         {value}
       </p>
@@ -555,7 +555,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 disabled={!practiceReady}
                 className={cn(
                   "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-colors sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
-                  "bg-neutral-50 text-neutral-900 hover:bg-neutral-100 disabled:opacity-50",
+                  "bg-neutral-200 text-neutral-900 hover:bg-neutral-100 disabled:opacity-50",
                   "dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
                 )}
               >
@@ -584,7 +584,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 onClick={onStartWriting}
                 className={cn(
                   "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-opacity hover:opacity-90 sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
-                  "bg-neutral-900 text-white dark:bg-white dark:text-[#1C1C1C]",
+                  "bg-neutral-200 dark:text-white dark:bg-white/10 text-[#1C1C1C] dark:hover:bg-white/15",
                 )}
               >
                 <span

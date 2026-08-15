@@ -11,6 +11,7 @@ import {
   Home,
   LogOut,
   Moon,
+  Note,
   Notebook,
   Palette,
   PenLine,
@@ -173,6 +174,12 @@ export function AccountDropdownContent({
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/learn">
           <MenuRow icon={Home} title="Home" />
+        </Link>
+      </DropdownMenuItem>
+
+      <DropdownMenuItem asChild className={itemClass}>
+        <Link href="/notes">
+          <MenuRow icon={Note} title="Notes" />
         </Link>
       </DropdownMenuItem>
 

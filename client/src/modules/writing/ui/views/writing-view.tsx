@@ -376,7 +376,7 @@ export function WritingView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-3 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-3 mt-10 sm:px-6">
         {promptLoading ? (
           <div className="space-y-4">
             <Skeleton className={cn('h-24 w-full rounded-2xl', surfaceClass)} />

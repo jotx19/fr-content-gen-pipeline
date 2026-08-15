@@ -1,6 +1,7 @@
 import {
   ChartBarIncreasing,
   Home,
+  Note,
   Notebook,
   PenLine,
   type AppIcon,
@@ -17,6 +18,7 @@ export type AppNavItem = {
 export const APP_NAV_ITEMS: AppNavItem[] = [
   { label: 'Home', href: '/learn', icon: Home, exact: true },
   { label: 'Dashboard', href: '/dashboard', icon: ChartBarIncreasing, exact: true },
+  { label: 'Notes', href: '/notes', icon: Note },
   { label: 'Reading', href: '/learn/lesson?mode=practice', icon: Notebook },
   { label: 'Writing', href: '/learn/writing', icon: PenLine },
 ];

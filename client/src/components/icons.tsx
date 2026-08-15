@@ -25,11 +25,13 @@ import {
   Globe02Icon,
   Home01Icon,
   InformationCircleIcon,
+  Link01Icon,
   Loading03Icon,
   Logout01Icon,
   Menu01Icon,
   Moon02Icon,
   Notebook01Icon,
+  NoteIcon,
   Notification03Icon,
   PaintBrush01Icon,
   PauseIcon,
@@ -113,11 +115,13 @@ export const FilterHorizontal = createIcon(FilterHorizontalIcon);
 export const Globe = createIcon(Globe02Icon);
 export const Home = createIcon(Home01Icon);
 export const Info = createIcon(InformationCircleIcon);
+export const LinkIcon = createIcon(Link01Icon);
 export const Loader2 = createIcon(Loading03Icon);
 export const LogOut = createIcon(Logout01Icon);
 export const Menu = createIcon(Menu01Icon);
 export const Moon = createIcon(Moon02Icon);
 export const Notebook = createIcon(Notebook01Icon);
+export const Note = createIcon(NoteIcon);
 export const Notification = createIcon(Notification03Icon);
 export const Palette = createIcon(PaintBrush01Icon);
 export const Pause = createIcon(PauseIcon);

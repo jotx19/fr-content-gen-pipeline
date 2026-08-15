@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const protectedPrefixes = ['/learn'];
+const protectedPrefixes = ['/learn', '/notes', '/dashboard', '/settings'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Public note share links stay open
+  if (pathname.startsWith('/notes/p/')) {
+    return NextResponse.next();
+  }
 
   const isProtected = protectedPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -23,5 +28,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/learn', '/learn/:path*'],
+  matcher: [
+    '/learn',
+    '/learn/:path*',
+    '/notes',
+    '/notes/:path*',
+    '/dashboard',
+    '/dashboard/:path*',
+    '/settings',
+    '/settings/:path*',
+  ],
 };

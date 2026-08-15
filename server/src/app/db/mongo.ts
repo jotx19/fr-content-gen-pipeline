@@ -15,6 +15,7 @@ global.mongooseCache = cached;
 export { User } from './schemas/user.schema.js';
 export { TefProfile, TefUser } from './schemas/tefProfile.schema.js';
 export { TefEvaluation, TEF_MODULES } from './schemas/tefEvaluation.schema.js';
+export { Note } from './schemas/note.schema.js';
 
 export async function connectDB() {
   const uri = process.env.MONGODB_URI;

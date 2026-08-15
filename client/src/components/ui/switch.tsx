@@ -7,7 +7,9 @@ type SwitchProps = {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   disabled?: boolean;
+  size?: 'default' | 'sm';
   'aria-label'?: string;
+  className?: string;
 };
 
 /** iOS-style on/off switch */
@@ -15,8 +17,12 @@ export function Switch({
   checked,
   onCheckedChange,
   disabled,
+  size = 'default',
   'aria-label': ariaLabel,
+  className,
 }: SwitchProps) {
+  const isSm = size === 'sm';
+
   return (
     <button
       type="button"
@@ -26,17 +32,20 @@ export function Switch({
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        'relative inline-flex h-[31px] w-[51px] shrink-0 items-center rounded-full transition-colors duration-200',
+        'relative inline-flex shrink-0 items-center rounded-full transition-colors duration-200',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         'disabled:cursor-not-allowed disabled:opacity-50',
+        isSm ? 'h-[20px] w-[34px]' : 'h-[31px] w-[51px]',
         checked ? 'bg-[#34C759]' : 'bg-black/15 dark:bg-white/20',
+        className,
       )}
     >
       <span
         className={cn(
-          'pointer-events-none absolute top-[2px] left-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-sm',
-          'transition-transform duration-200 ease-out',
-          checked && 'translate-x-[20px]',
+          'pointer-events-none absolute rounded-full bg-white shadow-sm transition-transform duration-200 ease-out',
+          isSm
+            ? cn('top-[2px] left-[2px] h-[16px] w-[16px]', checked && 'translate-x-[14px]')
+            : cn('top-[2px] left-[2px] h-[27px] w-[27px]', checked && 'translate-x-[20px]'),
         )}
       />
     </button>

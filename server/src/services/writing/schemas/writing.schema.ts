@@ -25,6 +25,10 @@ export const writingExampleSchema = z.object({
   promptId: z.string().optional(),
 });
 
+export const selfSelectWritingLevelSchema = z.object({
+  level: z.string().min(1),
+});
+
 export const writingPromptQuerySchema = z.object({
   topic: z.string().max(120).optional(),
   section: z.enum(['A', 'B']).optional(),
@@ -36,6 +40,7 @@ export const writingPromptQuerySchema = z.object({
 
 export type SubmitWritingBody = z.infer<typeof submitWritingSchema>;
 export type WritingExampleBody = z.infer<typeof writingExampleSchema>;
+export type SelfSelectWritingLevelBody = z.infer<typeof selfSelectWritingLevelSchema>;
 
 export const WRITING_CRITERIA_KEYS = [
   'content_coherence',

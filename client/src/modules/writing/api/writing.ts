@@ -43,3 +43,13 @@ export async function fetchWritingExample() {
   const { data } = await axiosInstance.post<WritingExampleResponse>('/tef/writing/example', {});
   return data;
 }
+
+export async function selfSelectWritingLevel(level: string) {
+  const { data } = await axiosInstance.post<{
+    writingLevel: string;
+    level: string;
+    writingXp: number;
+    taskMode: string;
+  }>('/tef/writing/level/self-select', { level });
+  return data;
+}

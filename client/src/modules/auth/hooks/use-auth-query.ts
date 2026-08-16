@@ -9,22 +9,24 @@ import { useAuthStore } from '@/store/authStore';
 export function useAuthBootstrapQuery() {
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
   const query = useQuery({
     queryKey: authKeys.me(),
     queryFn: fetchAuthMe,
     retry: false,
     staleTime: 60_000,
+    enabled: hasHydrated,
   });
 
   useEffect(() => {
-    if (!query.data) return;
+    if (!hasHydrated || !query.isFetched || !query.data) return;
     if (query.data.authenticated && query.data.user) {
       setSession(query.data.user, query.data.authRequired);
-    } else {
+    } else if (query.data.authRequired) {
       clearSession(query.data.authRequired);
     }
-  }, [query.data, setSession, clearSession]);
+  }, [hasHydrated, query.isFetched, query.data, setSession, clearSession]);
 
   return query;
 }

@@ -58,8 +58,8 @@ export function NotesListView() {
   return (
     <div className="min-h-dvh w-full px-4 pb-12 pt-6 sm:px-8 sm:pt-10">
       <div className="mx-auto w-full max-w-5xl">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <h1
               className={cn(
                 bricolage.className,
@@ -78,7 +78,7 @@ export function NotesListView() {
             disabled={createNote.isPending}
             className={cn(
               inter.className,
-              'inline-flex h-10 items-center gap-2 rounded-full bg-black px-4 text-sm font-medium text-white',
+              'inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-black px-3.5 text-sm font-medium text-white sm:gap-2 sm:px-4',
               'transition-opacity hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black',
             )}
           >

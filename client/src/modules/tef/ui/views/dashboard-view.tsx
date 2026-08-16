@@ -58,7 +58,7 @@ function StatCell({
           'mt-1 text-2xl font-semibold tabular-nums tracking-tight sm:text-3xl',
           accent ? gold : ink,
         )}
-      >
+      >8
         {value}
       </p>
     </div>
@@ -91,16 +91,18 @@ export function DashboardView() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const { data: profile, isLoading } = useTefProfileQuery(Boolean(user));
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!user && !isAuthenticated) {
       router.replace('/signin');
     }
-  }, [user, isAuthenticated, router]);
+  }, [hasHydrated, user, isAuthenticated, router]);
 
-  if (!user) return <DashboardSkeleton />;
+  if (!hasHydrated || !user) return <DashboardSkeleton />;
   if (isLoading) return <DashboardSkeleton />;
 
   const initials = user.name

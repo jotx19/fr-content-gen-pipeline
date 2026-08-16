@@ -6,6 +6,7 @@ import {
   writingExampleSchema,
   writingEvaluationQuerySchema,
   writingPromptQuerySchema,
+  selfSelectWritingLevelSchema,
 } from '../schemas/writing.schema.js';
 
 export async function writingRoutes(app: FastifyInstance) {
@@ -27,5 +28,9 @@ export async function writingRoutes(app: FastifyInstance) {
   app.get('/api/tef/writing/evaluations', auth, async (req, reply) => {
     const query = writingEvaluationQuerySchema.parse(req.query);
     return writing.evaluations({ ...req, query } as never, reply);
+  });
+  app.post('/api/tef/writing/level/self-select', auth, async (req, reply) => {
+    const body = selfSelectWritingLevelSchema.parse(req.body);
+    return writing.levelSelfSelect({ ...req, body } as never, reply);
   });
 }

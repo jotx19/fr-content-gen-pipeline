@@ -1,14 +1,24 @@
 'use client';
 
+import { useEffect } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { GOOGLE_CLIENT_ID } from '@/lib/google-client-id';
 import { getQueryClient } from '@/lib/query/get-query-client';
 import { useAuthBootstrapQuery } from '@/modules/auth/hooks/use-auth-query';
+import { useAuthStore } from '@/store/authStore';
 import { CustomToaster } from '@/components/ui/sonner';
 
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const finish = () => useAuthStore.getState().setHasHydrated(true);
+    if (useAuthStore.persist.hasHydrated()) {
+      finish();
+    }
+    return useAuthStore.persist.onFinishHydration(finish);
+  }, []);
+
   useAuthBootstrapQuery();
   return children;
 }

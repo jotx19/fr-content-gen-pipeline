@@ -19,7 +19,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { bricolage, inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import { useSelfSelectLevelMutation, useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
-import { useWritingProfileQuery } from '@/modules/writing/hooks/use-writing-queries';
+import {
+  useSelfSelectWritingLevelMutation,
+  useWritingProfileQuery,
+} from '@/modules/writing/hooks/use-writing-queries';
 import { useAuthStore } from '@/store/authStore';
 
 const panel =
@@ -180,9 +183,11 @@ export function SettingsView() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const { data: profile, isLoading } = useTefProfileQuery(Boolean(user));
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));
   const selfSelect = useSelfSelectLevelMutation();
+  const selfSelectWriting = useSelfSelectWritingLevelMutation();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { prefs, update, mounted } = useSettingsPrefs();
   const [themeMounted, setThemeMounted] = useState(false);
@@ -190,19 +195,17 @@ export function SettingsView() {
   useEffect(() => setThemeMounted(true), []);
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!user && !isAuthenticated) {
       router.replace('/signin');
     }
-  }, [user, isAuthenticated, router]);
+  }, [hasHydrated, user, isAuthenticated, router]);
 
-  if (!user || isLoading) return <SettingsSkeleton />;
+  if (!hasHydrated || !user || isLoading) return <SettingsSkeleton />;
 
   const readingLevel = profile?.level ?? 'B1';
   const writingLevel =
-    prefs.writingLevelPref ??
-    writingProfile?.writingLevel ??
-    writingProfile?.level ??
-    readingLevel;
+    writingProfile?.writingLevel ?? writingProfile?.level ?? readingLevel;
 
   const appearanceValue =
     !themeMounted ? 'system' : theme === 'system' ? 'system' : resolvedTheme === 'dark' ? 'dark' : 'light';
@@ -217,9 +220,15 @@ export function SettingsView() {
     }
   };
 
-  const handleWritingLevel = (level: string) => {
-    update({ writingLevelPref: level });
-    toast.success(`Writing level preference set to ${level}`);
+  const handleWritingLevel = async (level: string) => {
+    if (level === writingLevel) return;
+    try {
+      await selfSelectWriting.mutateAsync(level);
+      update({ writingLevelPref: level });
+      toast.success(`Writing level set to ${level}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not update writing level');
+    }
   };
 
   return (
@@ -267,7 +276,11 @@ export function SettingsView() {
             description={LEVEL_LABELS[writingLevel] ?? 'Preferred writing difficulty'}
             last
           >
-            <LevelDropdown value={writingLevel} onChange={handleWritingLevel} />
+            {selfSelectWriting.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin text-black/40 dark:text-white/40" />
+            ) : (
+              <LevelDropdown value={writingLevel} onChange={handleWritingLevel} />
+            )}
           </SettingRow>
         </section>
 
@@ -334,7 +347,7 @@ export function SettingsView() {
         </section>
 
         <p className={cn(inter.className, 'px-1 text-center text-[12px]', inkMuted)}>
-          Reading level syncs to your account. Writing preference is saved on this device.
+          Reading and writing levels sync to your account.
         </p>
       </div>
     </div>

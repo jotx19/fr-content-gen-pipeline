@@ -13,13 +13,15 @@ export type AppNavItem = {
   icon: AppIcon;
   /** Match only exact path (e.g. /learn vs /learn/writing) */
   exact?: boolean;
+  /** Render a subtle divider above this item in the sidebar */
+  separatorBefore?: boolean;
 };
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
   { label: 'Home', href: '/learn', icon: Home, exact: true },
   { label: 'Dashboard', href: '/dashboard', icon: ChartBarIncreasing, exact: true },
   { label: 'Notes', href: '/notes', icon: Note },
-  { label: 'Reading', href: '/learn/lesson?mode=practice', icon: Notebook },
+  { label: 'Reading', href: '/learn/lesson?mode=practice', icon: Notebook, separatorBefore: true },
   { label: 'Writing', href: '/learn/writing', icon: PenLine },
 ];
 

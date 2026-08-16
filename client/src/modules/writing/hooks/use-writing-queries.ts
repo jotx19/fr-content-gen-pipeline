@@ -5,6 +5,7 @@ import {
   fetchWritingExample,
   fetchWritingProfile,
   fetchWritingPrompt,
+  selfSelectWritingLevel,
   submitWriting,
 } from '../api/writing';
 import { writingKeys } from './keys';
@@ -35,6 +36,17 @@ export function useRefreshWritingPromptMutation() {
     onSuccess: (data, params) => {
       queryClient.setQueryData(writingKeys.prompt(params?.topic), data);
       queryClient.invalidateQueries({ queryKey: writingKeys.profile() });
+    },
+  });
+}
+
+export function useSelfSelectWritingLevelMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: selfSelectWritingLevel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: writingKeys.profile() });
+      queryClient.removeQueries({ queryKey: [...writingKeys.all, 'prompt'] });
     },
   });
 }

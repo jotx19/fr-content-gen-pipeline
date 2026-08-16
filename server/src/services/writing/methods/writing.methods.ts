@@ -33,9 +33,11 @@ import {
   normalizeCefrLevel,
   seedWritingLevel,
   taskModeForWritingLevel,
+  WRITING_XP_THRESHOLDS,
   writingXpGain,
   xpProgressForLevel,
 } from '../scoring/writingXp.js';
+import { CEFR_LEVELS } from '../../../content-pipeline/subagents/shared/reading.schemas.js';
 import {
   inferTefWritingSection,
   resolveTefWritingSection,
@@ -618,5 +620,44 @@ export async function getWritingProfile(userId: string) {
             createdAt: lastEval.createdAt,
           }
         : null,
+  };
+}
+
+export async function setWritingLevelManually(userId: string, level: string) {
+  requireMongo();
+
+  const normalized = normalizeCefrLevel(level);
+  if (!normalized || !CEFR_LEVELS.includes(normalized)) {
+    throw new Error('Invalid CEFR level');
+  }
+
+  const doc = await TefProfile.findOne({ userId }).lean();
+  if (!doc?.level) {
+    throw new Error('Complete reading placement before setting a writing level');
+  }
+
+  const writingXp = WRITING_XP_THRESHOLDS[normalized] ?? 0;
+  const weakAreas = (doc.weakAreas as string[]) ?? [];
+
+  await TefProfile.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        writingLevel: normalized,
+        'stats.writingXp': writingXp,
+        pendingWriting: null,
+        updatedAt: new Date(),
+      },
+    }
+  );
+
+  prefetchWritingPrompt(userId, normalized, weakAreas);
+
+  return {
+    writingLevel: normalized,
+    level: normalized,
+    writingXp,
+    writingProgress: xpProgressForLevel(writingXp, normalized),
+    taskMode: taskModeForWritingLevel(normalized),
   };
 }

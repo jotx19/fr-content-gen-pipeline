@@ -306,7 +306,7 @@ function GoldenXpStat({ xp }: { xp: number }) {
       <p
         className={`${inter.className} mt-1 text-[9px] uppercase font-medium tracking-wide text-neutral-400 dark:text-white/40`}
       >
-        reading xp
+        overall xp
       </p>
     </div>
   );

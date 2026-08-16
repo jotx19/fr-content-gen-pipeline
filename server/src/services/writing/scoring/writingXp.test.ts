@@ -6,6 +6,7 @@ import {
   taskModeForWritingLevel,
   writingLevelFromXp,
   writingXpGain,
+  WRITING_XP_THRESHOLDS,
 } from './writingXp.js';
 import { scoreFillBlanks } from './fillBlankScore.js';
 
@@ -18,16 +19,35 @@ describe('writingXp', () => {
     assert.equal(taskModeForWritingLevel('b2'), 'full');
   });
 
-  it('levels up writing from XP thresholds', () => {
-    const result = adjustWritingLevelFromXp('A1', 70, writingXpGain(90, 'fill_blanks'));
+  it('awards small XP per session', () => {
+    const gain = writingXpGain(90, 'fill_blanks');
+    assert.ok(gain <= 15, `expected small gain, got ${gain}`);
+    assert.ok(gain >= 2);
+  });
+
+  it('levels up writing only when XP crosses the next threshold', () => {
+    const almost = WRITING_XP_THRESHOLDS.A2 - 5;
+    const result = adjustWritingLevelFromXp('A1', almost, 10);
     assert.equal(result.newLevel, 'A2');
     assert.equal(result.adjustment, 'levelUp');
   });
 
+  it('does not level up from a single strong session early on', () => {
+    const result = adjustWritingLevelFromXp('A1', 0, writingXpGain(100, 'fill_blanks'));
+    assert.equal(result.newLevel, 'A1');
+    assert.equal(result.adjustment, 'same');
+  });
+
+  it('does not auto-demote when XP sits below a manually set level', () => {
+    const result = adjustWritingLevelFromXp('B1', 50, writingXpGain(80, 'full'));
+    assert.equal(result.newLevel, 'B1');
+    assert.equal(result.adjustment, 'same');
+  });
+
   it('derives level from cumulative XP', () => {
     assert.equal(writingLevelFromXp(0), 'A1');
-    assert.equal(writingLevelFromXp(85), 'A2');
-    assert.equal(writingLevelFromXp(250), 'B1');
+    assert.equal(writingLevelFromXp(WRITING_XP_THRESHOLDS.A2), 'A2');
+    assert.equal(writingLevelFromXp(WRITING_XP_THRESHOLDS.B1), 'B1');
   });
 });
 

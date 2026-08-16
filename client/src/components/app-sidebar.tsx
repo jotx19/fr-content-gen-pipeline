@@ -75,21 +75,30 @@ export function AppSidebar() {
             const Icon = item.icon;
             const active = isAppNavActive(pathname, item);
             return (
-              <Tooltip key={item.href}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(railBtnClass, active && railActiveClass)}
-                  >
-                    <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
+              <div key={item.href} className="flex flex-col items-center gap-1.5">
+                {item.separatorBefore ? (
+                  <div
+                    className="my-1 h-px w-6 bg-black/10 dark:bg-white/12"
+                    role="separator"
+                    aria-hidden
+                  />
+                ) : null}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={item.href}
+                      aria-label={item.label}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(railBtnClass, active && railActiveClass)}
+                    >
+                      <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={8}>
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             );
           })}
         </nav>

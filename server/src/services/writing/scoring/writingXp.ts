@@ -1,14 +1,17 @@
 // @ts-nocheck
 import { CEFR_LEVELS } from '../../../content-pipeline/subagents/shared/reading.schemas.js';
 
-/** XP required to reach each writing level (cumulative thresholds) */
+/**
+ * Cumulative XP to unlock each writing level.
+ * Tuned for very slow progression (~15–40 solid sessions per band).
+ */
 export const WRITING_XP_THRESHOLDS: Record<string, number> = {
   A1: 0,
-  A2: 80,
-  B1: 200,
-  B2: 380,
-  C1: 600,
-  C2: 850,
+  A2: 280,
+  B1: 750,
+  B2: 1600,
+  C1: 3000,
+  C2: 5200,
 };
 
 export function normalizeCefrLevel(level: string | null | undefined) {
@@ -23,10 +26,11 @@ export function taskModeForWritingLevel(level: string): 'fill_blanks' | 'sentenc
   return 'full';
 }
 
+/** Small XP per session so levels climb slowly */
 export function writingXpGain(overallScore: number, taskMode: string) {
-  const base = Math.round(overallScore * 0.55);
-  const bonus = taskMode === 'fill_blanks' ? 12 : taskMode === 'sentences' ? 18 : 25;
-  return Math.max(8, base + bonus);
+  const base = Math.round(overallScore * 0.1);
+  const bonus = taskMode === 'fill_blanks' ? 2 : taskMode === 'sentences' ? 3 : 4;
+  return Math.max(2, base + bonus);
 }
 
 export function writingLevelFromXp(xp: number) {
@@ -58,34 +62,25 @@ export function adjustWritingLevelFromXp(
   xpGain: number
 ) {
   const newXp = previousXp + xpGain;
-  const newLevel = writingLevelFromXp(newXp);
+  const xpLevel = writingLevelFromXp(newXp);
   const prevIdx = CEFR_LEVELS.indexOf(previousLevel);
-  const newIdx = CEFR_LEVELS.indexOf(newLevel);
+  const xpIdx = CEFR_LEVELS.indexOf(xpLevel);
 
-  if (newIdx > prevIdx) {
+  // Only level up from XP — never auto-demote (manual level picks stay until XP catches up)
+  if (xpIdx > prevIdx) {
     return {
       adjustment: 'levelUp',
-      newLevel,
+      newLevel: xpLevel,
       newXp,
       xpGain,
-      reason: `Writing XP reached ${newXp} — unlocked ${newLevel} tasks`,
+      reason: `Writing XP reached ${newXp} — unlocked ${xpLevel} tasks`,
     };
   }
 
-  if (newIdx < prevIdx) {
-    return {
-      adjustment: 'levelDown',
-      newLevel,
-      newXp,
-      xpGain,
-      reason: `Writing XP adjusted to ${newLevel} band`,
-    };
-  }
-
-  const progress = xpProgressForLevel(newXp, newLevel);
+  const progress = xpProgressForLevel(newXp, previousLevel);
   return {
     adjustment: 'same',
-    newLevel,
+    newLevel: previousLevel,
     newXp,
     xpGain,
     reason:

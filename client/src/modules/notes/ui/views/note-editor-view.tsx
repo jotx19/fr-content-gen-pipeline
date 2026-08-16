@@ -186,7 +186,7 @@ export function NoteEditorView() {
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded-lg p-2 text-black/40 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-white/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-[12px] text-black/40 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-white/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
               aria-label="Delete note"
             >
               <Trash2 className="h-4 w-4" strokeWidth={1.75} />

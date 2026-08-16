@@ -151,7 +151,7 @@ export function NotesListView() {
                     type="button"
                     aria-label="Delete note"
                     onClick={(e) => handleDelete(note.id, e)}
-                    className="rounded-lg p-1.5 text-black/30 opacity-0 transition-opacity hover:bg-black/5 hover:text-red-500 group-hover:opacity-100 dark:text-white/30 dark:hover:bg-white/10 dark:hover:text-red-400"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] text-black/30 opacity-0 transition-opacity hover:bg-black/5 hover:text-red-500 group-hover:opacity-100 dark:text-white/30 dark:hover:bg-white/10 dark:hover:text-red-400"
                   >
                     <Trash2 className="h-4 w-4" strokeWidth={1.75} />
                   </button>

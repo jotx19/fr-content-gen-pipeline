@@ -42,6 +42,7 @@ import {
   Sun03Icon,
   Target01Icon,
   Tick01Icon,
+  TranslateIcon,
   Undo02Icon,
   User02Icon,
   Calendar03Icon,
@@ -131,6 +132,7 @@ export const Settings = createIcon(Settings01Icon);
 export const Star = createIcon(StarIcon);
 export const Sun = createIcon(Sun03Icon);
 export const Target = createIcon(Target01Icon);
+export const Translate = createIcon(TranslateIcon);
 export const Trash2 = createIcon(Delete02Icon);
 export const Undo2 = createIcon(Undo02Icon);
 export const User = createIcon(User02Icon);

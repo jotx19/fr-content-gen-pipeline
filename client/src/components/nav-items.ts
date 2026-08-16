@@ -4,6 +4,7 @@ import {
   Note,
   Notebook,
   PenLine,
+  Translate,
   type AppIcon,
 } from '@/components/icons';
 
@@ -21,6 +22,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { label: 'Home', href: '/learn', icon: Home, exact: true },
   { label: 'Dashboard', href: '/dashboard', icon: ChartBarIncreasing, exact: true },
   { label: 'Notes', href: '/notes', icon: Note },
+  { label: 'Translate', href: '/translate', icon: Translate },
   { label: 'Reading', href: '/learn/lesson?mode=practice', icon: Notebook, separatorBefore: true },
   { label: 'Writing', href: '/learn/writing', icon: PenLine },
 ];

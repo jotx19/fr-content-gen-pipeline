@@ -10,6 +10,7 @@ import { BarChart3, BookOpen, Loader2, Target } from '@/components/icons';
 import { BrandLogo } from '@/components/logo';
 import { BRAND } from '@/lib/brand';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { useGoogleLoginMutation } from '@/modules/auth/hooks/use-auth-query';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +27,7 @@ function SignInCard({
   isPending: boolean;
   onSuccess: (response: CredentialResponse) => void;
 }) {
+  const { t, locale } = useI18n();
   return (
     <div
       className={cn(
@@ -39,7 +41,7 @@ function SignInCard({
           'text-center text-[1.35rem] font-medium tracking-tight text-white sm:text-[1.5rem]',
         )}
       >
-        Welcome back
+        {t('auth.welcomeBack')}
       </h1>
 
       <div className="-mx-9 m-8 h-px bg-white/12 sm:-mx-11" aria-hidden />
@@ -67,7 +69,7 @@ function SignInCard({
             )}
           >
             <Loader2 className="h-4 w-4 animate-spin" />
-            Signing in…
+            {t('auth.signingIn')}
           </button>
         ) : (
           <>
@@ -98,16 +100,17 @@ function SignInCard({
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Sign in with Google
+              {t('auth.signInGoogle')}
             </div>
             <div className="absolute inset-0 overflow-hidden rounded-full opacity-0">
               <GoogleLogin
                 onSuccess={onSuccess}
-                onError={() => toast.error('Google sign-in cancelled')}
+                onError={() => toast.error(t('auth.googleCancelled'))}
                 theme="outline"
                 size="large"
                 text="signin_with"
                 shape="pill"
+                locale={locale === 'fr' ? 'fr' : 'en'}
                 width={googleWidth}
               />
             </div>
@@ -121,13 +124,13 @@ function SignInCard({
           'mt-5 text-center text-[11px] leading-relaxed text-white/40',
         )}
       >
-        By signing in, you agree to our{' '}
+        {t('auth.agreePrefix')}{' '}
         <Link href="/terms" className="underline underline-offset-2 hover:text-white/65">
-          Terms of Service
+          {t('auth.terms')}
         </Link>{' '}
-        and{' '}
+        {t('auth.and')}{' '}
         <Link href="/privacy" className="underline underline-offset-2 hover:text-white/65">
-          Privacy Policy
+          {t('auth.privacy')}
         </Link>
         .
       </p>
@@ -142,6 +145,7 @@ export function SignInView() {
   const login = useGoogleLoginMutation();
   const googleWrapRef = useRef<HTMLDivElement>(null);
   const [googleWidth, setGoogleWidth] = useState(360);
+  const { t } = useI18n();
 
   useEffect(() => {
     const node = googleWrapRef.current;
@@ -164,15 +168,15 @@ export function SignInView() {
 
   const handleSuccess = async (response: CredentialResponse) => {
     if (!response.credential) {
-      toast.error('Google did not return a credential');
+      toast.error(t('auth.noCredential'));
       return;
     }
     try {
       await login.mutateAsync(response.credential);
-      toast.success(`Welcome to ${BRAND.name}!`);
+      toast.success(t('auth.welcomeTo', { name: BRAND.name }));
       router.replace(next.startsWith('/') ? next : '/learn');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Sign-in failed');
+      toast.error(err instanceof Error ? err.message : t('auth.failed'));
     }
   };
 
@@ -201,9 +205,12 @@ export function SignInView() {
               'mt-4 max-w-lg text-[2.35rem] font-semibold leading-[1.12] tracking-tight text-white sm:text-[2.75rem]',
             )}
           >
-            Place your level,
-            <br />
-            practice with clarity.
+            {t('auth.sideTitle').split('\n').map((line, i) => (
+              <span key={i}>
+                {i > 0 ? <br /> : null}
+                {line}
+              </span>
+            ))}
           </h2>
           <p
             className={cn(
@@ -211,14 +218,13 @@ export function SignInView() {
               'mt-5 max-w-md text-[15px] leading-relaxed text-white/65',
             )}
           >
-            Adaptive reading and writing for TEF and TCF. Short sessions that
-            actually stick.
+            {t('auth.sideBody')}
           </p>
         </div>
 
         <div className="relative z-10 pb-10 text-center">
           <p className={cn(inter.className, 'text-[12px] text-white/35')}>
-            Built for learners who show up every day
+            {t('auth.sideFooter')}
           </p>
         </div>
       </div>
@@ -244,14 +250,14 @@ export function SignInView() {
           )}
         >
           <Link href="/contact" className="underline underline-offset-2 hover:text-white/65">
-            Help Centre
+            {t('auth.helpCentre')}
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/terms" className="underline underline-offset-2 hover:text-white/65">
-              Terms
+              {t('auth.termsShort')}
             </Link>
             <Link href="/privacy" className="underline underline-offset-2 hover:text-white/65">
-              Privacy
+              {t('auth.privacyShort')}
             </Link>
           </div>
         </div>

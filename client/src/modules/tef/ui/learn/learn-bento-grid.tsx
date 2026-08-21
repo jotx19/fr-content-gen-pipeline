@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { bricolage, inter } from "@/lib/fonts";
+import { useI18n } from "@/lib/i18n";
 import { BrandLogo } from "@/components/logo";
 import {
   loadLastReadingXp,
@@ -267,6 +268,7 @@ function EmbossedStat({
 }
 
 function GoldenXpStat({ xp }: { xp: number }) {
+  const { t } = useI18n();
   const [displayXp, setDisplayXp] = useState(() => loadLastReadingXp() ?? xp);
 
   useEffect(() => {
@@ -300,19 +302,20 @@ function GoldenXpStat({ xp }: { xp: number }) {
           strokeWidth={2.25}
         />
         <span className={cn(streakGoldText, "text-[1.75rem] font-semibold")}>
-          XP
+          {t("common.xp")}
         </span>
       </div>
       <p
         className={`${inter.className} mt-1 text-[9px] uppercase font-medium tracking-wide text-neutral-400 dark:text-white/40`}
       >
-        overall xp
+        {t("learn.overallXp")}
       </p>
     </div>
   );
 }
 
 function StreakDayBars({ streak }: { streak: number }) {
+  const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
   const displayStreak = Math.max(streak, 1);
   const totalDays = Math.max(21, displayStreak + 7);
@@ -346,11 +349,11 @@ function StreakDayBars({ streak }: { streak: number }) {
                           ? cn("h-16 sm:h-[4.5rem]", streakGold)
                           : "h-10 bg-[#E0E0E0] dark:bg-white/10 sm:h-10",
                       )}
-                      aria-label={`Day ${dayNumber}`}
+                      aria-label={t("learn.day", { n: dayNumber })}
                     />
                   </TooltipTrigger>
                   <TooltipContent side="top" sideOffset={6}>
-                    Day {dayNumber}
+                    {t("learn.day", { n: dayNumber })}
                   </TooltipContent>
                 </Tooltip>
               );
@@ -374,6 +377,7 @@ function BentoXpStreakPanel({ xp, streak }: { xp: number; streak: number }) {
 }
 
 export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
+  const { t } = useI18n();
   const {
     firstName,
     level,
@@ -416,19 +420,18 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
               <h2
                 className={`${bricolage.className} text-2xl font-semibold leading-tight text-[#675549] dark:text-white sm:text-[1.75rem]`}
               >
-                From placement
+                {t("learn.fromPlacement")}
               </h2>
               <div
                 className={`${bricolage.className} mt-2 flex flex-wrap items-center gap-2 text-2xl font-semibold text-[#675549] dark:text-white sm:text-[1.75rem]`}
               >
                 <HeroArrowIcon />
-                <span>your level</span>
+                <span>{t("learn.yourLevel")}</span>
               </div>
               <p
                 className={`${inter.className} mt-auto max-w-md pt-6 text-sm leading-relaxed text-[#675549]/90 dark:text-white/80 sm:text-[15px]`}
               >
-                A short reading test sets your CEFR level and unlocks adaptive
-                MCQ practice and TCF-style writing.
+                {t("learn.placementBody")}
               </p>
             </>
           ) : (
@@ -436,7 +439,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
               <h2
                 className={`${bricolage.className} text-2xl font-semibold leading-tight text-[#675549] dark:text-white sm:text-[1.75rem] md:text-[1.75rem]`}
               >
-                Bonjour{firstName ? `, ${firstName}` : ""}!
+                {t("learn.hello", { name: firstName ? `, ${firstName}` : "" })}
               </h2>
               <div
                 className={`${bricolage.className} mt-2 flex flex-wrap items-center gap-2 text-2xl font-semibold text-[#675549] dark:text-white sm:text-[1.75rem]`}
@@ -446,8 +449,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
               <p
                 className={`${inter.className} mt-auto max-w-md pt-6 text-sm leading-relaxed text-[#675549]/90 dark:text-white/80 sm:text-[15px]`}
               >
-                {summary ||
-                  "Adaptive placement, daily practice, and full progress reports — everything you need to reach your French goals."}
+                {summary || t("learn.defaultSummary")}
               </p>
             </>
           )}
@@ -469,7 +471,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 onClick={onStartPlacement}
                 className={`${inter.className} inline-flex h-9 items-center rounded-full border border-[#675549]/25 bg-[#675549]/10 px-4 text-xs font-medium text-[#675549] transition-colors hover:border-[#675549]/40 hover:bg-[#675549]/15 dark:border-white/25 dark:bg-white/10 dark:text-white dark:hover:border-white/40 dark:hover:bg-white/15 sm:text-sm`}
               >
-                Evaluate level
+                {t("learn.evaluateLevel")}
               </button>
             )}
           </div>
@@ -488,9 +490,9 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
           <ChartNoAxesCombined className="h-4 w-4" strokeWidth={2.5} />
         </div>
         <span>
-          Level {level}
+          {t("learn.level", { level })}
         </span>
-        <EmbossedStat value={confidenceDisplay} label="Confidence" />
+        <EmbossedStat value={confidenceDisplay} label={t("learn.confidence")} />
       </div>
 
       {/* Bottom-center — golden XP + streak bars (row 2) */}
@@ -516,14 +518,14 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
           <h3
             className={`${bricolage.className} text-xl font-semibold text-neutral-900 dark:text-white sm:text-2xl`}
           >
-            Practice
+            {t("learn.practice")}
           </h3>
           <p
             className={`${inter.className} mt-2 max-w-[20rem] text-sm leading-relaxed text-neutral-500 dark:text-white/70`}
           >
             {placementMode
-              ? "Take placement first, then jump into reading and writing."
-              : "Jump into a reading lesson or written expression whenever you’re ready."}
+              ? t("learn.placementFirst")
+              : t("learn.jumpIn")}
           </p>
         </div>
 
@@ -540,10 +542,10 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
               <span
                 className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl`}
               >
-                Placement
+                {t("learn.placement")}
               </span>
               <span className="inline-flex items-center gap-2 text-sm font-medium opacity-80">
-                Start placement
+                {t("learn.startPlacement")}
                 <ArrowRight className="h-4 w-4" />
               </span>
             </button>
@@ -562,17 +564,17 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 <span
                   className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.75rem]`}
                 >
-                  Reading
+                  {t("common.reading")}
                 </span>
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 dark:text-white/70">
                   {practiceReady ? (
                     <>
-                      Start lesson
+                      {t("learn.startLesson")}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   ) : (
                     <>
-                      Preparing…
+                      {t("learn.preparing")}
                       <Loader2 className="h-4 w-4 animate-spin" />
                     </>
                   )}
@@ -590,10 +592,10 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 <span
                   className={`${bricolage.className} text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.75rem]`}
                 >
-                  Writing
+                  {t("common.writing")}
                 </span>
                 <span className="inline-flex items-center gap-2 text-sm font-medium opacity-80">
-                  Expression écrite
+                  {t("learn.writtenExpression")}
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </button>

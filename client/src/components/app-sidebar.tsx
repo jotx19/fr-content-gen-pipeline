@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { BRAND } from '@/lib/brand';
+import { useI18n } from '@/lib/i18n';
 import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const logout = useLogoutMutation();
+  const { t } = useI18n();
 
   const initials =
     user?.name
@@ -55,7 +57,7 @@ export function AppSidebar() {
           'fixed inset-y-0 left-0 z-50 hidden w-[60px] flex-col items-center md:flex',
           'border-r border-black/8 bg-background dark:border-white/8',
         )}
-        aria-label="App navigation"
+        aria-label={t('nav.appNavigation')}
       >
         <div className="flex w-full flex-col items-center pt-4">
           <Link
@@ -70,10 +72,11 @@ export function AppSidebar() {
           </Link>
         </div>
 
-        <nav className="mt-6 flex flex-1 flex-col items-center gap-1.5" aria-label="Primary">
+        <nav className="mt-6 flex flex-1 flex-col items-center gap-1.5" aria-label={t('nav.primary')}>
           {APP_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isAppNavActive(pathname, item);
+            const label = t(`common.${item.navKey}`);
             return (
               <div key={item.href} className="flex flex-col items-center gap-1.5">
                 {item.separatorBefore ? (
@@ -87,7 +90,7 @@ export function AppSidebar() {
                   <TooltipTrigger asChild>
                     <Link
                       href={item.href}
-                      aria-label={item.label}
+                      aria-label={label}
                       aria-current={active ? 'page' : undefined}
                       className={cn(railBtnClass, active && railActiveClass)}
                     >
@@ -95,7 +98,7 @@ export function AppSidebar() {
                     </Link>
                   </TooltipTrigger>
                   <TooltipContent side="right" sideOffset={8}>
-                    {item.label}
+                    {label}
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -109,13 +112,13 @@ export function AppSidebar() {
               <button
                 type="button"
                 className={railBtnClass}
-                aria-label="Notifications"
+                aria-label={t('common.notifications')}
               >
                 <Notification className="h-[22px] w-[22px]" strokeWidth={1.75} />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              Notifications
+              {t('common.notifications')}
             </TooltipContent>
           </Tooltip>
 
@@ -123,7 +126,7 @@ export function AppSidebar() {
             <TooltipTrigger asChild>
               <Link
                 href="/settings"
-                aria-label="Settings"
+                aria-label={t('common.settings')}
                 className={cn(
                   railBtnClass,
                   pathname.startsWith('/settings') && railActiveClass,
@@ -133,7 +136,7 @@ export function AppSidebar() {
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              Settings
+              {t('common.settings')}
             </TooltipContent>
           </Tooltip>
 
@@ -147,13 +150,13 @@ export function AppSidebar() {
                     'outline-none transition-opacity hover:opacity-90',
                     'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   )}
-                  aria-label="Account menu"
+                  aria-label={t('nav.accountMenu')}
                 >
                   <div className="border border-white/30 p-1 rounded-full">
                   <Avatar className="h-7 w-7">
                     <AvatarImage
                       src={user.picture ?? undefined}
-                      alt={user.name ?? 'Account'}
+                      alt={user.name ?? t('common.account')}
                     />
                     <AvatarFallback className="bg-[#7B61FF] text-[11px] font-semibold text-white">
                       {initials}

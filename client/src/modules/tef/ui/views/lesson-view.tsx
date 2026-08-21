@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import {
   clearPlacementProgress,
@@ -35,7 +36,8 @@ type FlatItem = {
 
 function modulesFromBatch(
   modules: PublicReadingModule[] | undefined,
-  questions: PublicQuestion[]
+  questions: PublicQuestion[],
+  defaultTitle: string
 ): PublicReadingModule[] {
   if (modules?.length) return modules;
   if (!questions.length) return [];
@@ -43,7 +45,7 @@ function modulesFromBatch(
     {
       id: 'mod-legacy',
       type: 'mcq_set',
-      title: 'Practice',
+      title: defaultTitle,
       items: questions,
     },
   ];
@@ -108,6 +110,7 @@ function moduleSegmentTone({
 
 export function LessonView() {
   const router = useRouter();
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const mode = (searchParams.get('mode') as 'placement' | 'practice') || 'practice';
   const isFresh = searchParams.get('fresh') === '1';
@@ -169,7 +172,7 @@ export function LessonView() {
         const saved = loadPlacementProgress();
         if (saved.questions?.length && !isFresh) {
           if (cancelled) return;
-          const mods = modulesFromBatch(undefined, saved.questions);
+          const mods = modulesFromBatch(undefined, saved.questions, t('lesson.practice'));
           setModules(mods);
           setAnswers(saved.answers ?? new Array(saved.questions.length).fill(null));
           setCorrectIndices(new Array(saved.questions.length).fill(null));
@@ -180,9 +183,9 @@ export function LessonView() {
         clearPlacementProgress();
         const data = await startOnboard.mutateAsync();
         if (cancelled) return;
-        if (!data.questions?.length) throw new Error('No questions returned');
+        if (!data.questions?.length) throw new Error(t('lesson.noQuestions'));
 
-        const mods = modulesFromBatch(undefined, data.questions);
+        const mods = modulesFromBatch(undefined, data.questions, t('lesson.practice'));
         setModules(mods);
         setAnswers(new Array(data.questions.length).fill(null));
         setCorrectIndices(new Array(data.questions.length).fill(null));
@@ -190,7 +193,7 @@ export function LessonView() {
         savePlacementProgress({ questions: data.questions, answers: [], currentIdx: 0 });
       } catch (err) {
         if (!cancelled) {
-          toast.error(err instanceof Error ? err.message : 'Failed to load placement');
+          toast.error(err instanceof Error ? err.message : t('lesson.loadPlacementFailed'));
           router.replace('/learn');
         }
       } finally {
@@ -209,14 +212,14 @@ export function LessonView() {
 
     if (practiceQuery.isError) {
       practiceInitRef.current = true;
-      toast.error('Failed to load practice');
+      toast.error(t('lesson.loadPracticeFailed'));
       router.replace('/learn');
       return;
     }
 
     if (!practiceQuery.isSuccess) return;
     const data = practiceQuery.data;
-    const mods = modulesFromBatch(data.modules, data.questions ?? []);
+    const mods = modulesFromBatch(data.modules, data.questions ?? [], t('lesson.practice'));
     if (!mods.length) return;
 
     practiceInitRef.current = true;
@@ -256,7 +259,7 @@ export function LessonView() {
         playMcqWrongSound();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not check answer');
+      toast.error(err instanceof Error ? err.message : t('lesson.checkFailed'));
     }
   };
 
@@ -285,7 +288,7 @@ export function LessonView() {
       setLastDiagnostic(data);
       router.push('/learn/results');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Submit failed');
+      toast.error(err instanceof Error ? err.message : t('lesson.submitFailed'));
     }
   };
 
@@ -296,7 +299,7 @@ export function LessonView() {
       setLastDiagnostic(data);
       router.push('/learn/results');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Submit failed');
+      toast.error(err instanceof Error ? err.message : t('lesson.submitFailed'));
     }
   };
 
@@ -335,11 +338,11 @@ export function LessonView() {
   const currentQuestion = questions[currentIdx];
 
   const title = useMemo(
-    () => (isPlacement ? 'Placement test' : topic ? topic : 'Practice'),
-    [isPlacement, topic]
+    () => (isPlacement ? t('lesson.placementTest') : topic ? topic : t('lesson.practice')),
+    [isPlacement, topic, t]
   );
 
-  const modeLabel = isPlacement ? 'Placement' : 'Practice';
+  const modeLabel = isPlacement ? t('lesson.placement') : t('lesson.practice');
   const ModeIcon = isPlacement ? ClipboardList : BookOpen;
 
   if (loading || (mode === 'practice' && practiceQuery.isLoading)) {
@@ -382,8 +385,8 @@ export function LessonView() {
       className="flex gap-1"
       aria-label={
         isPlacement
-          ? `Question progress: ${currentIdx + 1} of ${questions.length}`
-          : `Module progress: ${currentModuleIndex + 1} of ${modules.length}`
+          ? t('lesson.questionProgress', { current: currentIdx + 1, total: questions.length })
+          : t('lesson.moduleProgress', { current: currentModuleIndex + 1, total: modules.length })
       }
     >
       {(isPlacement ? questions : modules).map((_, index) => {
@@ -525,7 +528,7 @@ export function LessonView() {
               )}
             >
               <p className="mb-2 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                {currentModule.type === 'finding_info' ? 'Document' : 'Passage'}
+                {currentModule.type === 'finding_info' ? t('lesson.document') : t('lesson.passage')}
               </p>
               {currentModule.passage}
             </article>
@@ -563,7 +566,7 @@ export function LessonView() {
             disabled={checked || answers[currentIdx] == null || busy}
             className="w-[5.25rem] shrink-0 px-0"
           >
-            Clear
+            {t('common.clear')}
           </Button>
           <Button
             variant="pillPrimary"
@@ -587,15 +590,15 @@ export function LessonView() {
                 <Loader2 className="h-4 w-4 animate-spin" /> Checking…
               </>
             ) : !checked ? (
-              'Check'
+              t('common.check')
             ) : busy ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" /> Scoring…
               </>
             ) : isLast ? (
-              'Finish'
+              t('common.finish')
             ) : (
-              'Continue'
+              t('common.continue')
             )}
           </Button>
         </div>

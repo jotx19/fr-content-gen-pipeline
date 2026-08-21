@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AnimatedText } from '@/components/ui/animated-text';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import {
   loadLastReadingScore,
   loadLastReadingXp,
@@ -352,6 +353,7 @@ function AnimatedSkillPanel({
 
 export function ResultsView() {
   const router = useRouter();
+  const { t } = useI18n();
   const diagnostic = useLessonStore((s) => s.lastDiagnostic);
   const { data: profile } = useTefProfileQuery();
   const [activeSkill, setActiveSkill] = useState(0);
@@ -458,7 +460,7 @@ export function ResultsView() {
               onClick={() => router.push('/learn')}
             >
               <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.25} />
-              Home
+              {t('common.home')}
             </Button>
         <div className="flex min-w-0 flex-1 items-center justify-end">
           <div className="grid w-full max-w-xs grid-cols-2 gap-1.5 overflow-hidden rounded-4xl border border-black/8 bg-white/72 p-1.5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/65 sm:max-w-sm md:rounded-full">
@@ -477,7 +479,7 @@ export function ResultsView() {
               className="min-w-0 px-2 text-xs sm:px-3 sm:text-sm"
               onClick={() => router.push('/learn/lesson?mode=practice')}
             >
-              Continue
+              {t('common.continue')}
             </Button>
           </div>
         </div>
@@ -497,7 +499,7 @@ export function ResultsView() {
           onClick={replayScore}
           className="sm:col-start-1 sm:row-start-1"
         >
-          <CardHeader icon={Target} label="Accuracy" palette={pastel.accuracy} />
+          <CardHeader icon={Target} label={t('results.accuracy')} palette={pastel.accuracy} />
           <CapsuleBars
             values={trendBars}
             compareValues={prevBars}
@@ -523,7 +525,7 @@ export function ResultsView() {
               >
                 {sessionMeta.scoreDelta > 0 && `+${sessionMeta.scoreDelta}%`}
                 {sessionMeta.scoreDelta < 0 && `${sessionMeta.scoreDelta}%`}
-                {sessionMeta.scoreDelta === 0 && 'Same'}
+                {sessionMeta.scoreDelta === 0 && t('results.same')}
               </motion.span>
             )}
           </div>
@@ -532,7 +534,7 @@ export function ResultsView() {
         <BentoCard palette={pastel.mint} visible={revealIndex >= 1} delay={0.06} className="sm:col-start-2 sm:row-start-1">
           <CardHeader
             icon={Energy}
-            label="XP gained"
+            label={t('results.xpGained')}
             palette={pastel.mint}
             trailing={
               <span className={cn('text-[10px] font-semibold tabular-nums sm:text-xs', pastel.mint.label)}>
@@ -549,13 +551,13 @@ export function ResultsView() {
             >
               <AnimatedText text={`+${animatedXp}`} remountOnChange={false} delayStep={0.015} />
             </motion.span>
-            <span className={cn(`${inter.className} text-sm font-semibold`, pastel.mint.label)}>XP</span>
+            <span className={cn(`${inter.className} text-sm font-semibold`, pastel.mint.label)}>{t('common.xp')}</span>
           </div>
         </BentoCard>
         </div>
 
         <BentoCard palette={pastel.lavender} visible={revealIndex >= 1} delay={0.1} className="sm:col-start-1 sm:row-start-2">
-          <CardHeader icon={Award} label="Your level" palette={pastel.lavender} />
+          <CardHeader icon={Award} label={t('results.yourLevel')} palette={pastel.lavender} />
           <CapsuleBars values={levelBars} palette={pastel.lavender} visible={revealIndex >= 2} />
           <div className="mt-2 flex shrink-0 items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
@@ -614,7 +616,7 @@ export function ResultsView() {
         >
           <CardHeader
             icon={ChartBarIncreasing}
-            label={skillBreakdown.length > 0 ? 'Skills' : 'Focus next'}
+            label={skillBreakdown.length > 0 ? t('results.skills') : t('results.focusNext')}
             palette={pastel.peach}
             trailing={
               skillBreakdown.length > 1 ? (

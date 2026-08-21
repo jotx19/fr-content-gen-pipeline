@@ -31,10 +31,9 @@ import {
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useI18n } from '@/lib/i18n';
 import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
-
-const LANG_KEY = 'fringo-language';
 
 const panelClass = cn(
   inter.className,
@@ -87,30 +86,6 @@ function MenuRow({
   );
 }
 
-function usePreferredLanguage() {
-  const [language, setLanguage] = useState('en');
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(LANG_KEY);
-      if (stored === 'en' || stored === 'fr') setLanguage(stored);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const update = (value: string) => {
-    setLanguage(value);
-    try {
-      localStorage.setItem(LANG_KEY, value);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  return { language, setLanguage: update };
-}
-
 export function AccountDropdownContent({
   onLogout,
   userName,
@@ -120,11 +95,11 @@ export function AccountDropdownContent({
 }: AccountDropdownContentProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { language, setLanguage } = usePreferredLanguage();
+  const { locale, setLocale, t } = useI18n();
 
   useEffect(() => setMounted(true), []);
 
-  const displayName = userName?.split(' ')[0] || 'Account';
+  const displayName = userName?.split(' ')[0] || t('common.account');
   const initials =
     userName
       ?.split(' ')
@@ -150,7 +125,7 @@ export function AccountDropdownContent({
         )}
       >
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarImage src={userPicture ?? undefined} alt={userName ?? 'Account'} />
+          <AvatarImage src={userPicture ?? undefined} alt={userName ?? t('common.account')} />
           <AvatarFallback className="bg-[#7B61FF] text-[11px] font-semibold text-white">
             {initials}
           </AvatarFallback>
@@ -167,31 +142,31 @@ export function AccountDropdownContent({
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/dashboard">
-          <MenuRow icon={ChartBarIncreasing} title="Dashboard" />
+          <MenuRow icon={ChartBarIncreasing} title={t('common.dashboard')} />
         </Link>
       </DropdownMenuItem>
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/learn">
-          <MenuRow icon={Home} title="Home" />
+          <MenuRow icon={Home} title={t('common.home')} />
         </Link>
       </DropdownMenuItem>
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/notes">
-          <MenuRow icon={Note} title="Notes" />
+          <MenuRow icon={Note} title={t('common.notes')} />
         </Link>
       </DropdownMenuItem>
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/learn/lesson?mode=practice">
-          <MenuRow icon={Notebook} title="Reading" />
+          <MenuRow icon={Notebook} title={t('common.reading')} />
         </Link>
       </DropdownMenuItem>
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/learn/writing">
-          <MenuRow icon={PenLine} title="Writing" />
+          <MenuRow icon={PenLine} title={t('common.writing')} />
         </Link>
       </DropdownMenuItem>
 
@@ -201,7 +176,7 @@ export function AccountDropdownContent({
         <DropdownMenuSubTrigger className={cn(itemClass, 'flex w-full items-center')}>
           <MenuRow
             icon={Palette}
-            title="Appearance"
+            title={t('common.appearance')}
             trailing={<ChevronRight className={chevronClass} strokeWidth={2} />}
           />
         </DropdownMenuSubTrigger>
@@ -212,15 +187,15 @@ export function AccountDropdownContent({
           >
             <DropdownMenuRadioItem value="light" className={itemClass}>
               <Sun className={iconClass} strokeWidth={iconStroke} />
-              Light
+              {t('common.light')}
             </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="dark" className={itemClass}>
               <Moon className={iconClass} strokeWidth={iconStroke} />
-              Dark
+              {t('common.dark')}
             </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="system" className={itemClass}>
               <Palette className={iconClass} strokeWidth={iconStroke} />
-              System
+              {t('common.system')}
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuSubContent>
@@ -230,17 +205,22 @@ export function AccountDropdownContent({
         <DropdownMenuSubTrigger className={cn(itemClass, 'flex w-full items-center')}>
           <MenuRow
             icon={Globe}
-            title="Language"
+            title={t('common.language')}
             trailing={<ChevronRight className={chevronClass} strokeWidth={2} />}
           />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent sideOffset={8} className={subPanelClass}>
-          <DropdownMenuRadioGroup value={language} onValueChange={setLanguage}>
+          <DropdownMenuRadioGroup
+            value={locale}
+            onValueChange={(value) => {
+              if (value === 'en' || value === 'fr') setLocale(value);
+            }}
+          >
             <DropdownMenuRadioItem value="en" className={itemClass}>
-              English
+              {t('common.english')}
             </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="fr" className={itemClass}>
-              Français
+              {t('common.french')}
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuSubContent>
@@ -248,7 +228,7 @@ export function AccountDropdownContent({
 
       <DropdownMenuItem asChild className={itemClass}>
         <Link href="/settings">
-          <MenuRow icon={Settings} title="Settings" />
+          <MenuRow icon={Settings} title={t('common.settings')} />
         </Link>
       </DropdownMenuItem>
 
@@ -258,7 +238,7 @@ export function AccountDropdownContent({
         onClick={onLogout}
         className={cn(itemClass, 'flex w-full items-center text-foreground/90 dark:text-white/90')}
       >
-        <MenuRow icon={LogOut} title="Log out" />
+        <MenuRow icon={LogOut} title={t('common.logOut')} />
       </DropdownMenuItem>
     </DropdownMenuContent>
   );

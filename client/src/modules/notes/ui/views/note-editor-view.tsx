@@ -9,6 +9,7 @@ import type { Block } from '@blocknote/core';
 import { ArrowLeft, Check, Globe, LinkIcon, Loader2, Trash2 } from '@/components/icons';
 import { Switch } from '@/components/ui/switch';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { NotesEditor } from '@/modules/notes/ui/components/notes-editor';
 import {
@@ -23,6 +24,7 @@ export function NoteEditorView() {
   const id = params?.id ?? '';
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const { t } = useI18n();
   const { data: note, isLoading, isError } = useNoteQuery(id, Boolean(user && id));
   const updateNote = useUpdateNoteMutation();
   const removeNote = useDeleteNoteMutation();
@@ -37,7 +39,7 @@ export function NoteEditorView() {
 
   useEffect(() => {
     if (!note || seeded.current) return;
-    setTitle(note.title || 'Untitled');
+    setTitle(note.title || t('notes.untitled'));
     setVisibility(note.visibility);
     seeded.current = true;
   }, [note]);
@@ -51,10 +53,10 @@ export function NoteEditorView() {
       if (!id) return;
       if (titleTimer.current) clearTimeout(titleTimer.current);
       titleTimer.current = setTimeout(() => {
-        updateNote.mutate({ id, title: next || 'Untitled' });
+        updateNote.mutate({ id, title: next || t('notes.untitled') });
       }, 500);
     },
-    [id, updateNote]
+    [id, updateNote, t]
   );
 
   const handleTitleChange = (value: string) => {
@@ -78,7 +80,7 @@ export function NoteEditorView() {
     setVisibility(next);
     try {
       await updateNote.mutateAsync({ id, visibility: next });
-      toast.success(isPublic ? 'Note is public' : 'Note is private');
+      toast.success(isPublic ? t('notes.public') : t('notes.private'));
     } catch (err) {
       setVisibility(isPublic ? 'private' : 'public');
       toast.error(err instanceof Error ? err.message : 'Could not update visibility');
@@ -88,10 +90,10 @@ export function NoteEditorView() {
   const handleDelete = async () => {
     try {
       await removeNote.mutateAsync(id);
-      toast.success('Note deleted');
+      toast.success(t('notes.deleted'));
       router.push('/notes');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not delete note');
+      toast.error(err instanceof Error ? err.message : t('notes.deleteFailed'));
     }
   };
 
@@ -100,7 +102,7 @@ export function NoteEditorView() {
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
-      toast.success('Link copied');
+      toast.success(t('common.copied'));
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setLinkCopied(false), 1800);
     } catch {
@@ -150,7 +152,7 @@ export function NoteEditorView() {
             )}
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-            Notes
+            {t('notes.title')}
           </Link>
 
           <div className="flex items-center gap-2">
@@ -160,7 +162,7 @@ export function NoteEditorView() {
                 onClick={handleCopyPublicLink}
                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-md text-black/45 transition-colors hover:bg-black/5 hover:text-black dark:text-white/45 dark:hover:bg-white/8 dark:hover:text-white"
                 aria-label={linkCopied ? 'Link copied' : 'Copy public link'}
-                title={linkCopied ? 'Copied' : 'Copy public link'}
+                title={linkCopied ? t('common.copied') : 'Copy public link'}
               >
                 {linkCopied ? (
                   <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2} />
@@ -173,13 +175,13 @@ export function NoteEditorView() {
             <div className="flex items-center gap-1.5 rounded-full border border-black/10 px-2 py-1 dark:border-white/12">
               <Globe className="h-3.5 w-3.5 text-black/45 dark:text-white/45" strokeWidth={1.75} />
               <span className={cn(inter.className, 'text-[11px] font-medium text-black/55 dark:text-white/55')}>
-                Public
+                {t('notes.public')}
               </span>
               <Switch
                 size="sm"
                 checked={visibility === 'public'}
                 onCheckedChange={handleVisibility}
-                aria-label="Public note"
+                aria-label={t('notes.public')}
               />
             </div>
 
@@ -187,7 +189,7 @@ export function NoteEditorView() {
               type="button"
               onClick={handleDelete}
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-[12px] text-black/40 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-white/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-              aria-label="Delete note"
+              aria-label={t('notes.deleteNote')}
             >
               <Trash2 className="h-4 w-4" strokeWidth={1.75} />
             </button>
@@ -199,7 +201,7 @@ export function NoteEditorView() {
         <input
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder="Untitled"
+          placeholder={t('notes.untitled')}
           className={cn(
             bricolage.className,
             'mb-6 w-full border-none bg-transparent text-3xl font-semibold tracking-tight text-black outline-none placeholder:text-black/25 dark:text-white dark:placeholder:text-white/25 sm:text-4xl',

@@ -8,8 +8,16 @@ import {
   type AppIcon,
 } from '@/components/icons';
 
+export type AppNavKey =
+  | 'home'
+  | 'dashboard'
+  | 'notes'
+  | 'translate'
+  | 'reading'
+  | 'writing';
+
 export type AppNavItem = {
-  label: string;
+  navKey: AppNavKey;
   href: string;
   icon: AppIcon;
   /** Match only exact path (e.g. /learn vs /learn/writing) */
@@ -19,18 +27,18 @@ export type AppNavItem = {
 };
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
-  { label: 'Home', href: '/learn', icon: Home, exact: true },
-  { label: 'Dashboard', href: '/dashboard', icon: ChartBarIncreasing, exact: true },
-  { label: 'Notes', href: '/notes', icon: Note },
-  { label: 'Translate', href: '/translate', icon: Translate },
-  { label: 'Reading', href: '/learn/lesson?mode=practice', icon: Notebook, separatorBefore: true },
-  { label: 'Writing', href: '/learn/writing', icon: PenLine },
+  { navKey: 'home', href: '/learn', icon: Home, exact: true },
+  { navKey: 'dashboard', href: '/dashboard', icon: ChartBarIncreasing, exact: true },
+  { navKey: 'notes', href: '/notes', icon: Note },
+  { navKey: 'translate', href: '/translate', icon: Translate },
+  { navKey: 'reading', href: '/learn/lesson?mode=practice', icon: Notebook, separatorBefore: true },
+  { navKey: 'writing', href: '/learn/writing', icon: PenLine },
 ];
 
 export const LANDING_NAV_ITEMS = [
-  { label: 'Learn', href: '/learn' },
-  { label: 'Pricing', href: '#pricing' },
-] as const;
+  { navKey: 'learn' as const, href: '/learn' },
+  { navKey: 'pricing' as const, href: '#pricing' },
+];
 
 export function isAppNavActive(
   pathname: string,

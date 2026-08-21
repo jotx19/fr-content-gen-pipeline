@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { ArrowUpDown, Check, Copy, Loader2, X } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useTranslateMutation } from '@/modules/translate/hooks/use-translate-queries';
 
@@ -14,12 +15,8 @@ const inkMuted = 'text-[#675549]/80 dark:text-white/70';
 
 type Lang = 'EN' | 'FR';
 
-const LANG_LABEL: Record<Lang, string> = {
-  EN: 'English',
-  FR: 'French',
-};
-
 export function TranslateView() {
+  const { t } = useI18n();
   const translate = useTranslateMutation();
   const [sourceLang, setSourceLang] = useState<Lang>('EN');
   const [targetLang, setTargetLang] = useState<Lang>('FR');
@@ -27,6 +24,9 @@ export function TranslateView() {
   const [translatedText, setTranslatedText] = useState('');
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const langLabel = (lang: Lang) =>
+    lang === 'EN' ? t('common.english') : t('common.french');
 
   useEffect(() => {
     return () => {
@@ -37,7 +37,7 @@ export function TranslateView() {
   const handleConvert = async () => {
     const trimmed = sourceText.trim();
     if (!trimmed) {
-      toast.error('Enter text to translate');
+      toast.error(t('translate.enterText'));
       return;
     }
     try {
@@ -48,7 +48,7 @@ export function TranslateView() {
       });
       setTranslatedText(result.text);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Translation failed');
+      toast.error(err instanceof Error ? err.message : t('translate.failed'));
     }
   };
 
@@ -64,11 +64,11 @@ export function TranslateView() {
     try {
       await navigator.clipboard.writeText(translatedText);
       setCopied(true);
-      toast.success('Copied');
+      toast.success(t('common.copied'));
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(false), 1600);
     } catch {
-      toast.error('Could not copy');
+      toast.error(t('translate.copyFailed'));
     }
   };
 
@@ -82,10 +82,13 @@ export function TranslateView() {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 sm:gap-6">
         <div className="px-1">
           <h1 className={cn(bricolage.className, 'text-2xl font-semibold tracking-tight sm:text-3xl', ink)}>
-            Translate
+            {t('translate.title')}
           </h1>
           <p className={cn(inter.className, 'mt-1 text-sm', inkMuted)}>
-            Instant <span className="text-[#675549] font-bold dark:text-white">EN</span> to <span className="text-[#675549] font-bold dark:text-white">FR</span> translation help for study and writing practice
+            {t('translate.subtitlePrefix')}{' '}
+            <span className="text-[#675549] font-bold dark:text-white">EN</span> to{' '}
+            <span className="text-[#675549] font-bold dark:text-white">FR</span>{' '}
+            {t('translate.subtitleSuffix')}
           </p>
         </div>
 
@@ -99,7 +102,7 @@ export function TranslateView() {
                   ink,
                 )}
               >
-                {LANG_LABEL[sourceLang]}
+                {langLabel(sourceLang)}
               </span>
               <button
                 type="button"
@@ -109,8 +112,8 @@ export function TranslateView() {
                   inkMuted,
                   'hover:bg-[#675549]/10 hover:text-[#675549] dark:hover:bg-white/10 dark:hover:text-white',
                 )}
-                aria-label="Swap languages"
-                title="Swap languages"
+                aria-label={t('translate.swap')}
+                title={t('translate.swap')}
               >
                 <ArrowUpDown className="h-3.5 w-3.5" strokeWidth={1.75} />
               </button>
@@ -121,7 +124,7 @@ export function TranslateView() {
                   ink,
                 )}
               >
-                {LANG_LABEL[targetLang]}
+                {langLabel(targetLang)}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -134,8 +137,8 @@ export function TranslateView() {
                   inkMuted,
                   'hover:bg-[#675549]/10 hover:text-[#675549] disabled:opacity-40 dark:hover:bg-white/10 dark:hover:text-white',
                 )}
-                aria-label="Clear"
-                title="Clear"
+                aria-label={t('common.clear')}
+                title={t('common.clear')}
               >
                 <X className="h-3.5 w-3.5" strokeWidth={1.75} />
               </button>
@@ -153,7 +156,7 @@ export function TranslateView() {
                 {translate.isPending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : null}
-                Convert
+                {t('translate.convert')}
               </button>
             </div>
           </div>
@@ -162,7 +165,7 @@ export function TranslateView() {
             <div className="flex min-h-[280px] flex-col border-b border-[#675549]/12 sm:min-h-[400px] lg:border-b-0 lg:border-r dark:border-white/10">
               <div className="flex h-11 shrink-0 items-center justify-between px-5 sm:px-6">
                 <h2 className={cn(inter.className, 'text-xs font-semibold uppercase tracking-wide', inkMuted)}>
-                  {LANG_LABEL[sourceLang]}
+                  {langLabel(sourceLang)}
                 </h2>
                 <span
                   className={cn(
@@ -177,7 +180,7 @@ export function TranslateView() {
               <textarea
                 value={sourceText}
                 onChange={(e) => setSourceText(e.target.value.slice(0, 5000))}
-                placeholder={sourceLang === 'EN' ? 'Write in English…' : 'Écrivez en français…'}
+                placeholder={sourceLang === 'EN' ? t('translate.writeEn') : t('translate.writeFr')}
                 className={cn(
                   inter.className,
                   'min-h-0 w-full flex-1 resize-none bg-transparent px-5 pb-4 text-[15px] leading-relaxed outline-none sm:px-6',
@@ -190,7 +193,7 @@ export function TranslateView() {
             <div className="flex min-h-[280px] flex-col sm:min-h-[400px]">
               <div className="flex h-11 shrink-0 items-center justify-between px-5 sm:px-6">
                 <h2 className={cn(inter.className, 'text-xs font-semibold uppercase tracking-wide', inkMuted)}>
-                  {LANG_LABEL[targetLang]}
+                  {langLabel(targetLang)}
                 </h2>
                 <button
                   type="button"
@@ -201,8 +204,8 @@ export function TranslateView() {
                     inkMuted,
                     'hover:bg-[#675549]/10 hover:text-[#675549] disabled:opacity-30 dark:hover:bg-white/10 dark:hover:text-white',
                   )}
-                  aria-label={copied ? 'Copied' : 'Copy translation'}
-                  title={copied ? 'Copied' : 'Copy'}
+                  aria-label={copied ? t('common.copied') : t('translate.copyTranslation')}
+                  title={copied ? t('common.copied') : t('common.copy')}
                 >
                   {copied ? (
                     <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2} />
@@ -219,7 +222,7 @@ export function TranslateView() {
                 )}
               >
                 {translatedText ||
-                  (targetLang === 'FR' ? 'French appears here' : 'English appears here')}
+                  (targetLang === 'FR' ? t('translate.appearsFr') : t('translate.appearsEn'))}
               </div>
             </div>
           </div>

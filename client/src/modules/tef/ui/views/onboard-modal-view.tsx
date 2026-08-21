@@ -9,6 +9,7 @@ import { OnboardingChecklist } from '@/components/ui/onboarding-checklist';
 import { Separator } from '@/components/ui/separator';
 import { BRAND } from '@/lib/brand';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useSelfSelectLevelMutation } from '@/modules/tef/hooks/use-tef-queries';
 import { toast } from 'sonner';
@@ -32,31 +33,31 @@ function OnboardButton({
   );
 }
 
-const LEVEL_OPTIONS = [
-  { value: 'A1', label: 'Beginner', desc: 'Basic words and phrases' },
-  { value: 'A2', label: 'Elementary', desc: 'Simple everyday situations' },
-  { value: 'B1', label: 'Intermediate', desc: 'Most daily situations' },
-  { value: 'B2', label: 'Upper Intermediate', desc: 'Complex topics, fluent' },
-  { value: 'C1', label: 'Advanced', desc: 'Flexible and effective use' },
-  { value: 'C2', label: 'Mastery', desc: 'Near-native proficiency' },
-] as const;
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 
 const PLACEMENT_LESSON_URL = '/learn/lesson?mode=placement&fresh=1';
 
 export function OnboardModalView() {
   const router = useRouter();
+  const { t, m } = useI18n();
   const [pickedLevel, setPickedLevel] = useState('B1');
   const [selectingLevel, setSelectingLevel] = useState(false);
 
   const selfSelect = useSelfSelectLevelMutation();
 
+  const LEVEL_OPTIONS = CEFR_LEVELS.map((value) => ({
+    value,
+    label: m.onboard.levels[value].label,
+    desc: m.onboard.levels[value].desc,
+  }));
+
   const checklistSteps = useMemo(
     () => [
-      { id: 1, title: 'Create your account', isCompleted: true },
-      { id: 2, title: 'Set your French level', isCompleted: false },
-      { id: 3, title: 'Start practicing', isCompleted: false },
+      { id: 1, title: t('onboard.stepAccount'), isCompleted: true },
+      { id: 2, title: t('onboard.stepLevel'), isCompleted: false },
+      { id: 3, title: t('onboard.stepPractice'), isCompleted: false },
     ],
-    []
+    [t]
   );
 
   const handleSelfSelect = async () => {
@@ -65,7 +66,7 @@ export function OnboardModalView() {
       await selfSelect.mutateAsync(pickedLevel);
       router.push('/learn');
     } catch {
-      toast.error('Something went wrong, try again');
+      toast.error(t('onboard.failed'));
     } finally {
       setSelectingLevel(false);
     }
@@ -78,7 +79,7 @@ export function OnboardModalView() {
         className="fixed inset-0 z-50 flex items-center justify-center p-2.5 md:p-4"
         role="dialog"
         aria-modal="true"
-        aria-label="Onboarding"
+        aria-label={t('onboard.aria')}
       >
         <div
           className={cn(
@@ -100,6 +101,7 @@ export function OnboardModalView() {
                   steps={checklistSteps}
                   activeStepId={2}
                   sidebar
+                  title={t('onboard.gettingStarted')}
                 />
               </div>
             </div>
@@ -109,10 +111,10 @@ export function OnboardModalView() {
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto px-4 py-6">
                 <LevelPickerWidget
-                  levels={[...LEVEL_OPTIONS]}
+                  levels={LEVEL_OPTIONS}
                   value={pickedLevel}
                   onValueChange={setPickedLevel}
-                  title="Select your level"
+                  title={t('onboard.selectLevel')}
                 />
 
                 <OnboardButton
@@ -123,7 +125,7 @@ export function OnboardModalView() {
                   {selectingLevel ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    'Continue with this level'
+                    t('onboard.continueLevel')
                   )}
                 </OnboardButton>
 
@@ -133,7 +135,7 @@ export function OnboardModalView() {
                   className="w-full max-w-sm"
                   onClick={() => router.push(PLACEMENT_LESSON_URL)}
                 >
-                  Evaluate yourself
+                  {t('onboard.evaluateYourself')}
                 </OnboardButton>
               </div>
             </div>

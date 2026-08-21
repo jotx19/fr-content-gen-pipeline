@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import {
   useRefreshWritingPromptMutation,
@@ -116,6 +117,7 @@ function countWords(text: string) {
 
 export function WritingView() {
   const router = useRouter();
+  const { t } = useI18n();
   const setLastResult = useWritingStore((s) => s.setLastResult);
   const { data: profile, isLoading: profileLoading } = useWritingProfileQuery();
   const {
@@ -221,7 +223,7 @@ export function WritingView() {
       payload = { sentences: sentenceAnswers };
     } else {
       if (!text.trim()) {
-        toast.error('Write your answer before submitting.');
+        toast.error(t('writing.writeBeforeSubmit'));
         return;
       }
       payload = { text: text.trim() };
@@ -232,7 +234,7 @@ export function WritingView() {
       setLastResult(result);
       router.push('/learn/writing/results');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Submission failed');
+      toast.error(err instanceof Error ? err.message : t('writing.submitFailed'));
     }
   };
 
@@ -286,7 +288,7 @@ export function WritingView() {
       showExampleNotes(data.notes);
     } catch (err) {
       setShowExample(false);
-      toast.error(err instanceof Error ? err.message : 'Could not load example');
+      toast.error(err instanceof Error ? err.message : t('writing.exampleFailed'));
     }
   };
 
@@ -303,7 +305,7 @@ export function WritingView() {
 
   const handleCopyAnswer = async () => {
     if (!text.trim()) {
-      toast.error('Nothing to copy yet.');
+      toast.error(t('writing.nothingToCopy'));
       return;
     }
     try {
@@ -312,14 +314,14 @@ export function WritingView() {
       if (copyResetRef.current !== undefined) window.clearTimeout(copyResetRef.current);
       copyResetRef.current = window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Could not copy to clipboard');
+      toast.error(t('writing.copyFailed'));
     }
   };
 
   const handleCopyExample = async () => {
     const toCopy = (exampleData?.exampleAnswer ?? exampleTypedText).trim();
     if (!toCopy) {
-      toast.error('Nothing to copy yet.');
+      toast.error(t('writing.nothingToCopy'));
       return;
     }
     try {
@@ -328,7 +330,7 @@ export function WritingView() {
       if (exampleCopyResetRef.current !== undefined) window.clearTimeout(exampleCopyResetRef.current);
       exampleCopyResetRef.current = window.setTimeout(() => setExampleCopied(false), 2000);
     } catch {
-      toast.error('Could not copy to clipboard');
+      toast.error(t('writing.copyFailed'));
     }
   };
 
@@ -338,9 +340,9 @@ export function WritingView() {
     try {
       await refreshPrompt.mutateAsync(section ? { section } : undefined);
       setQuestionOpen(true);
-      toast.success(section ? `Section ${section} prompt ready` : 'New prompt ready');
+      toast.success(section ? t('writing.sectionReady', { section }) : t('writing.promptReady'));
     } catch {
-      toast.error('Could not refresh prompt');
+      toast.error(t('writing.refreshFailed'));
     } finally {
       setPromptRefreshing(false);
       setPendingSection(null);
@@ -368,7 +370,7 @@ export function WritingView() {
           Writing practice unlocks after reading placement. Writing level and XP are tracked separately.
         </p>
         <Button type="button" onClick={() => router.push('/learn')} className="mt-8 rounded-full">
-          Back to Learn
+          {t('common.backToLearn')}
         </Button>
       </div>
     );
@@ -403,7 +405,7 @@ export function WritingView() {
                             type="button"
                             disabled={questionLoading}
                             className="group inline-flex items-center gap-1.5 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 data-[state=open]:[&_svg]:rotate-180"
-                            aria-label="Switch writing section"
+                            aria-label={t('writing.switchSection')}
                           >
                             <h1
                               className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}
@@ -433,7 +435,7 @@ export function WritingView() {
                           <button
                             type="button"
                             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-foreground/55 transition-colors hover:text-foreground"
-                            aria-label="Section information"
+                            aria-label={t('writing.sectionInfo')}
                           >
                             <Info className="h-3.5 w-3.5" />
                           </button>
@@ -456,7 +458,7 @@ export function WritingView() {
                     <h1
                       className={`${bricolage.className} text-xl font-semibold tracking-tight sm:text-2xl`}
                     >
-                      {taskMode === 'fill_blanks' ? 'Fill blanks' : 'Write sentences'}
+                      {taskMode === 'fill_blanks' ? t('writing.fillBlanks') : t('writing.writeSentences')}
                     </h1>
                   )}
                 </div>
@@ -485,7 +487,7 @@ export function WritingView() {
                       {example.isPending ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : null}
-                      {showExample ? 'Hide example' : 'Generate with AI'}
+                      {showExample ? t('writing.hideExample') : t('writing.generateAi')}
                     </button>
                   </Badge>
                 </div>
@@ -493,7 +495,7 @@ export function WritingView() {
 
               <div className="px-5 pb-4">
                 {questionLoading ? (
-                  <div className="space-y-3 py-1" aria-busy="true" aria-label="Loading question">
+                  <div className="space-y-3 py-1" aria-busy="true" aria-label={t('writing.loadingQuestion')}>
                     <Skeleton className="h-3 w-16 rounded-md bg-white/60 dark:bg-white/10" />
                     <Skeleton className="h-6 w-[88%] rounded-md bg-white/60 dark:bg-white/10 sm:h-7" />
                     <div className="space-y-2 pt-1">
@@ -542,7 +544,7 @@ export function WritingView() {
               {(taskMode === 'fill_blanks' || taskMode === 'sentences') && (
                 <div>
                   <label className="text-sm font-medium text-foreground">
-                    {showExample ? 'AI example — your reply' : 'Your reply'}
+                    {showExample ? t('writing.aiExampleReply') : t('writing.yourReply')}
                   </label>
                   <div
                     className={cn(
@@ -586,7 +588,7 @@ export function WritingView() {
                     ) : null}
                     <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-white/50 px-4 py-3 dark:border-white/10">
                       <ToolbarIconButton
-                        label="Next task"
+                        label={t('writing.nextTask')}
                         onClick={() => handleNewPrompt()}
                         disabled={questionLoading || promptLoading}
                       >
@@ -611,7 +613,7 @@ export function WritingView() {
                             Submitting…
                           </>
                         ) : (
-                          'Submit'
+                          t('common.submit')
                         )}
                       </Button>
                     </div>
@@ -622,7 +624,7 @@ export function WritingView() {
               {taskMode === 'full' && (
               <div className="mt-6">
                 <label htmlFor="writing-answer" className="text-sm font-medium text-foreground">
-                  {showExample ? 'AI example (French)' : 'Your answer (French)'}
+                  {showExample ? t('writing.aiExampleFr') : t('writing.yourAnswerFr')}
                 </label>
                 <div
                   className={cn(
@@ -643,7 +645,7 @@ export function WritingView() {
                                     toolbarIcon,
                                     'pointer-events-auto border border-white/60 bg-white/80 shadow-sm backdrop-blur-md dark:border-white/15 dark:bg-white/10'
                                   )}
-                                  aria-label="Why this example works"
+                                  aria-label={t('writing.whyExample')}
                                 >
                                   <Info className="h-3.5 w-3.5" />
                                 </button>
@@ -669,7 +671,7 @@ export function WritingView() {
                                   'pointer-events-auto rounded-md border-white/60 shadow-sm dark:border-white/15',
                                   surfaceClass
                                 )}
-                                aria-label={exampleCopied ? 'Copied' : 'Copy example'}
+                                aria-label={exampleCopied ? t('common.copied') : t('writing.copyExample')}
                               >
                                 {exampleCopied ? (
                                   <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
@@ -679,7 +681,7 @@ export function WritingView() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
-                              {exampleCopied ? 'Copied' : 'Copy example'}
+                              {exampleCopied ? t('common.copied') : t('writing.copyExample')}
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -705,13 +707,13 @@ export function WritingView() {
                               onClick={handleClearAnswer}
                               disabled={!text.trim()}
                               className="pointer-events-auto rounded-md border border-red-200/80 bg-red-500/10 text-red-700 shadow-sm hover:bg-red-500/15 hover:text-red-800 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-500 dark:hover:bg-red-500/15 dark:hover:text-red-400"
-                              aria-label="Clear answer"
+                              aria-label={t('writing.clearAnswer')}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">
-                            Clear answer
+                            {t('writing.clearAnswer')}
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -726,7 +728,7 @@ export function WritingView() {
                                 'pointer-events-auto rounded-md border-white/60 shadow-sm dark:border-white/15',
                                 surfaceClass
                               )}
-                              aria-label={copied ? 'Copied' : 'Copy answer'}
+                              aria-label={copied ? t('common.copied') : t('writing.copyAnswer')}
                             >
                               {copied ? (
                                 <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
@@ -736,7 +738,7 @@ export function WritingView() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">
-                            {copied ? 'Copied' : 'Copy answer'}
+                            {copied ? t('common.copied') : t('writing.copyAnswer')}
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -763,8 +765,8 @@ export function WritingView() {
                               : 'text-red-600 dark:text-red-400'
                       )}
                     >
-                      {showExample && example.isPending && 'Generating… '}
-                      {showExample && !example.isPending && !exampleTypingDone && 'Writing… '}
+                      {showExample && example.isPending && `${t('writing.generating')} `}
+                      {showExample && !example.isPending && !exampleTypingDone && `${t('writing.writing')} `}
                       {wordCount} words
                     </span>
                     <FooterSeparator />
@@ -773,7 +775,7 @@ export function WritingView() {
                     </span>
                     <FooterSeparator />
                     <ToolbarIconButton
-                      label="Next task"
+                      label={t('writing.nextTask')}
                       onClick={() => handleNewPrompt()}
                       disabled={questionLoading || promptLoading}
                     >
@@ -798,7 +800,7 @@ export function WritingView() {
                           Evaluating…
                         </>
                       ) : (
-                        'Submit for evaluation'
+                        t('writing.submitEval')
                       )}
                     </Button>
                   </div>

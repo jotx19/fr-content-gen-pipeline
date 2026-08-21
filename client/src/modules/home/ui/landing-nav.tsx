@@ -11,6 +11,7 @@ import { LANDING_NAV_ITEMS } from '@/components/nav-items';
 import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { useThemeToggle } from '@/components/theme-toggle';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 
@@ -132,7 +133,7 @@ function LandingMobileMenu({
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <motion.nav
-            aria-label="Mobile"
+            aria-label={t('nav.mobile')}
             className="mx-auto flex min-h-full w-full max-w-md flex-col px-6 pt-24 pb-12"
             variants={mobileMenuContainerVariants}
             initial="hidden"
@@ -171,18 +172,19 @@ export function LandingNav() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isDark, toggle, mounted } = useThemeToggle();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t, locale, setLocale } = useI18n();
 
   const authHref = isAuthenticated ? '/learn' : '/signin';
-  const authLabel = isAuthenticated ? 'Continue' : 'Sign in';
+  const authLabel = isAuthenticated ? t('common.continue') : t('common.signIn');
 
   const mobileItems: MobileNavItem[] = [
     ...LANDING_NAV_ITEMS.map((item) => ({
       href: item.href,
-      label: item.label,
+      label: t(`common.${item.navKey}`),
       active: pathname.startsWith(item.href),
     })),
-    { href: '/contact', label: 'Contact' },
-    { href: '/#features', label: 'Features' },
+    { href: '/contact', label: t('common.contact') },
+    { href: '/#features', label: t('common.features') },
   ];
 
   useEffect(() => {
@@ -207,7 +209,7 @@ export function LandingNav() {
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={menuOpen}
             className="inline-flex size-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-black/5 md:hidden dark:hover:bg-white/10"
           >
@@ -225,14 +227,14 @@ export function LandingNav() {
             className="md:hidden"
           />
 
-          <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
+          <nav className="hidden items-center gap-6 md:flex" aria-label={t('nav.main')}>
             {LANDING_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className="text-sm text-black/70 transition-colors hover:text-black dark:text-white/70 dark:hover:text-white"
               >
-                {item.label}
+                {t(`common.${item.navKey}`)}
               </Link>
             ))}
           </nav>
@@ -244,7 +246,15 @@ export function LandingNav() {
           className="hidden justify-self-center md:inline-flex"
         />
 
-        <div className="flex items-center justify-end md:col-start-3">
+        <div className="flex items-center justify-end gap-2 md:col-start-3">
+          <button
+            type="button"
+            onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
+            className="inline-flex h-9 items-center rounded-full px-3 text-[12px] font-medium text-black/70 transition-colors hover:text-black dark:text-white/70 dark:hover:text-white"
+            aria-label={t('common.language')}
+          >
+            {locale === 'fr' ? 'FR' : 'EN'}
+          </button>
           <div
             className={cn(
               'relative inline-flex h-9 items-stretch overflow-hidden rounded-full border',
@@ -257,10 +267,10 @@ export function LandingNav() {
               onClick={toggle}
               aria-label={
                 !mounted
-                  ? 'Toggle theme'
+                  ? t('nav.toggleTheme')
                   : isDark
-                    ? 'Switch to light mode'
-                    : 'Switch to dark mode'
+                    ? t('nav.switchToLight')
+                    : t('nav.switchToDark')
               }
               className={cn(
                 'flex w-10 shrink-0 items-center justify-center transition-colors',

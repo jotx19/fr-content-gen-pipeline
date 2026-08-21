@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { Loader2, Note, Plus, Trash2 } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n, useLocaleDate } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import {
   useCreateNoteMutation,
@@ -17,19 +18,10 @@ import { useAuthStore } from '@/store/authStore';
 const panel =
   'rounded-[24px] bg-[#FCFCFC] shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:bg-[#1C1C1C] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)] sm:rounded-[28px]';
 
-function formatDate(value?: string | null) {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(d);
-}
-
 export function NotesListView() {
   const router = useRouter();
+  const { t } = useI18n();
+  const formatDate = useLocaleDate();
   const user = useAuthStore((s) => s.user);
   const { data: notes, isLoading, isError } = useNotesQuery(Boolean(user));
   const createNote = useCreateNoteMutation();
@@ -37,10 +29,10 @@ export function NotesListView() {
 
   const handleCreate = async () => {
     try {
-      const note = await createNote.mutateAsync({ title: 'Untitled' });
+      const note = await createNote.mutateAsync({ title: t('notes.untitled') });
       router.push(`/notes/${note.id}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not create note');
+      toast.error(err instanceof Error ? err.message : t('notes.createFailed'));
     }
   };
 
@@ -49,9 +41,9 @@ export function NotesListView() {
     e.stopPropagation();
     try {
       await removeNote.mutateAsync(id);
-      toast.success('Note deleted');
+      toast.success(t('notes.deleted'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not delete note');
+      toast.error(err instanceof Error ? err.message : t('notes.deleteFailed'));
     }
   };
 
@@ -66,10 +58,10 @@ export function NotesListView() {
                 'text-2xl font-semibold tracking-tight text-black dark:text-white sm:text-3xl',
               )}
             >
-              Notes
+              {t('notes.title')}
             </h1>
             <p className={cn(inter.className, 'mt-1 text-sm text-black/55 dark:text-white/55')}>
-              Capture ideas, vocab, and study notes
+              {t('notes.subtitle')}
             </p>
           </div>
           <button
@@ -87,7 +79,7 @@ export function NotesListView() {
             ) : (
               <Plus className="h-4 w-4" strokeWidth={2} />
             )}
-            New note
+            {t('notes.newNote')}
           </button>
         </div>
 
@@ -99,7 +91,7 @@ export function NotesListView() {
           </div>
         ) : isError ? (
           <p className={cn(inter.className, 'text-sm text-red-500')}>
-            Could not load notes. Try again.
+            {t('notes.loadFailed')}
           </p>
         ) : !notes?.length ? (
           <div
@@ -110,10 +102,10 @@ export function NotesListView() {
           >
             <Note className="mb-3 h-8 w-8 text-black/30 dark:text-white/30" strokeWidth={1.5} />
             <p className={cn(bricolage.className, 'text-lg font-medium text-black dark:text-white')}>
-              No notes yet
+              {t('notes.emptyTitle')}
             </p>
             <p className={cn(inter.className, 'mt-1 max-w-sm text-sm text-black/55 dark:text-white/55')}>
-              Create your first page. Use / for commands, drag blocks, and set notes public or private.
+              {t('notes.emptyBody')}
             </p>
             <button
               type="button"
@@ -124,7 +116,7 @@ export function NotesListView() {
               )}
             >
               <Plus className="h-4 w-4" />
-              Create note
+              {t('notes.createNote')}
             </button>
           </div>
         ) : (
@@ -145,11 +137,11 @@ export function NotesListView() {
                       'line-clamp-2 text-lg font-semibold tracking-tight text-black dark:text-white',
                     )}
                   >
-                    {note.title || 'Untitled'}
+                    {note.title || t('notes.untitled')}
                   </h2>
                   <button
                     type="button"
-                    aria-label="Delete note"
+                    aria-label={t('notes.deleteNote')}
                     onClick={(e) => handleDelete(note.id, e)}
                     className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] text-black/30 opacity-0 transition-opacity hover:bg-black/5 hover:text-red-500 group-hover:opacity-100 dark:text-white/30 dark:hover:bg-white/10 dark:hover:text-red-400"
                   >
@@ -179,7 +171,7 @@ export function NotesListView() {
                         : 'bg-black/5 text-black/50 dark:bg-white/10 dark:text-white/50',
                     )}
                   >
-                    {note.visibility}
+                    {note.visibility === 'public' ? t('notes.public') : t('notes.private')}
                   </span>
                 </div>
               </Link>

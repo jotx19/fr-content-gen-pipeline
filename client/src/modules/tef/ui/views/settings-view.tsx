@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useSelfSelectLevelMutation, useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
 import {
@@ -31,15 +32,6 @@ const ink = 'text-[#675549] dark:text-white';
 const inkMuted = 'text-[#675549]/80 dark:text-white/70';
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
-
-const LEVEL_LABELS: Record<string, string> = {
-  A1: 'Beginner',
-  A2: 'Elementary',
-  B1: 'Intermediate',
-  B2: 'Upper Intermediate',
-  C1: 'Advanced',
-  C2: 'Mastery',
-};
 
 const dropdownPanel = cn(
   inter.className,
@@ -102,6 +94,7 @@ function LevelDropdown({
   onChange: (level: string) => void;
   disabled?: boolean;
 }) {
+  const { m } = useI18n();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild disabled={disabled}>
@@ -127,7 +120,7 @@ function LevelDropdown({
               <span className="flex min-w-0 items-baseline gap-2 overflow-hidden">
                 <span className="shrink-0 font-semibold">{level}</span>
                 <span className="truncate text-black/50 dark:text-white/45">
-                  {LEVEL_LABELS[level]}
+                  {m.settings.levelsCefr[level]}
                 </span>
               </span>
             </DropdownMenuRadioItem>
@@ -181,6 +174,7 @@ function SelectDropdown({
 
 export function SettingsView() {
   const router = useRouter();
+  const { t, m, locale, setLocale } = useI18n();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
@@ -214,9 +208,9 @@ export function SettingsView() {
     if (level === readingLevel) return;
     try {
       await selfSelect.mutateAsync(level);
-      toast.success(`Reading level set to ${level}`);
+      toast.success(t('settings.readingSet', { level }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not update level');
+      toast.error(err instanceof Error ? err.message : t('settings.updateLevelFailed'));
     }
   };
 
@@ -225,9 +219,9 @@ export function SettingsView() {
     try {
       await selfSelectWriting.mutateAsync(level);
       update({ writingLevelPref: level });
-      toast.success(`Writing level set to ${level}`);
+      toast.success(t('settings.writingSet', { level }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not update writing level');
+      toast.error(err instanceof Error ? err.message : t('settings.updateWritingFailed'));
     }
   };
 
@@ -237,10 +231,10 @@ export function SettingsView() {
         <div className="flex w-full items-end justify-between gap-4 px-1">
           <div className="min-w-0">
             <h1 className={cn(bricolage.className, 'text-2xl font-semibold tracking-tight sm:text-3xl', ink)}>
-              Settings
+              {t('settings.title')}
             </h1>
             <p className={cn(inter.className, 'mt-1 text-sm', inkMuted)}>
-              Levels, language, and preferences
+              {t('settings.subtitle')}
             </p>
           </div>
           <Link
@@ -250,7 +244,7 @@ export function SettingsView() {
               'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-neutral-900 px-4 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-neutral-900',
             )}
           >
-            Back to Learn
+            {t('common.backToLearn')}
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.25} />
           </Link>
         </div>
@@ -258,12 +252,15 @@ export function SettingsView() {
         <section className={panel}>
           <div className="border-b border-[#675549]/12 px-5 py-3.5 sm:px-6 dark:border-white/10">
             <h2 className={cn(inter.className, 'text-[11px] font-semibold uppercase tracking-[0.14em]', inkMuted)}>
-              Levels
+              {t('settings.levels')}
             </h2>
           </div>
           <SettingRow
-            label="Reading level"
-            description={LEVEL_LABELS[readingLevel] ?? 'CEFR practice level'}
+            label={t('settings.readingLevel')}
+            description={
+              m.settings.levelsCefr[readingLevel as keyof typeof m.settings.levelsCefr] ??
+              t('settings.cefrPractice')
+            }
           >
             {selfSelect.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin text-black/40 dark:text-white/40" />
@@ -272,8 +269,11 @@ export function SettingsView() {
             )}
           </SettingRow>
           <SettingRow
-            label="Writing level"
-            description={LEVEL_LABELS[writingLevel] ?? 'Preferred writing difficulty'}
+            label={t('settings.writingLevel')}
+            description={
+              m.settings.levelsCefr[writingLevel as keyof typeof m.settings.levelsCefr] ??
+              t('settings.writingDifficulty')
+            }
             last
           >
             {selfSelectWriting.isPending ? (
@@ -287,28 +287,32 @@ export function SettingsView() {
         <section className={panel}>
           <div className="border-b border-[#675549]/12 px-5 py-3.5 sm:px-6 dark:border-white/10">
             <h2 className={cn(inter.className, 'text-[11px] font-semibold uppercase tracking-[0.14em]', inkMuted)}>
-              Appearance & language
+              {t('settings.appearanceLanguage')}
             </h2>
           </div>
-          <SettingRow label="Theme" description="Light, dark, or match system">
+          <SettingRow label={t('settings.theme')} description={t('settings.themeDesc')}>
             <SelectDropdown
               value={appearanceValue}
               onChange={setTheme}
               options={[
-                { value: 'light', label: 'Light' },
-                { value: 'dark', label: 'Dark' },
-                { value: 'system', label: 'System' },
+                { value: 'light', label: t('common.light') },
+                { value: 'dark', label: t('common.dark') },
+                { value: 'system', label: t('common.system') },
               ]}
             />
           </SettingRow>
-          <SettingRow label="App language" description="Interface language" last>
+          <SettingRow label={t('settings.appLanguage')} description={t('settings.appLanguageDesc')} last>
             {mounted ? (
               <SelectDropdown
-                value={prefs.language}
-                onChange={(v) => update({ language: v as 'en' | 'fr' })}
+                value={locale}
+                onChange={(v) => {
+                  const language = v as 'en' | 'fr';
+                  update({ language });
+                  setLocale(language);
+                }}
                 options={[
-                  { value: 'en', label: 'English' },
-                  { value: 'fr', label: 'Français' },
+                  { value: 'en', label: t('common.english') },
+                  { value: 'fr', label: t('common.french') },
                 ]}
               />
             ) : (
@@ -320,34 +324,34 @@ export function SettingsView() {
         <section className={panel}>
           <div className="border-b border-[#675549]/12 px-5 py-3.5 sm:px-6 dark:border-white/10">
             <h2 className={cn(inter.className, 'text-[11px] font-semibold uppercase tracking-[0.14em]', inkMuted)}>
-              Preferences
+              {t('settings.preferences')}
             </h2>
           </div>
-          <SettingRow label="Sound effects" description="Soft cues on actions">
+          <SettingRow label={t('settings.soundEffects')} description={t('settings.soundEffectsDesc')}>
             <Switch
               checked={prefs.soundEffects}
               onCheckedChange={(v) => update({ soundEffects: v })}
-              aria-label="Sound effects"
+              aria-label={t('settings.soundEffects')}
             />
           </SettingRow>
-          <SettingRow label="Celebrations" description="XP and streak celebrations">
+          <SettingRow label={t('settings.celebrations')} description={t('settings.celebrationsDesc')}>
             <Switch
               checked={prefs.celebrations}
               onCheckedChange={(v) => update({ celebrations: v })}
-              aria-label="Celebrations"
+              aria-label={t('settings.celebrations')}
             />
           </SettingRow>
-          <SettingRow label="Reduce motion" description="Minimize animations" last>
+          <SettingRow label={t('settings.reduceMotion')} description={t('settings.reduceMotionDesc')} last>
             <Switch
               checked={prefs.reduceMotion}
               onCheckedChange={(v) => update({ reduceMotion: v })}
-              aria-label="Reduce motion"
+              aria-label={t('settings.reduceMotion')}
             />
           </SettingRow>
         </section>
 
         <p className={cn(inter.className, 'px-1 text-center text-[12px]', inkMuted)}>
-          Reading and writing levels sync to your account.
+          {t('settings.levelsSync')}
         </p>
       </div>
     </div>

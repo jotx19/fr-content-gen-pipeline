@@ -3,16 +3,19 @@
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 export function FeaturesBridge({
   ctaHref,
-  ctaLabel = 'Start free',
+  ctaLabel,
 }: {
   ctaHref: string;
   ctaLabel?: string;
 }) {
   const reduceMotion = useReducedMotion();
+  const { t } = useI18n();
+  const label = ctaLabel ?? t('landing.startFree');
 
   return (
     <div className="mb-12 flex flex-col items-center gap-6 pt-6 text-center sm:mb-16 sm:pt-10 md:mb-20">
@@ -26,9 +29,9 @@ export function FeaturesBridge({
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
-        Everything you need to improve.
+        {t('landing.featuresTitle1')}
         <br className="hidden sm:block" />
-        Placement, practice, and progress.
+        {t('landing.featuresTitle2')}
       </motion.h2>
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 12 }}
@@ -40,7 +43,7 @@ export function FeaturesBridge({
           href={ctaHref}
           className="inline-flex h-11 items-center rounded-full bg-black px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-black"
         >
-          {ctaLabel}
+          {label}
         </Link>
       </motion.div>
     </div>

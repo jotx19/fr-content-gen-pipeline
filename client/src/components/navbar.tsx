@@ -22,6 +22,7 @@ import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { useThemeToggle } from '@/components/theme-toggle';
 import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
@@ -186,6 +187,7 @@ const avatarPillClass = cn(
 
 export function Navbar() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const logout = useLogoutMutation();
@@ -256,7 +258,7 @@ export function Navbar() {
                   )}
                   strokeWidth={2}
                 />
-                {item.label}
+                {t(`common.${item.navKey}`)}
               </Link>
             );
           })}

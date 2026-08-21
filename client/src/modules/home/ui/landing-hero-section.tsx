@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { useAuthStore } from '@/store/authStore';
 import { LandingCraftCards } from './landing-craft-cards';
 
@@ -14,8 +15,9 @@ const fade = { duration: 0.28, ease };
 export function LandingHeroSection() {
   const reduceMotion = useReducedMotion() ?? false;
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { t } = useI18n();
   const href = isAuthenticated ? '/learn' : '/signin';
-  const label = isAuthenticated ? 'Explore' : 'Start free';
+  const label = isAuthenticated ? t('landing.explore') : t('landing.startFree');
 
   return (
     <section
@@ -25,7 +27,7 @@ export function LandingHeroSection() {
         'h-[calc(100dvh-10rem)] justify-center overflow-hidden pb-4',
         'sm:h-auto sm:min-h-[calc(100dvh-3.5rem)] sm:justify-start sm:overflow-visible',
       )}
-      aria-label="Fringo home"
+      aria-label={t('landing.homeAria')}
     >
       <div className="relative z-10 mx-auto pt-0 sm:pt-10 flex w-full max-w-3xl shrink-0 flex-col items-center justify-center text-center">
         <motion.h1
@@ -37,7 +39,7 @@ export function LandingHeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={fade}
         >
-          Learn French with Clarity and Fringo
+          {t('landing.heroTitle')}
         </motion.h1>
 
         <motion.p
@@ -46,7 +48,7 @@ export function LandingHeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={fade}
         >
-          Adaptive placement, daily practice, and full progress reports. Start free and learn at your own pace.
+          {t('landing.heroSubtitle')}
         </motion.p>
 
         <motion.div
@@ -73,12 +75,12 @@ export function LandingHeroSection() {
               'dark:bg-white/10 dark:text-white',
             )}
           >
-            See pricing
+            {t('landing.seePricing')}
           </Link>
         </motion.div>
       </div>
 
-      <div className="relative z-20 flex w-full shrink-0 items-center justify-center sm:flex-1">
+      <div className="relative z-20 mt-8 flex w-full shrink-0 items-center justify-center sm:mt-10 sm:flex-1">
         <LandingCraftCards eager />
       </div>
     </section>

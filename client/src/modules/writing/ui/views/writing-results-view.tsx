@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AnimatedText } from '@/components/ui/animated-text';
 import { bricolage, inter } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { WritingCriterionScore } from '@/modules/writing/types/writing';
 import { useWritingStore } from '@/store/writingStore';
@@ -370,6 +371,7 @@ function AnimatedCriteriaPanel({
 
 export function WritingResultsView() {
   const router = useRouter();
+  const { t } = useI18n();
   const result = useWritingStore((s) => s.lastResult);
   const [activeCriterion, setActiveCriterion] = useState(0);
   const [scoreReplay, setScoreReplay] = useState(0);
@@ -475,7 +477,7 @@ export function WritingResultsView() {
           onClick={() => router.push('/learn')}
         >
           <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.25} />
-          Home
+          {t('common.home')}
         </Button>
 
         <div className="flex min-w-0 flex-1 items-center justify-end">
@@ -495,7 +497,7 @@ export function WritingResultsView() {
               className="min-w-0 px-2 text-xs sm:px-3 sm:text-sm"
               onClick={() => router.push('/learn')}
             >
-              Continue
+              {t('common.continue')}
             </Button>
           </div>
         </div>
@@ -549,7 +551,7 @@ export function WritingResultsView() {
             >
               <CardHeader
                 icon={Energy}
-                label="Writing XP"
+                label={t('results.writingXp')}
                 palette={palette.mint}
                 trailing={
                   <span className={cn('text-[9px] font-semibold tabular-nums sm:text-xs', palette.mint.label)}>
@@ -562,7 +564,7 @@ export function WritingResultsView() {
                 <span className={cn(`${bricolage.className} text-3xl font-bold tabular-nums sm:text-4xl`, palette.mint.value)}>
                   <AnimatedText text={`+${animatedXp}`} remountOnChange={false} delayStep={0.015} />
                 </span>
-                <span className={cn(`${inter.className} text-sm font-semibold`, palette.mint.label)}>XP</span>
+                <span className={cn(`${inter.className} text-sm font-semibold`, palette.mint.label)}>{t('common.xp')}</span>
               </div>
             </BentoCard>
 
@@ -572,7 +574,7 @@ export function WritingResultsView() {
               delay={0.1}
               className="sm:col-start-2 sm:row-start-2"
             >
-              <CardHeader icon={Award} label="Writing level" palette={palette.lavender} />
+              <CardHeader icon={Award} label={t('results.writingLevel')} palette={palette.lavender} />
               <CapsuleBars values={levelBars} palette={palette.lavender} visible={revealIndex >= 2} compact />
               <div className="mt-2 flex shrink-0 items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-1.5">

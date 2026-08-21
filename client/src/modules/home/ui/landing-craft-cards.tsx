@@ -10,6 +10,7 @@ import {
 } from 'framer-motion';
 
 import { playfair } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 type GraphicType =
@@ -139,10 +140,10 @@ const STACK_ENTER = [
   { x: 30, y: 120 },
 ] as const;
 
-const MOBILE_CARD_W = 300;
-const MOBILE_CARD_H = 420;
-const MOBILE_STAGE_W = 360;
-const MOBILE_STAGE_H = 460;
+const MOBILE_CARD_W = 264;
+const MOBILE_CARD_H = 360;
+const MOBILE_STAGE_W = 320;
+const MOBILE_STAGE_H = 400;
 
 const spring = { type: 'spring' as const, visualDuration: 0.4, bounce: 0.15 };
 const stripBase = { offsetX: 0, offsetY: 184, spacing: 70 };
@@ -368,6 +369,8 @@ function MobileStackCard({
   reduceMotion: boolean;
   onSwipe: () => void;
 }) {
+  const { m } = useI18n();
+  const copy = m.landing.cards[card.id as keyof typeof m.landing.cards];
   const x = useMotionValue(0);
   const [dragging, setDragging] = useState(false);
   const swiping = useRef(false);
@@ -456,7 +459,7 @@ function MobileStackCard({
           className="h-full w-full overflow-hidden rounded-2xl shadow-[0_18px_40px_-18px_rgba(0,0,0,0.4)]"
           style={{ backgroundColor: card.background }}
         >
-          <div className="overflow-hidden" style={{ margin: 18, marginBottom: 14, width: 264, height: 160 }}>
+          <div className="overflow-hidden" style={{ margin: 16, marginBottom: 12, width: 232, height: 136 }}>
             <CardGraphic
               type={card.graphicType}
               color={card.foreground}
@@ -467,22 +470,22 @@ function MobileStackCard({
             className={cn(playfair.className, 'whitespace-pre-line font-medium')}
             style={{
               color: card.foreground,
-              fontSize: 28,
-              lineHeight: '30px',
-              padding: '0 18px',
+              fontSize: 24,
+              lineHeight: '26px',
+              padding: '0 16px',
             }}
           >
-            {card.title}
+            {copy.title}
           </h3>
           <p
             style={{
               color: card.bodyColor,
-              fontSize: 15,
-              lineHeight: '22px',
-              padding: '10px 18px 0',
+              fontSize: 13,
+              lineHeight: '20px',
+              padding: '8px 16px 0',
             }}
           >
-            {card.description}
+            {copy.description}
           </p>
         </div>
       </motion.div>
@@ -505,9 +508,9 @@ function MobileCraftStack({ eager }: { eager: boolean }) {
     const update = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const availW = Math.max(260, w - 40);
-      /* Leave room for nav + title + subtitle inside the locked hero. */
-      const availH = Math.max(260, h - 280);
+      const availW = Math.max(240, w - 72);
+      /* Leave room for nav + title + subtitle + top gap inside the locked hero. */
+      const availH = Math.max(240, h - 320);
       setScale(Math.min(availW / MOBILE_STAGE_W, availH / MOBILE_STAGE_H, 1));
     };
     update();
@@ -573,6 +576,7 @@ function MobileCraftStack({ eager }: { eager: boolean }) {
 
 function DesktopCraftFan({ eager }: { eager: boolean }) {
   const reduceMotion = usePrefersReducedMotion();
+  const { m } = useI18n();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [entered, setEntered] = useState(eager);
@@ -671,7 +675,8 @@ function DesktopCraftFan({ eager }: { eager: boolean }) {
               cardScale = 0.7 * stripPos.scale;
             }
 
-            const titleLines = card.title.split('\n');
+            const copy = m.landing.cards[card.id as keyof typeof m.landing.cards];
+            const titleLines = copy.title.split('\n');
             const titleBlockH = size.titleLineH * titleLines.length;
             const titleTop = isActive
               ? size.padding + size.graphicH + 16
@@ -770,7 +775,7 @@ function DesktopCraftFan({ eager }: { eager: boolean }) {
                       }}
                       transition={{ duration: 0.25 }}
                     >
-                      {card.description}
+                      {copy.description}
                     </motion.p>
                   </motion.div>
                 </motion.div>
@@ -796,7 +801,7 @@ export function LandingCraftCards({ eager = false }: { eager?: boolean }) {
   }, []);
 
   if (!ready) {
-    return <div className="mx-auto h-[420px] w-full max-w-sm sm:h-[520px]" aria-hidden />;
+    return <div className="mx-auto h-[380px] w-full max-w-sm sm:h-[520px]" aria-hidden />;
   }
 
   return isMobile ? (

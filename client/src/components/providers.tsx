@@ -9,6 +9,7 @@ import { getQueryClient } from '@/lib/query/get-query-client';
 import { useAuthBootstrapQuery } from '@/modules/auth/hooks/use-auth-query';
 import { useAuthStore } from '@/store/authStore';
 import { CustomToaster } from '@/components/ui/sonner';
+import { I18nProvider } from '@/lib/i18n';
 
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -36,8 +37,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         storageKey="fringo-theme"
       >
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-          <AuthBootstrap>{children}</AuthBootstrap>
-          <CustomToaster />
+          <I18nProvider>
+            <AuthBootstrap>{children}</AuthBootstrap>
+            <CustomToaster />
+          </I18nProvider>
         </GoogleOAuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

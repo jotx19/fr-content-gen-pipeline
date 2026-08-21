@@ -12,6 +12,7 @@ import { NavBlurBackdrop } from '@/components/nav-blur-backdrop';
 import { useThemeToggle } from '@/components/theme-toggle';
 import { useLogoutMutation } from '@/modules/auth/hooks/use-auth-query';
 import { bricolage } from '@/lib/fonts';
+import { useI18n } from '@/lib/i18n';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
@@ -64,14 +65,15 @@ function AppMobileMenu({
   pathname: string;
 }) {
   const { isDark, toggle, mounted } = useThemeToggle();
+  const { t } = useI18n();
 
   const mobileItems: { label: string; href: string; exact?: boolean }[] = [
     ...APP_NAV_ITEMS.map((item) => ({
-      label: item.label,
+      label: t(`common.${item.navKey}`),
       href: item.href,
       exact: item.exact,
     })),
-    { label: 'Settings', href: '/settings' },
+    { label: t('common.settings'), href: '/settings' },
   ];
 
   return (
@@ -89,7 +91,7 @@ function AppMobileMenu({
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <motion.nav
-            aria-label="Mobile"
+            aria-label={t('nav.mobile')}
             className="mx-auto flex min-h-full w-full max-w-md flex-col px-6 pt-24 pb-12"
             variants={mobileMenuContainerVariants}
             initial="hidden"
@@ -120,7 +122,7 @@ function AppMobileMenu({
                 className={cn(mobileLinkClass, 'flex w-full items-center justify-between')}
               >
                 <span className="inline-flex items-center gap-3">
-                  Appearance
+                  {t('common.appearance')}
                 </span>
                 {mounted ? (
                   isDark ? (
@@ -145,7 +147,7 @@ function AppMobileMenu({
                 }}
               >
                 <LogOut className="size-6 shrink-0" strokeWidth={2} />
-                Log out
+                {t('common.logOut')}
               </button>
             </MobileMenuRow>
           </motion.nav>
@@ -161,6 +163,7 @@ export function AppMobileNav() {
   const user = useAuthStore((s) => s.user);
   const logout = useLogoutMutation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -184,7 +187,7 @@ export function AppMobileNav() {
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={menuOpen}
             className="inline-flex size-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/10"
           >

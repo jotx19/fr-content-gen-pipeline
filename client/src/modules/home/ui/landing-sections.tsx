@@ -7,67 +7,13 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Check, Plus } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import { useAuthStore } from '@/store/authStore';
 import { FeaturesBridge } from './landing-helpers';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const STREAK_DAYS = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0] as const;
-
-const FAQ_ITEMS = [
-  {
-    q: 'What is Fringo?',
-    a: 'Fringo is a focused French practice app built for learners preparing for exams like TEF and TCF. You place your CEFR level once, then practice reading and writing in short sessions that fit a real schedule. The goal is clear progress you can feel week to week, not another endless content library you never finish.',
-  },
-  {
-    q: 'Is Fringo free to start?',
-    a: 'Yes. The Free plan includes CEFR placement, daily reading practice, writing prompts, streaks, and XP, so you can start without a card. When you want unlimited lessons, fuller writing feedback, and progress reports, Pro unlocks those extras. You can stay on Free as long as you like and upgrade only when it makes sense.',
-  },
-  {
-    q: 'How does placement work?',
-    a: 'A short CEFR placement test estimates your level in a few minutes. Fringo uses that result to match reading difficulty and writing expectations to where you actually are, instead of forcing a one-size-fits-all path. You get practice that feels challenging enough to grow, without jumping into material that wastes your time.',
-  },
-  {
-    q: 'Can I practice reading and writing?',
-    a: 'Yes, both skills are first-class. Reading uses exam-style passages to build comprehension, vocabulary, and pacing under conditions closer to the real test. Writing gives structured prompts plus feedback on clarity, structure, and language so you can revise with purpose. Together they cover the written side of TEF and TCF prep without splitting your attention across five different apps.',
-  },
-  {
-    q: 'How do streaks help?',
-    a: 'Every session you finish grows your streak and earns XP, with milestones and level-ups along the way. That visible chain makes it easier to come back tomorrow, even on busy days, because progress is concrete instead of vague. Streaks are there to support consistency, not to punish you, so short daily practice still counts.',
-  },
-] as const;
-
-const PLANS = [
-  {
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    blurb: 'Start placing and practicing without a card.',
-    features: [
-      'CEFR placement test',
-      'Daily reading practice',
-      'Writing prompts',
-      'Streaks and XP',
-    ],
-    cta: 'Start free',
-    featured: false,
-  },
-  {
-    name: 'Pro',
-    price: '$12',
-    period: '/ month',
-    blurb: 'Unlimited practice with deeper feedback when you are ready.',
-    features: [
-      'Everything in Free',
-      'Unlimited lessons',
-      'Full writing feedback',
-      'Progress reports',
-      'Priority updates',
-    ],
-    cta: 'Go Pro',
-    featured: true,
-  },
-] as const;
 
 function SectionFade({
   children,
@@ -95,6 +41,7 @@ function SectionFade({
 function StreakBand({ ctaHref }: { ctaHref: string }) {
   const reduceMotion = useReducedMotion();
   const filled = STREAK_DAYS.filter(Boolean).length;
+  const { t } = useI18n();
 
   return (
     <section
@@ -114,7 +61,7 @@ function StreakBand({ ctaHref }: { ctaHref: string }) {
           <p
             className={`${inter.className} text-[11px] font-medium uppercase tracking-[0.18em] text-white/70`}
           >
-            Built for coming back
+            {t('landing.streakEyebrow')}
           </p>
           <h2
             id="streak-heading"
@@ -123,19 +70,18 @@ function StreakBand({ ctaHref }: { ctaHref: string }) {
               'mt-3 text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-white sm:text-[2.75rem]',
             )}
           >
-            Streaks that feel worth keeping.
+            {t('landing.streakTitle')}
           </h2>
           <p
             className={`${inter.className} mt-3 max-w-md text-sm leading-relaxed text-white/70 sm:text-[15px]`}
           >
-            Hit a session, grow the day bar, unlock milestones. Level-ups and XP celebrations make
-            progress visible, so motivation is not guesswork.
+            {t('landing.streakBody')}
           </p>
           <Link
             href={ctaHref}
             className="mt-7 inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
           >
-            Keep your streak
+            {t('landing.keepStreak')}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </SectionFade>
@@ -152,13 +98,13 @@ function StreakBand({ ctaHref }: { ctaHref: string }) {
                 <p
                   className={`${inter.className} mt-1 text-[11px] font-medium uppercase tracking-wide text-white/55`}
                 >
-                  day streak
+                  {t('landing.dayStreak')}
                 </p>
               </div>
               <p
                 className={`${inter.className} mb-1 max-w-[9rem] text-right text-xs leading-snug text-white/55`}
               >
-                Next milestone at day 14
+                {t('landing.nextMilestone')}
               </p>
             </div>
 
@@ -190,18 +136,39 @@ function StreakBand({ ctaHref }: { ctaHref: string }) {
 
 function Pricing({ ctaHref }: { ctaHref: string }) {
   const reduceMotion = useReducedMotion();
+  const { t, m } = useI18n();
+  const plans = [
+    {
+      name: m.landing.plans.free.name,
+      price: '$0',
+      period: t('common.forever'),
+      blurb: m.landing.plans.free.blurb,
+      features: m.landing.plans.free.features,
+      cta: m.landing.plans.free.cta,
+      featured: false,
+    },
+    {
+      name: m.landing.plans.pro.name,
+      price: '$12',
+      period: t('common.perMonth'),
+      blurb: m.landing.plans.pro.blurb,
+      features: m.landing.plans.pro.features,
+      cta: m.landing.plans.pro.cta,
+      featured: true,
+    },
+  ];
 
   return (
     <section
       id="pricing"
-      className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24"
+      className="mx-auto max-w-6xl px-7 py-16 sm:px-8 sm:py-24"
       aria-labelledby="pricing-heading"
     >
-      <SectionFade className="mx-auto mb-12 max-w-2xl text-center sm:mb-16">
+      <SectionFade className="mx-auto mb-8 max-w-2xl text-center sm:mb-16">
         <p
           className={`${inter.className} text-[11px] font-medium uppercase tracking-[0.18em] text-black/55 dark:text-white/55`}
         >
-          Pricing
+          {t('landing.pricingEyebrow')}
         </p>
         <h2
           id="pricing-heading"
@@ -210,18 +177,17 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
             'mt-3 text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-black dark:text-white sm:text-[2.75rem]',
           )}
         >
-          Simple plans. Start free.
+          {t('landing.pricingTitle')}
         </h2>
         <p
           className={`${inter.className} mx-auto mt-3 max-w-md text-sm leading-relaxed text-black/70 dark:text-white/70 sm:text-[15px]`}
         >
-          Place your level and practice every day. Upgrade when you want more lessons and deeper
-          feedback.
+          {t('landing.pricingBody')}
         </p>
       </SectionFade>
 
-      <div className="mx-auto grid max-w-4xl gap-4 sm:gap-5 md:grid-cols-2">
-        {PLANS.map((plan, i) => (
+      <div className="mx-auto grid max-w-4xl gap-3 sm:gap-5 md:grid-cols-2">
+        {plans.map((plan, i) => (
           <motion.div
             key={plan.name}
             initial={reduceMotion ? false : { opacity: 0, y: 24 }}
@@ -229,34 +195,34 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5, delay: reduceMotion ? 0 : 0.06 + i * 0.08, ease }}
             className={cn(
-              'flex flex-col rounded-[1.5rem] px-5 py-7 sm:rounded-[2rem] sm:px-8 sm:py-10',
+              'flex flex-col rounded-[1.25rem] px-4 py-5 sm:rounded-[2rem] sm:px-8 sm:py-10',
               plan.featured
                 ? 'bg-black text-white dark:bg-white dark:text-black'
                 : 'bg-black/[0.04] text-black dark:bg-white/[0.06] dark:text-white',
             )}
           >
             <div className="flex items-baseline justify-between gap-3">
-              <h3 className={`${bricolage.className} text-xl font-semibold sm:text-2xl`}>
+              <h3 className={`${bricolage.className} text-lg font-semibold sm:text-2xl`}>
                 {plan.name}
               </h3>
               {plan.featured ? (
                 <span
                   className={`${inter.className} text-[11px] font-medium uppercase tracking-[0.14em] text-white/70 dark:text-black/70`}
                 >
-                  Popular
+                  {t('common.popular')}
                 </span>
               ) : null}
             </div>
 
-            <div className="mt-5 flex items-end gap-1.5">
+            <div className="mt-3 flex items-end gap-1.5 sm:mt-5">
               <span
-                className={`${bricolage.className} text-[3rem] font-semibold leading-none tracking-tight sm:text-[3.5rem]`}
+                className={`${bricolage.className} text-[2.35rem] font-semibold leading-none tracking-tight sm:text-[3.5rem]`}
               >
                 {plan.price}
               </span>
               <span
                 className={cn(
-                  `${inter.className} mb-1.5 text-sm`,
+                  `${inter.className} mb-1 text-xs sm:mb-1.5 sm:text-sm`,
                   plan.featured
                     ? 'text-white/70 dark:text-black/70'
                     : 'text-black/55 dark:text-white/55',
@@ -268,7 +234,7 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
 
             <p
               className={cn(
-                `${inter.className} mt-4 text-sm leading-relaxed`,
+                `${inter.className} mt-3 text-[13px] leading-relaxed sm:mt-4 sm:text-sm`,
                 plan.featured
                   ? 'text-white/80 dark:text-black/80'
                   : 'text-black/70 dark:text-white/70',
@@ -277,12 +243,12 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
               {plan.blurb}
             </p>
 
-            <ul className="mt-7 flex flex-col gap-3">
+            <ul className="mt-5 flex flex-col gap-2 sm:mt-7 sm:gap-3">
               {plan.features.map((feature) => (
                 <li
                   key={feature}
                   className={cn(
-                    `${inter.className} flex items-start gap-2.5 text-sm`,
+                    `${inter.className} flex items-start gap-2 text-[13px] sm:gap-2.5 sm:text-sm`,
                     plan.featured
                       ? 'text-white/85 dark:text-black/85'
                       : 'text-black/80 dark:text-white/80',
@@ -290,7 +256,7 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
                 >
                   <Check
                     className={cn(
-                      'mt-0.5 h-4 w-4 shrink-0',
+                      'mt-0.5 h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4',
                       plan.featured
                         ? 'text-white dark:text-black'
                         : 'text-black/70 dark:text-white/70',
@@ -305,7 +271,7 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
             <Link
               href={ctaHref}
               className={cn(
-                'mt-9 inline-flex h-11 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-medium transition-opacity hover:opacity-90',
+                'mt-6 inline-flex h-9 items-center justify-center gap-2 rounded-full px-5 text-[13px] font-medium transition-opacity hover:opacity-90 sm:mt-9 sm:h-11 sm:px-6 sm:text-[15px]',
                 plan.featured
                   ? 'bg-white text-black dark:bg-black dark:text-white'
                   : 'bg-black text-white dark:bg-white dark:text-black',
@@ -324,9 +290,11 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
 function FaqSection() {
   const [open, setOpen] = useState<number | null>(null);
   const reduceMotion = useReducedMotion();
+  const { t, m } = useI18n();
 
   return (
     <section
+      id="faq"
       className="px-5 py-16 sm:px-8 sm:py-24"
       aria-labelledby="faq-heading"
     >
@@ -338,15 +306,15 @@ function FaqSection() {
             'text-center text-[1.45rem] font-semibold leading-[1.1] tracking-tight text-black dark:text-white sm:text-[2.75rem]',
           )}
         >
-          FAQ
+          {t('landing.faqTitle')}
         </h2>
 
         <ul className="mt-10 sm:mt-14">
-          {FAQ_ITEMS.map((item, i) => {
+          {m.landing.faq.map((item, i) => {
             const isOpen = open === i;
             const panelId = `faq-panel-${i}`;
             const buttonId = `faq-button-${i}`;
-            const isLast = i === FAQ_ITEMS.length - 1;
+            const isLast = i === m.landing.faq.length - 1;
 
             return (
               <li
@@ -412,15 +380,16 @@ function FaqSection() {
 
 export function LandingSections() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { t } = useI18n();
   const ctaHref = isAuthenticated ? '/learn' : '/signin';
-  const ctaLabel = isAuthenticated ? 'Continue learning' : 'Start free';
+  const ctaLabel = isAuthenticated ? t('common.continue') : t('landing.startFree');
 
   return (
     <div className="relative z-10">
       <section
         id="product"
         className="relative z-10 mx-auto max-w-6xl px-5 pb-6 pt-10 sm:px-8 sm:pt-16"
-        aria-label="Product features"
+        aria-label={t('common.features')}
       >
         <FeaturesBridge ctaHref={ctaHref} ctaLabel={ctaLabel} />
       </section>

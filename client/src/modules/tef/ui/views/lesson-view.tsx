@@ -338,7 +338,12 @@ export function LessonView() {
   const currentQuestion = questions[currentIdx];
 
   const title = useMemo(
-    () => (isPlacement ? t('lesson.placementTest') : topic ? topic : t('lesson.practice')),
+    () =>
+      isPlacement
+        ? t('lesson.placementTest')
+        : topic
+          ? topic
+          : t('lesson.tefReading'),
     [isPlacement, topic, t]
   );
 
@@ -363,22 +368,45 @@ export function LessonView() {
       </>
     ) : (
       <>
-        Module{' '}
-        <span className="font-medium tabular-nums text-foreground">
-          {currentModuleIndex + 1}
-        </span>
+        {currentModule?.sectionCode ? (
+          <span className="font-medium text-foreground">
+            Section {currentModule.sectionCode}
+          </span>
+        ) : (
+          <>
+            Module{' '}
+            <span className="font-medium tabular-nums text-foreground">
+              {currentModuleIndex + 1}
+            </span>
+          </>
+        )}
         <span className="text-muted-foreground/70"> / {modules.length}</span>
-        {currentModule?.title ? (
-          <span className="text-muted-foreground/70"> <br/> {currentModule.title}</span>
+        {currentModule?.sectionTitle || currentModule?.title ? (
+          <span className="text-muted-foreground/70">
+            {' '}
+            · {currentModule.sectionTitle ?? currentModule.title}
+          </span>
         ) : null}
         {itemsInModule > 1 ? (
           <span className="text-muted-foreground/70">
             {' '}
-            <br/> Item {itemInModule}/{itemsInModule}
+            · {itemInModule}/{itemsInModule}
           </span>
         ) : null}
       </>
     );
+
+  const passageLabel = () => {
+    if (!currentModule) return t('lesson.passage');
+    const type = currentModule.type;
+    if (type === 'statement_graph') return t('lesson.chart');
+    if (type === 'doc_info_match' || type === 'finding_info') return t('lesson.document');
+    if (type === 'sentence_gap') return t('lesson.passage');
+    if (type === 'text_gap' || type === 'press_article' || type === 'admin_documents') {
+      return t('lesson.passage');
+    }
+    return t('lesson.passage');
+  };
 
   const renderProgressSegments = () => (
     <div
@@ -435,7 +463,7 @@ export function LessonView() {
               index === currentModuleIndex &&
                 'ring-1 ring-primary/25 ring-offset-1 ring-offset-[#FCFCFC] dark:ring-offset-[#1C1C1C]',
             )}
-            title={modules[index]?.title}
+            title={modules[index]?.sectionTitle ?? modules[index]?.title}
           />
         );
       })}
@@ -471,7 +499,7 @@ export function LessonView() {
           <div>
             <div className="mb-3 flex items-end justify-between gap-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Progress
+                {t('lesson.progress')}
               </p>
               <p className={`${bricolage.className} text-2xl font-semibold tabular-nums`}>
                 {Math.min(100, Math.max(0, progressPct))}%
@@ -508,7 +536,7 @@ export function LessonView() {
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Progress
+                  {t('lesson.progress')}
                 </p>
                 <p className={`${bricolage.className} text-lg font-semibold tabular-nums`}>
                   {Math.min(100, Math.max(0, progressPct))}%
@@ -527,8 +555,8 @@ export function LessonView() {
                 panelClass,
               )}
             >
-              <p className="mb-2 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                {currentModule.type === 'finding_info' ? t('lesson.document') : t('lesson.passage')}
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground/50">
+                {passageLabel()}
               </p>
               {currentModule.passage}
             </article>

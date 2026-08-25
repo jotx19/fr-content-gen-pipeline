@@ -118,6 +118,8 @@ function LandingMobileMenu({
   authHref: string;
   authLabel: string;
 }) {
+  const { t } = useI18n();
+
   return (
     <AnimatePresence>
       {open ? (

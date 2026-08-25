@@ -27,7 +27,7 @@ function SignInCard({
   isPending: boolean;
   onSuccess: (response: CredentialResponse) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   return (
     <div
       className={cn(
@@ -110,7 +110,6 @@ function SignInCard({
                 size="large"
                 text="signin_with"
                 shape="pill"
-                locale={locale === 'fr' ? 'fr' : 'en'}
                 width={googleWidth}
               />
             </div>

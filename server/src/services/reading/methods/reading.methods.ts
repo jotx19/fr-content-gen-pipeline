@@ -173,8 +173,7 @@ function shouldUseReadingTemplatesOnly() {
 
 async function generatePracticeBatch(userId: string, { level, weakAreas }: { level: string; weakAreas: string[] }) {
   const topicHint = pickTopic(weakAreas);
-  // Multi-module TEF-style reading sessions (passage, finding info, grammar/vocab).
-  const session = pickReadingPracticeSession(`${userId}:${level}:${topicHint}`);
+  const session = pickReadingPracticeSession(`${userId}:${level}:${topicHint}`, level, weakAreas);
   const modules = session.modules;
   const questions = flattenReadingModules(modules);
   const topic = session.topic || topicHint;
@@ -183,14 +182,23 @@ async function generatePracticeBatch(userId: string, { level, weakAreas }: { lev
     throw new Error('Could not generate practice questions');
   }
 
-  const pendingPractice = { modules, questions, topic, createdAt: new Date() };
+  const pendingPractice = {
+    modules,
+    questions,
+    topic,
+    levelBand: session.levelBand,
+    targetLevel: level,
+    examFormat: session.examFormat,
+    sectionCount: session.sectionCount,
+    createdAt: new Date(),
+  };
   await TefProfile.findOneAndUpdate(
     { userId },
     { $set: { pendingPractice, updatedAt: new Date() } }
   );
 
   console.log(
-    `[reading] practice session ready (${modules.length} modules, ${questions.length} items) for ${userId.slice(0, 8)}`
+    `[reading] TEF practice ready (${session.levelBand}, ${modules.length} sections, ${questions.length}/${session.fullExamQuestionCount} items) for ${userId.slice(0, 8)}`
   );
   return pendingPractice;
 }

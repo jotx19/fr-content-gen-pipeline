@@ -7,8 +7,9 @@ export const config = {
   appUrl: process.env.APP_URL || 'http://localhost:3000',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
   appName: process.env.APP_NAME || 'TEF Canada Coach',
-  tefPlacementCount: Number(process.env.TEF_PLACEMENT_COUNT) || 5,
-  tefPracticeCount: Number(process.env.TEF_PRACTICE_COUNT) || 3,
+  tefPlacementCount: Number(process.env.TEF_PLACEMENT_COUNT) || 6,
+  /** TEF practice mini-exam: 14 Q across 7 sections (~35% of full 40 Q exam). */
+  tefPracticeCount: Number(process.env.TEF_PRACTICE_COUNT) || 14,
   /** MCQ batches need more output tokens than short writing eval JSON. */
   tefReadingLlmMaxTokens:
     Number(process.env.TEF_READING_LLM_MAX_TOKENS) ||

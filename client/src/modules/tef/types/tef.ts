@@ -5,12 +5,25 @@ export type PublicQuestion = {
   skillTag?: string;
 };
 
-export type ReadingModuleType = 'passage_mcq' | 'finding_info' | 'mcq_set';
+export type ReadingModuleType =
+  | 'short_documents'
+  | 'sentence_gap'
+  | 'text_gap'
+  | 'doc_info_match'
+  | 'statement_graph'
+  | 'admin_documents'
+  | 'press_article'
+  | 'passage_mcq'
+  | 'finding_info'
+  | 'mcq_set';
 
 export type PublicReadingModule = {
   id: string;
   type: ReadingModuleType | string;
   title: string;
+  sectionCode?: string;
+  sectionTitle?: string;
+  sectionTitleEn?: string;
   passage?: string;
   items: PublicQuestion[];
 };
@@ -46,6 +59,9 @@ export type PracticeBatch = {
   level: string;
   weakAreas: string[];
   topic?: string;
+  examFormat?: string;
+  levelBand?: string;
+  sectionCount?: number;
   modules?: PublicReadingModule[];
   questions: PublicQuestion[];
   ready: boolean;

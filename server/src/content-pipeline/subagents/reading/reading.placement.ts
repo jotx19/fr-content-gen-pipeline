@@ -9,6 +9,7 @@ const PLACEMENT_SYSTEM = `Generate a TEF Canada placement quiz as one JSON batch
 
 Rules:
 - exactly 6 MCQs in one response (or count requested).
+- Mix document reading, grammar, and vocabulary; difficulty should span A2–B2 to estimate level.
 - question + options: French only, formal/administrative style.
 - include correctIndex (0-3) and skillTag per question.
 - exactly 4 options each.

@@ -7,7 +7,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowRight, ChartNoAxesCombined, Loader2, Plus } from "@/components/icons";
+import { ArrowRight, ChartNoAxesCombined, Loader2, Plus, Star } from "@/components/icons";
 import {
   Tooltip,
   TooltipContent,
@@ -30,6 +30,7 @@ export type LearnBentoData = {
   summary?: string;
   streak: number;
   xp: number;
+  isPro?: boolean;
   practiceReady?: boolean;
   placementMode?: boolean;
   onStartPractice?: () => void;
@@ -385,6 +386,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
     summary,
     streak,
     xp,
+    isPro,
     practiceReady,
     placementMode,
     onStartPractice,
@@ -436,15 +438,31 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
             </>
           ) : (
             <>
-              <h2
-                className={`${bricolage.className} text-2xl font-semibold leading-tight text-[#675549] dark:text-white sm:text-[1.75rem] md:text-[1.75rem]`}
-              >
-                {t("learn.hello", { name: firstName ? `, ${firstName}` : "" })}
-              </h2>
-              <div
-                className={`${bricolage.className} mt-2 flex flex-wrap items-center gap-2 text-2xl font-semibold text-[#675549] dark:text-white sm:text-[1.75rem]`}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                {isPro ? (
+                  <>
+                    <Star
+                      className="h-5 w-5 shrink-0 fill-[#C9A227] text-[#C9A227] md:hidden"
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <span
+                      className={`${inter.className} hidden shrink-0 rounded-sm bg-[#1A3D2E] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-white md:inline-flex`}
+                    >
+                      {t("common.pro")}
+                    </span>
+                  </>
+                ) : null}
+                <h2
+                  className={`${bricolage.className} text-2xl font-semibold leading-tight text-[#675549] dark:text-white sm:text-[1.75rem] md:text-[1.75rem]`}
+                >
+                  {t("learn.hello", { name: firstName ? `, ${firstName}` : "" })}
+                </h2>
+              {/* <div
+                className={`${bricolage.className} flex flex-wrap items-center gap-2 text-2xl font-semibold text-[#675549] dark:text-white sm:text-[1.75rem]`}
               >
                 <HeroArrowIcon />
+              </div> */}
               </div>
               <p
                 className={`${inter.className} mt-auto max-w-md pt-6 text-sm leading-relaxed text-[#675549]/90 dark:text-white/80 sm:text-[15px]`}

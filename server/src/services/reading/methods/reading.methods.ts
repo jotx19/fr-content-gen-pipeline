@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { TefProfile, TefEvaluation, isMongoReady } from '../../../app/db/mongo.js';
 import { runGenerationGraph, runEvaluationGraph } from '../../../content-pipeline/agent/graph.js';
 import {
@@ -18,7 +17,33 @@ import {
   flattenReadingModules,
   pickReadingPracticeSession,
 } from '../prompts/readingPracticeTemplates.js';
+import type { ReadingMcqItem, ReadingModule } from '../prompts/readingPractice.types.js';
 import { pickPlacementTemplate } from '../prompts/readingPlacementTemplates.js';
+import { assertFeatureAccess, consumeFeatureUsage } from '../../billing/freemium.js';
+import type { ITefProfile } from '../../../app/db/schemas/tefProfile.schema.js';
+import type { ITefEvaluation, LevelAdjustment } from '../../../app/db/schemas/tefEvaluation.schema.js';
+
+type PendingPractice = {
+  questions?: ReadingMcqItem[];
+  modules?: ReadingModule[];
+  topic?: string;
+  levelBand?: string;
+  targetLevel?: string;
+  examFormat?: string;
+  sectionCount?: number;
+  createdAt?: Date;
+};
+
+type PendingPlacement = {
+  questions?: ReadingMcqItem[];
+  createdAt?: Date;
+};
+
+type LevelResult = {
+  newLevel?: string;
+  adjustment?: LevelAdjustment;
+  reason?: string | null;
+};
 
 const TOPIC_BY_SKILL: Record<string, string> = {
   grammaire: 'formal French grammar',
@@ -35,22 +60,26 @@ function requireMongo() {
   }
 }
 
-function hasPendingPractice(pending: { questions?: unknown[]; modules?: unknown[] } | undefined) {
+function hasPendingPractice(pending: PendingPractice | null | undefined) {
   return Boolean(pending?.questions?.length || pending?.modules?.length);
 }
 
-function profileFromDoc(doc: Record<string, unknown> | null, lastEval?: Record<string, unknown> | null) {
+function profileFromDoc(
+  doc: ITefProfile | Record<string, unknown> | null,
+  lastEval?: ITefEvaluation | Record<string, unknown> | null
+) {
   if (!doc?.level) return null;
-  const pending = doc.pendingPractice as { questions?: unknown[]; modules?: unknown[] } | undefined;
-  const stats = (doc.stats as Record<string, number>) ?? {};
+  const profile = doc as ITefProfile;
+  const pending = profile.pendingPractice as PendingPractice | null | undefined;
+  const stats = profile.stats ?? {};
   const readingXp = stats.readingXp ?? stats.xp ?? 0;
   return {
-    level: doc.level,
-    confidence: doc.confidence ?? null,
-    weakAreas: doc.weakAreas ?? [],
-    summary: doc.summary ?? '',
+    level: profile.level,
+    confidence: profile.confidence ?? null,
+    weakAreas: profile.weakAreas ?? [],
+    summary: profile.summary ?? '',
     onboardedAt:
-      (doc.onboardedAt as Date)?.toISOString?.() ?? (doc.onboardedAt as string) ?? null,
+      profile.onboardedAt?.toISOString?.() ?? (profile.onboardedAt as unknown as string) ?? null,
     practiceReady: hasPendingPractice(pending),
     stats: {
       totalSessions: stats.totalSessions ?? 0,
@@ -62,13 +91,15 @@ function profileFromDoc(doc: Record<string, unknown> | null, lastEval?: Record<s
     },
     lastEvaluation: lastEval
       ? {
-          id: String(lastEval._id),
-          module: lastEval.module ?? READING_MODULE,
-          kind: lastEval.kind,
-          overallAccuracy: lastEval.overallAccuracy,
-          levelAfter: lastEval.levelAfter,
-          summary: lastEval.summary,
-          createdAt: (lastEval.createdAt as Date)?.toISOString?.() ?? lastEval.createdAt,
+          id: String((lastEval as ITefEvaluation & { _id: unknown })._id),
+          module: (lastEval as ITefEvaluation).module ?? READING_MODULE,
+          kind: (lastEval as ITefEvaluation).kind,
+          overallAccuracy: (lastEval as ITefEvaluation).overallAccuracy,
+          levelAfter: (lastEval as ITefEvaluation).levelAfter,
+          summary: (lastEval as ITefEvaluation).summary,
+          createdAt:
+            (lastEval as ITefEvaluation).createdAt?.toISOString?.() ??
+            (lastEval as ITefEvaluation).createdAt,
         }
       : null,
   };
@@ -81,13 +112,9 @@ function pickTopic(weakAreas: string[] = []) {
   return 'daily life and administration in Canada';
 }
 
-function practiceResponse(doc: Record<string, unknown>) {
-  const pending = doc.pendingPractice as {
-    questions?: unknown[];
-    modules?: unknown[];
-    topic?: string;
-  };
-  const modules = pending?.modules?.length
+function practiceResponse(doc: ITefProfile | Record<string, unknown>) {
+  const pending = (doc as ITefProfile).pendingPractice as PendingPractice | null | undefined;
+  const modules: ReadingModule[] = pending?.modules?.length
     ? pending.modules
     : pending?.questions?.length
       ? [
@@ -203,7 +230,7 @@ async function generatePracticeBatch(userId: string, { level, weakAreas }: { lev
   return pendingPractice;
 }
 
-async function generatePlacementQuestions(userId: string, count: number) {
+async function generatePlacementQuestions(userId: string, count: number): Promise<ReadingMcqItem[]> {
   if (shouldUseReadingTemplatesOnly()) {
     const questions = pickPlacementTemplate(userId, count);
     console.log(`[reading] placement from templates (${questions.length} q) for ${userId.slice(0, 8)}`);
@@ -218,7 +245,9 @@ async function generatePlacementQuestions(userId: string, count: number) {
       subagentName: 'placement',
       subagentInput: { count },
     });
-    if (questions?.length) return questions;
+    if (Array.isArray(questions) && questions.length) {
+      return questions as ReadingMcqItem[];
+    }
     throw new Error('Placement generator returned no questions');
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -439,7 +468,12 @@ export async function onRequestPractice(userId: string) {
     throw new Error('Complete placement before starting practice');
   }
 
-  if (!(doc.pendingPractice as { modules?: unknown[] } | undefined)?.modules?.length) {
+  const hasPending = (doc.pendingPractice as { modules?: unknown[] } | undefined)?.modules?.length;
+  if (!hasPending) {
+    await assertFeatureAccess(userId, 'reading');
+  }
+
+  if (!hasPending) {
     await ensurePracticeBatch(userId, doc);
     doc = await TefProfile.findOne({ userId }).lean();
   }
@@ -450,20 +484,18 @@ export async function onRequestPractice(userId: string) {
 export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
   requireMongo();
 
+  await assertFeatureAccess(userId, 'reading');
+
   const doc = await TefProfile.findOne({ userId }).lean();
   if (!doc?.level) {
     throw new Error('Complete placement before submitting practice');
   }
 
-  const pending = doc.pendingPractice as {
-    questions?: unknown[];
-    modules?: unknown[];
-    topic?: string;
-  } | undefined;
+  const pending = doc.pendingPractice as PendingPractice | null | undefined;
   const questions =
     pending?.questions?.length
       ? pending.questions
-      : flattenReadingModules(pending?.modules);
+      : flattenReadingModules(pending?.modules ?? []);
   if (!questions?.length) {
     throw new Error('No practice session found — start practice first');
   }
@@ -505,6 +537,8 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     }
   );
 
+  const levelResultTyped = levelResult as LevelResult | null;
+
   const evalDoc = await persistEvaluation(userId, {
     kind: 'practice',
     evaluation,
@@ -512,13 +546,15 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     userAnswers,
     levelBefore,
     levelAfter: newLevel,
-    adjustment: levelResult?.adjustment ?? 'same',
-    reason: levelResult?.reason ?? null,
+    adjustment: levelResultTyped?.adjustment ?? 'same',
+    reason: levelResultTyped?.reason ?? null,
     summary,
     topic: pending?.topic ?? null,
   });
 
   void prefetchPractice(userId);
+
+  await consumeFeatureUsage(userId, 'reading');
 
   storeSessionMemory(userId, {
     kind: 'practice',
@@ -551,9 +587,9 @@ export async function onSubmitAnswers(userId: string, userAnswers: number[]) {
     ...evaluation,
     evaluationId: evalDoc._id.toString(),
     module: READING_MODULE,
-    adjustment: levelResult?.adjustment,
+    adjustment: levelResultTyped?.adjustment,
     newLevel,
-    reason: levelResult?.reason,
+    reason: levelResultTyped?.reason,
     summary,
     profile,
   };
@@ -600,18 +636,16 @@ export async function checkSessionAnswer(
   requireMongo();
 
   const doc = await TefProfile.findOne({ userId }).lean();
+  const pendingPlacement = doc?.pendingPlacement as PendingPlacement | null | undefined;
+  const pendingPractice = doc?.pendingPractice as PendingPractice | null | undefined;
   const pending =
-    kind === 'placement'
-      ? (doc?.pendingPlacement as { questions?: unknown[] } | undefined)
-      : (doc?.pendingPractice as { questions?: unknown[]; modules?: unknown[] } | undefined);
+    kind === 'placement' ? pendingPlacement : pendingPractice;
 
-  const questions =
+  const questions: ReadingMcqItem[] =
     pending?.questions?.length
       ? pending.questions
       : kind === 'practice'
-        ? flattenReadingModules(
-            (pending as { modules?: unknown[] } | undefined)?.modules
-          )
+        ? flattenReadingModules(pendingPractice?.modules ?? [])
         : [];
   if (!questions?.length) {
     throw new Error(`No ${kind} session found — start a session first`);

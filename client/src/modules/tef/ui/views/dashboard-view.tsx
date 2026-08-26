@@ -13,6 +13,7 @@ import {
   Star,
   Target,
 } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { bricolage, inter } from '@/lib/fonts';
@@ -20,8 +21,10 @@ import { useI18n, useLocaleDate } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
 import { overallLevelAndConfidence } from '@/modules/tef/lib/overall-progress';
+import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
 import { useWritingProfileQuery } from '@/modules/writing/hooks/use-writing-queries';
 import { useAuthStore } from '@/store/authStore';
+import { usePaywallStore } from '@/store/paywallStore';
 
 const panel = 'rounded-[28px] bg-[#FCFCFC] dark:bg-[#1C1C1C] sm:rounded-[32px]';
 const ink = 'text-[#675549] dark:text-white';
@@ -86,6 +89,8 @@ export function DashboardView() {
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const { data: profile, isLoading } = useTefProfileQuery(Boolean(user));
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));
+  const { data: billing, isLoading: billingLoading } = useBillingStatusQuery(Boolean(user));
+  const openPaywall = usePaywallStore((s) => s.openPaywall);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -134,6 +139,33 @@ export function DashboardView() {
     ? writingProfile.taskMode.split('_').join(' ')
     : null;
 
+  const isPro = billing?.plan === 'pro';
+  const accessExpires = billing?.currentPeriodEnd
+    ? formatDate(billing.currentPeriodEnd)
+    : null;
+  const accessType =
+    billing?.subscriptionInterval === 'year'
+      ? t('dashboard.accessYearly')
+      : billing?.subscriptionInterval === 'month'
+        ? t('dashboard.accessMonthly')
+        : '—';
+  const planStatus =
+    billing?.subscriptionStatus === 'active'
+      ? t('dashboard.statusActive')
+      : billing?.subscriptionStatus === 'canceled'
+        ? t('dashboard.statusExpired')
+        : t('dashboard.statusNone');
+  const readingUsage = billing
+    ? isPro
+      ? t('dashboard.unlimited')
+      : `${billing.usage.readingSessions}/${billing.limits.readingSessionsPerDay ?? '—'}`
+    : '—';
+  const writingUsage = billing
+    ? isPro
+      ? t('dashboard.unlimited')
+      : `${billing.usage.writingSessions}/${billing.limits.writingSessionsPerDay ?? '—'}`
+    : '—';
+
   return (
     <div className="min-h-dvh p-10">
       <div className="mx-auto w-full max-w-5xl space-y-4 px-4 sm:px-6">
@@ -176,6 +208,66 @@ export function DashboardView() {
             <div className="mt-5 border-t border-[#675549]/12 pt-4 dark:border-white/10">
               {onboarded && <MetaRow label={t('dashboard.readingOnboarded')} value={onboarded} />}
               {lastLogin && <MetaRow label={t('dashboard.lastLogin')} value={lastLogin} />}
+            </div>
+          )}
+        </section>
+
+        <section className={cn(panel, 'px-6 py-5 sm:px-7')}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Star
+                className={cn('h-4 w-4', isPro ? 'fill-[#C9A227] text-[#C9A227]' : inkMuted)}
+                strokeWidth={2}
+              />
+              <h2 className={cn(inter.className, 'text-xs font-semibold uppercase tracking-wide', inkMuted)}>
+                {t('dashboard.planAndBilling')}
+              </h2>
+            </div>
+            {isPro ? (
+              <span
+                className={cn(
+                  inter.className,
+                  'rounded-full bg-[#1A3D2E] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white',
+                )}
+              >
+                {t('common.pro')}
+              </span>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => openPaywall('reading')}
+                className={cn(inter.className, 'h-8 rounded-full bg-[#1A3D2E] text-xs font-semibold text-white hover:bg-[#1A3D2E]/90')}
+              >
+                {t('dashboard.upgradeToPro')}
+              </Button>
+            )}
+          </div>
+
+          {billingLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-2/3" />
+            </div>
+          ) : (
+            <div className="space-y-0">
+              <MetaRow
+                label={t('dashboard.currentPlan')}
+                value={isPro ? t('common.pro') : t('common.freePlan')}
+              />
+              <MetaRow label={t('dashboard.planStatus')} value={planStatus} />
+              {isPro ? (
+                <>
+                  <MetaRow label={t('dashboard.accessType')} value={accessType} />
+                  <MetaRow
+                    label={t('dashboard.accessExpires')}
+                    value={accessExpires ?? t('dashboard.noExpiry')}
+                  />
+                </>
+              ) : null}
+              <MetaRow label={t('dashboard.readingToday')} value={readingUsage} />
+              <MetaRow label={t('dashboard.writingToday')} value={writingUsage} />
             </div>
           )}
         </section>

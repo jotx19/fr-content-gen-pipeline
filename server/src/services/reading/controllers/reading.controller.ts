@@ -12,10 +12,15 @@ import {
 } from '../methods/reading.methods.js';
 import type { SubmitAnswersBody, CheckAnswerBody, SelfSelectLevelBody } from '../schemas/reading.schema.js';
 import type { TefModule } from '../../../app/db/schemas/tefEvaluation.schema.js';
+import { PaywallError } from '../../billing/freemium.js';
+import { sendPaywall } from '../../billing/billing.controller.js';
 
 type AuthedRequest = FastifyRequest & { userId: string };
 
 function mapError(reply: FastifyReply, err: unknown) {
+  if (err instanceof PaywallError) {
+    return sendPaywall(reply, err);
+  }
   const message = err instanceof Error ? err.message : 'Internal server error';
   const status =
     message.includes('placement') ||

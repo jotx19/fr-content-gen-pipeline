@@ -15,6 +15,7 @@ import {
   savePlacementProgress,
 } from '@/lib/tef-session-storage';
 import { playMcqCorrectSound, playMcqWrongSound } from '@/lib/mcq-sounds';
+import { handlePaywallError } from '@/lib/paywall';
 import { McqQuestion } from '@/modules/tef/ui/components/mcq-question';
 import {
   useCheckAnswerMutation,
@@ -288,6 +289,7 @@ export function LessonView() {
       setLastDiagnostic(data);
       router.push('/learn/results');
     } catch (err) {
+      if (handlePaywallError(err, 'reading')) return;
       toast.error(err instanceof Error ? err.message : t('lesson.submitFailed'));
     }
   };
@@ -299,6 +301,7 @@ export function LessonView() {
       setLastDiagnostic(data);
       router.push('/learn/results');
     } catch (err) {
+      if (handlePaywallError(err, 'reading')) return;
       toast.error(err instanceof Error ? err.message : t('lesson.submitFailed'));
     }
   };

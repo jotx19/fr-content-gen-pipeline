@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { withTefSection } from './readingExamStructure.js';
+import type { ReadingSessionsByBand } from './readingPractice.types.js';
 
 /** TEF-format practice sessions keyed by CEFR band (14 questions, 7 sections). */
-export const READING_SESSIONS_BY_BAND = {
+export const READING_SESSIONS_BY_BAND: ReadingSessionsByBand = {
   beginner: [
     {
       topic: 'Compréhension écrite — niveau A1–A2',

@@ -22,6 +22,7 @@ import {
 import { bricolage } from '@/lib/fonts';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { handlePaywallError } from '@/lib/paywall';
 import {
   useRefreshWritingPromptMutation,
   useSubmitWritingMutation,
@@ -234,6 +235,7 @@ export function WritingView() {
       setLastResult(result);
       router.push('/learn/writing/results');
     } catch (err) {
+      if (handlePaywallError(err, 'writing')) return;
       toast.error(err instanceof Error ? err.message : t('writing.submitFailed'));
     }
   };

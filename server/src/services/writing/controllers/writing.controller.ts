@@ -8,10 +8,15 @@ import {
   setWritingLevelManually,
 } from '../methods/writing.methods.js';
 import type { SubmitWritingBody, WritingExampleBody } from '../schemas/writing.schema.js';
+import { PaywallError } from '../../billing/freemium.js';
+import { sendPaywall } from '../../billing/billing.controller.js';
 
 type AuthedRequest = FastifyRequest & { userId: string };
 
 function mapError(reply: FastifyReply, err: unknown) {
+  if (err instanceof PaywallError) {
+    return sendPaywall(reply, err);
+  }
   const message = err instanceof Error ? err.message : 'Internal server error';
   const status =
     message.includes('placement') ||

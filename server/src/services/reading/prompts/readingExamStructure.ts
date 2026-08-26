@@ -1,5 +1,10 @@
-// @ts-nocheck
-import { CEFR_LEVELS } from '../../../content-pipeline/subagents/shared/reading.schemas.js';
+import type {
+  ReadingModule,
+  ReadingModuleInput,
+} from './readingPractice.types.js';
+
+export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+export type CefrLevel = (typeof CEFR_LEVELS)[number];
 
 /** Official TEF Canada compréhension écrite structure (40 Q, 60 min). */
 export const TEF_READING_EXAM = {
@@ -7,13 +12,23 @@ export const TEF_READING_EXAM = {
   durationMinutes: 60,
   sectionCount: 7,
   optionsPerQuestion: 4,
+} as const;
+
+export type TefReadingSection = {
+  code: string;
+  key: string;
+  titleFr: string;
+  titleEn: string;
+  examCount: number;
+  practiceCount: number;
+  type: string;
 };
 
 /**
  * Seven TEF sub-sections (2024+ format).
  * practiceCount scales a daily session (~35% of full exam).
  */
-export const TEF_READING_SECTIONS = [
+export const TEF_READING_SECTIONS: readonly TefReadingSection[] = [
   {
     code: 'A',
     key: 'short_documents',
@@ -77,7 +92,7 @@ export const TEF_READING_SECTIONS = [
     practiceCount: 3,
     type: 'press_article',
   },
-];
+] as const;
 
 export const TEF_PRACTICE_QUESTION_COUNT = TEF_READING_SECTIONS.reduce(
   (sum, s) => sum + s.practiceCount,
@@ -86,9 +101,13 @@ export const TEF_PRACTICE_QUESTION_COUNT = TEF_READING_SECTIONS.reduce(
 
 export type ReadingLevelBand = 'beginner' | 'intermediate' | 'advanced';
 
-export function normalizeCefrForReading(level: unknown): string {
+function isCefrLevel(value: string): value is CefrLevel {
+  return (CEFR_LEVELS as readonly string[]).includes(value);
+}
+
+export function normalizeCefrForReading(level: unknown): CefrLevel {
   const raw = String(level ?? 'B1').trim().toUpperCase();
-  return CEFR_LEVELS.includes(raw) ? raw : 'B1';
+  return isCefrLevel(raw) ? raw : 'B1';
 }
 
 export function readingLevelBand(level: unknown): ReadingLevelBand {
@@ -111,15 +130,21 @@ export function readingLevelGuidance(level: unknown): string {
   return LEVEL_GUIDANCE[readingLevelBand(level)];
 }
 
-export function sectionLabel(section: (typeof TEF_READING_SECTIONS)[number], locale = 'fr') {
+export function sectionLabel(section: TefReadingSection, locale: 'en' | 'fr' = 'fr'): string {
   const title = locale === 'en' ? section.titleEn : section.titleFr;
   return `Section ${section.code} — ${title}`;
 }
 
 /** Stamp official TEF section metadata onto a practice module. */
-export function withTefSection(module: Record<string, unknown>, sectionKey: string) {
+export function withTefSection(module: ReadingModuleInput, sectionKey: string): ReadingModule {
   const section = TEF_READING_SECTIONS.find((s) => s.key === sectionKey);
-  if (!section) return module;
+  if (!section) {
+    return {
+      ...module,
+      type: sectionKey,
+      title: module.id,
+    };
+  }
   return {
     ...module,
     type: section.type,

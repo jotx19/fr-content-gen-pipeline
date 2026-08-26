@@ -4,11 +4,12 @@ import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
-import { ArrowRight, Check, Plus } from '@/components/icons';
+import { ArrowRight, Plus } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore } from '@/store/authStore';
+import { SubscriptionPlanCards } from '@/modules/billing/ui/subscription-plan-cards';
 import { FeaturesBridge } from './landing-helpers';
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -135,36 +136,15 @@ function StreakBand({ ctaHref }: { ctaHref: string }) {
 }
 
 function Pricing({ ctaHref }: { ctaHref: string }) {
-  const reduceMotion = useReducedMotion();
-  const { t, m } = useI18n();
-  const plans = [
-    {
-      name: m.landing.plans.free.name,
-      price: '$0',
-      period: t('common.forever'),
-      blurb: m.landing.plans.free.blurb,
-      features: m.landing.plans.free.features,
-      cta: m.landing.plans.free.cta,
-      featured: false,
-    },
-    {
-      name: m.landing.plans.pro.name,
-      price: '$12',
-      period: t('common.perMonth'),
-      blurb: m.landing.plans.pro.blurb,
-      features: m.landing.plans.pro.features,
-      cta: m.landing.plans.pro.cta,
-      featured: true,
-    },
-  ];
+  const { t } = useI18n();
 
   return (
     <section
       id="pricing"
-      className="mx-auto max-w-6xl px-7 py-16 sm:px-8 sm:py-24"
+      className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24"
       aria-labelledby="pricing-heading"
     >
-      <SectionFade className="mx-auto mb-8 max-w-2xl text-center sm:mb-16">
+      <SectionFade className="mx-auto mb-8 max-w-2xl text-center sm:mb-12">
         <p
           className={`${inter.className} text-[11px] font-medium uppercase tracking-[0.18em] text-black/55 dark:text-white/55`}
         >
@@ -186,103 +166,11 @@ function Pricing({ ctaHref }: { ctaHref: string }) {
         </p>
       </SectionFade>
 
-      <div className="mx-auto grid max-w-4xl gap-3 sm:gap-5 md:grid-cols-2">
-        {plans.map((plan, i) => (
-          <motion.div
-            key={plan.name}
-            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.5, delay: reduceMotion ? 0 : 0.06 + i * 0.08, ease }}
-            className={cn(
-              'flex flex-col rounded-[1.25rem] px-4 py-5 sm:rounded-[2rem] sm:px-8 sm:py-10',
-              plan.featured
-                ? 'bg-black text-white dark:bg-white dark:text-black'
-                : 'bg-black/[0.04] text-black dark:bg-white/[0.06] dark:text-white',
-            )}
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className={`${bricolage.className} text-lg font-semibold sm:text-2xl`}>
-                {plan.name}
-              </h3>
-              {plan.featured ? (
-                <span
-                  className={`${inter.className} text-[11px] font-medium uppercase tracking-[0.14em] text-white/70 dark:text-black/70`}
-                >
-                  {t('common.popular')}
-                </span>
-              ) : null}
-            </div>
-
-            <div className="mt-3 flex items-end gap-1.5 sm:mt-5">
-              <span
-                className={`${bricolage.className} text-[2.35rem] font-semibold leading-none tracking-tight sm:text-[3.5rem]`}
-              >
-                {plan.price}
-              </span>
-              <span
-                className={cn(
-                  `${inter.className} mb-1 text-xs sm:mb-1.5 sm:text-sm`,
-                  plan.featured
-                    ? 'text-white/70 dark:text-black/70'
-                    : 'text-black/55 dark:text-white/55',
-                )}
-              >
-                {plan.period}
-              </span>
-            </div>
-
-            <p
-              className={cn(
-                `${inter.className} mt-3 text-[13px] leading-relaxed sm:mt-4 sm:text-sm`,
-                plan.featured
-                  ? 'text-white/80 dark:text-black/80'
-                  : 'text-black/70 dark:text-white/70',
-              )}
-            >
-              {plan.blurb}
-            </p>
-
-            <ul className="mt-5 flex flex-col gap-2 sm:mt-7 sm:gap-3">
-              {plan.features.map((feature) => (
-                <li
-                  key={feature}
-                  className={cn(
-                    `${inter.className} flex items-start gap-2 text-[13px] sm:gap-2.5 sm:text-sm`,
-                    plan.featured
-                      ? 'text-white/85 dark:text-black/85'
-                      : 'text-black/80 dark:text-white/80',
-                  )}
-                >
-                  <Check
-                    className={cn(
-                      'mt-0.5 h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4',
-                      plan.featured
-                        ? 'text-white dark:text-black'
-                        : 'text-black/70 dark:text-white/70',
-                    )}
-                    strokeWidth={2.5}
-                  />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href={ctaHref}
-              className={cn(
-                'mt-6 inline-flex h-9 items-center justify-center gap-2 rounded-full px-5 text-[13px] font-medium transition-opacity hover:opacity-90 sm:mt-9 sm:h-11 sm:px-6 sm:text-[15px]',
-                plan.featured
-                  ? 'bg-white text-black dark:bg-black dark:text-white'
-                  : 'bg-black text-white dark:bg-white dark:text-black',
-              )}
-            >
-              {plan.cta}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </motion.div>
-        ))}
-      </div>
+      <SectionFade delay={0.08}>
+        <div className="mx-auto max-w-5xl">
+          <SubscriptionPlanCards variant="page" freeHref={ctaHref} />
+        </div>
+      </SectionFade>
     </section>
   );
 }

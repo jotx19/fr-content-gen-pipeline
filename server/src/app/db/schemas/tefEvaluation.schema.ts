@@ -1,10 +1,57 @@
-// @ts-nocheck
-import mongoose from 'mongoose';
+import mongoose, { type HydratedDocument, type Model } from 'mongoose';
 
 export const TEF_MODULES = ['reading', 'writing'] as const;
 export type TefModule = (typeof TEF_MODULES)[number];
 
-const skillBreakdownItemSchema = new mongoose.Schema(
+export type EvaluationKind = 'placement' | 'practice';
+export type LevelAdjustment = 'levelUp' | 'levelDown' | 'same' | null;
+
+export type SkillBreakdownItem = {
+  skillTag: string;
+  correct: number;
+  total: number;
+  accuracy: number;
+};
+
+export type CriteriaBreakdownItem = {
+  criterion: string;
+  label: string;
+  score: number;
+  feedback: string;
+};
+
+export type QuestionResult = {
+  questionIndex: number;
+  correct: boolean;
+  skillTag: string;
+  explanation?: string;
+};
+
+export interface ITefEvaluation {
+  userId: string;
+  module: TefModule;
+  kind: EvaluationKind;
+  overallAccuracy: number;
+  skillBreakdown: SkillBreakdownItem[];
+  criteriaBreakdown: CriteriaBreakdownItem[];
+  weakAreas: string[];
+  userAnswers: number[];
+  userSubmission: unknown;
+  results: QuestionResult[];
+  questions: unknown[];
+  levelBefore: string | null;
+  levelAfter: string | null;
+  adjustment: LevelAdjustment;
+  reason: string | null;
+  confidence: number | null;
+  summary: string;
+  topic: string | null;
+  createdAt: Date;
+}
+
+export type TefEvaluationDocument = HydratedDocument<ITefEvaluation>;
+
+const skillBreakdownItemSchema = new mongoose.Schema<SkillBreakdownItem>(
   {
     skillTag: { type: String, required: true },
     correct: { type: Number, required: true },
@@ -14,7 +61,7 @@ const skillBreakdownItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const criteriaBreakdownItemSchema = new mongoose.Schema(
+const criteriaBreakdownItemSchema = new mongoose.Schema<CriteriaBreakdownItem>(
   {
     criterion: { type: String, required: true },
     label: { type: String, required: true },
@@ -24,7 +71,7 @@ const criteriaBreakdownItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const questionResultSchema = new mongoose.Schema(
+const questionResultSchema = new mongoose.Schema<QuestionResult>(
   {
     questionIndex: { type: Number, required: true },
     correct: { type: Boolean, required: true },
@@ -34,7 +81,7 @@ const questionResultSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const tefEvaluationSchema = new mongoose.Schema(
+const tefEvaluationSchema = new mongoose.Schema<ITefEvaluation>(
   {
     userId: { type: String, required: true, index: true },
     module: {
@@ -67,5 +114,7 @@ const tefEvaluationSchema = new mongoose.Schema(
 
 tefEvaluationSchema.index({ userId: 1, createdAt: -1 });
 tefEvaluationSchema.index({ userId: 1, module: 1, createdAt: -1 });
-export const TefEvaluation =
-  mongoose.models.TefEvaluation ?? mongoose.model('TefEvaluation', tefEvaluationSchema);
+
+export const TefEvaluation: Model<ITefEvaluation> =
+  (mongoose.models.TefEvaluation as Model<ITefEvaluation> | undefined) ??
+  mongoose.model<ITefEvaluation>('TefEvaluation', tefEvaluationSchema);

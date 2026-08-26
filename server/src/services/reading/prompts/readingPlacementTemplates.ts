@@ -1,9 +1,11 @@
-// @ts-nocheck
 import { createHash } from 'node:crypto';
 import { shuffleMcqOptions } from '../../../content-pipeline/subagents/shared/reading.normalize.js';
+import type { ReadingMcqItem } from './readingPractice.types.js';
+
+type PlacementQuestion = ReadingMcqItem & { register: string };
 
 /** Static TEF placement MCQs — used when OpenRouter credits are low or TEF_READING_USE_TEMPLATES=true */
-const PLACEMENT_QUESTIONS = [
+const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
   {
     id: 'place-1',
     question: 'Choisissez la forme correcte : « Hier, nous ___ au marché. »',
@@ -94,10 +96,10 @@ function pickStartIndex(seed: string, length: number) {
   return hash[0] % length;
 }
 
-export function pickPlacementTemplate(seed = '', count = 5) {
+export function pickPlacementTemplate(seed = '', count = 5): ReadingMcqItem[] {
   const size = Math.min(Math.max(Number(count) || 5, 5), PLACEMENT_QUESTIONS.length);
   const start = pickStartIndex(seed || String(Date.now()), PLACEMENT_QUESTIONS.length);
-  const questions = [];
+  const questions: ReadingMcqItem[] = [];
 
   for (let i = 0; i < size; i += 1) {
     questions.push(

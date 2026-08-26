@@ -43,6 +43,7 @@ import {
   resolveTefWritingSection,
 } from '../../../content-pipeline/subagents/writing/tefWritingSections.js';
 import { applyWordCountToEvaluation } from '../scoring/writingWordCount.js';
+import { assertFeatureAccess, consumeFeatureUsage } from '../../billing/freemium.js';
 
 function requireMongo() {
   if (!isMongoReady()) {
@@ -340,6 +341,8 @@ export async function submitWriting(
 ) {
   requireMongo();
 
+  await assertFeatureAccess(userId, 'writing');
+
   const doc = await TefProfile.findOne({ userId }).lean();
   if (!doc?.level) {
     throw new Error('Complete reading placement before submitting writing');
@@ -493,6 +496,8 @@ export async function submitWriting(
   }).catch((err) => console.warn('[rag] writing index:', err.message));
 
   prefetchWritingPrompt(userId, newLevel, weakAreas);
+
+  await consumeFeatureUsage(userId, 'writing');
 
   const progress = xpProgressForLevel(newWritingXp, newLevel);
 

@@ -1,7 +1,39 @@
-// @ts-nocheck
-import mongoose from 'mongoose';
+import mongoose, { type HydratedDocument, type Model } from 'mongoose';
 
-const tefProfileSchema = new mongoose.Schema(
+export type OnboardMethod = 'placement' | 'self_selected' | null;
+
+export type TefProfileStats = {
+  totalSessions?: number;
+  totalQuestions?: number;
+  streakDays?: number;
+  xp?: number;
+  readingXp?: number;
+  writingXp?: number;
+};
+
+export interface ITefProfile {
+  userId: string;
+  level: string | null;
+  writingLevel: string | null;
+  confidence: number | null;
+  weakAreas: string[];
+  summary: string;
+  accuracyHistory: number[];
+  pendingPlacement: unknown;
+  pendingPractice: unknown;
+  pendingWriting: unknown;
+  writingScoreHistory: number[];
+  lastEvaluationId: mongoose.Types.ObjectId | null;
+  stats: TefProfileStats;
+  onboardedAt: Date | null;
+  onboardMethod: OnboardMethod;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type TefProfileDocument = HydratedDocument<ITefProfile>;
+
+const tefProfileSchema = new mongoose.Schema<ITefProfile>(
   {
     userId: { type: String, required: true, unique: true, index: true },
     level: { type: String, default: null },
@@ -30,8 +62,10 @@ const tefProfileSchema = new mongoose.Schema(
   },
   { collection: 'tef_profiles' }
 );
-export const TefProfile =
-  mongoose.models.TefProfile ?? mongoose.model('TefProfile', tefProfileSchema);
+
+export const TefProfile: Model<ITefProfile> =
+  (mongoose.models.TefProfile as Model<ITefProfile> | undefined) ??
+  mongoose.model<ITefProfile>('TefProfile', tefProfileSchema);
 
 /** @deprecated Use TefProfile — kept for migration reference */
 export const TefUser = TefProfile;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createHash } from 'node:crypto';
 import { shuffleMcqOptions } from '../../../content-pipeline/subagents/shared/reading.normalize.js';
 import {
@@ -8,16 +7,21 @@ import {
   TEF_READING_SECTIONS,
 } from './readingExamStructure.js';
 import { READING_SESSIONS_BY_BAND } from './readingPracticeSessions.js';
+import type {
+  FlatReadingItem,
+  ReadingModule,
+  ReadingPracticePickResult,
+} from './readingPractice.types.js';
 
 export { TEF_READING_EXAM, TEF_READING_SECTIONS, TEF_PRACTICE_QUESTION_COUNT };
 
-function pickBatchIndex(seed, batchCount) {
+function pickBatchIndex(seed: string, batchCount: number): number {
   if (!batchCount) return 0;
   const hash = createHash('sha256').update(seed).digest();
   return hash[0] % batchCount;
 }
 
-export function flattenReadingModules(modules = []) {
+export function flattenReadingModules(modules: ReadingModule[] = []): FlatReadingItem[] {
   return modules.flatMap((mod) =>
     (mod.items ?? []).map((item) => ({
       ...item,
@@ -42,11 +46,14 @@ export function pickReadingPracticeTemplate(seed = '', count = 3) {
  * Pick a TEF-format reading practice session (7 sections, 14 questions by default).
  * Content band follows the learner's CEFR level (A1–A2 / B1–B2 / C1–C2).
  */
-export function pickReadingPracticeSession(seed = '', level = 'B1', weakAreas = []) {
+export function pickReadingPracticeSession(
+  seed = '',
+  level = 'B1',
+  weakAreas: string[] = []
+): ReadingPracticePickResult {
   const band = readingLevelBand(level);
   const pool = READING_SESSIONS_BY_BAND[band] ?? READING_SESSIONS_BY_BAND.intermediate;
 
-  // Rotate sessions; weak-area tags can nudge the seed for variety.
   const weakKey = Array.isArray(weakAreas) && weakAreas.length ? weakAreas.join(',') : '';
   const index = pickBatchIndex(`${seed}:${band}:${weakKey}`, pool.length);
   const session = pool[index] ?? pool[0];

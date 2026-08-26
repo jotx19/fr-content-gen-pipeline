@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useI18n } from '@/lib/i18n';
 import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
+import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
 
 const panelClass = cn(
   inter.className,
@@ -96,6 +97,8 @@ export function AccountDropdownContent({
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { locale, setLocale, t } = useI18n();
+  const { data: billing } = useBillingStatusQuery();
+  const isPro = billing?.plan === 'pro';
 
   useEffect(() => setMounted(true), []);
 
@@ -133,11 +136,13 @@ export function AccountDropdownContent({
         <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground dark:text-white">
           {displayName}
         </span>
-        <Star
-          className="h-3.5 w-3.5 shrink-0 text-foreground/35 dark:text-white/35"
-          strokeWidth={1.75}
-          aria-hidden
-        />
+        {isPro ? (
+          <Star
+            className="h-3.5 w-3.5 shrink-0 fill-[#C9A227] text-[#C9A227]"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        ) : null}
       </div>
 
       <DropdownMenuItem asChild className={itemClass}>

@@ -5,6 +5,7 @@ import { AppMobileNav, AppMobileNavSpacer } from '@/components/app-mobile-nav';
 import { AppSidebar, AppSidebarOffset } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
 import { OnboardingGate } from '@/modules/tef/ui/components/onboarding-gate';
+import { PaywallDialog } from '@/modules/billing/ui/paywall-dialog';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -41,6 +42,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </main>
       </div>
       <OnboardingGate />
+      <PaywallDialog />
     </div>
   );
 }

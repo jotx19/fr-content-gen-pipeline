@@ -12,6 +12,9 @@ import { LearnBentoGrid } from '@/modules/tef/ui/learn/learn-bento-grid';
 import { useAuthStore } from '@/store/authStore';
 import { useLessonStore } from '@/store/lessonStore';
 import { clearPlacementProgress } from '@/lib/tef-session-storage';
+import { handlePaywallError, isAtDailyLimit } from '@/lib/paywall';
+import { usePaywallStore } from '@/store/paywallStore';
+import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
 import { overallLevelAndConfidence } from '@/modules/tef/lib/overall-progress';
 
 function LearnSkeleton() {
@@ -34,6 +37,8 @@ export function LearnHomeView() {
     pollWhilePreparing: true,
   });
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));
+  const { data: billing } = useBillingStatusQuery(Boolean(profile?.level));
+  const openPaywall = usePaywallStore((s) => s.openPaywall);
   const { mutate: requestPrefetch } = usePrefetchPractice();
   const prefetchRequestedRef = useRef(false);
 
@@ -54,11 +59,19 @@ export function LearnHomeView() {
   };
 
   const handleStartPractice = () => {
+    if (isAtDailyLimit(billing, 'reading')) {
+      openPaywall('reading');
+      return;
+    }
     setMode('practice');
     router.push('/learn/lesson?mode=practice');
   };
 
   const handleStartWriting = () => {
+    if (isAtDailyLimit(billing, 'writing')) {
+      openPaywall('writing');
+      return;
+    }
     router.push('/learn/writing');
   };
 
@@ -93,6 +106,7 @@ export function LearnHomeView() {
       : summary,
     streak: profile?.stats?.streakDays ?? 0,
     xp: readingXp + writingXp,
+    isPro: billing?.plan === 'pro',
     practiceReady: profile?.practiceReady,
     placementMode,
     onStartPractice: handleStartPractice,

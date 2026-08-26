@@ -4,6 +4,7 @@ import { healthRoutes } from './health.routes.js';
 import { tefRoutes } from './tef.routes.js';
 import { notesRoutes } from '../../services/notes/routes/notes.routes.js';
 import { translateRoutes } from '../../services/translate/routes/translate.routes.js';
+import { billingRoutes } from '../../services/billing/routes/billing.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   await authRoutes(app);
@@ -11,4 +12,5 @@ export async function registerRoutes(app: FastifyInstance) {
   await tefRoutes(app);
   await notesRoutes(app);
   await translateRoutes(app);
+  await billingRoutes(app);
 }

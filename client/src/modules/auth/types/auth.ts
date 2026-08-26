@@ -3,6 +3,8 @@ export type AuthUser = {
   email: string;
   name: string;
   picture: string | null;
+  plan?: 'free' | 'pro';
+  subscriptionStatus?: string;
   createdAt?: string | null;
   lastLoginAt?: string | null;
 };

@@ -1,7 +1,9 @@
-// @ts-nocheck
 import { User } from '../db/schemas/user.schema.js';
 import { TefProfile } from '../db/schemas/tefProfile.schema.js';
 import { TefEvaluation } from '../db/schemas/tefEvaluation.schema.js';
+import type { IUser, UserPlan } from '../db/schemas/user.schema.js';
+import type { TefModule } from '../db/schemas/tefEvaluation.schema.js';
+import { isProUser } from '../../services/billing/freemium.js';
 
 export type GoogleProfile = {
   googleId: string;
@@ -51,26 +53,32 @@ export type PublicUser = {
   email: string;
   name: string;
   picture: string | null;
+  plan: UserPlan;
+  subscriptionStatus: string;
   createdAt?: string | null;
   lastLoginAt?: string | null;
 };
 
-export function toPublicUser(user) {
+type PublicUserSource = Pick<
+  IUser,
+  'email' | 'name' | 'picture' | 'plan' | 'subscriptionStatus' | 'createdAt' | 'lastLoginAt'
+> & {
+  _id: { toString(): string };
+};
+
+export function toPublicUser(user: PublicUserSource): PublicUser {
+  const pro = isProUser(user);
   return {
     id: user._id.toString(),
     email: user.email,
     name: user.name,
     picture: user.picture ?? null,
-    createdAt: user.createdAt
-      ? new Date(user.createdAt).toISOString()
-      : null,
-    lastLoginAt: user.lastLoginAt
-      ? new Date(user.lastLoginAt).toISOString()
-      : null,
+    plan: pro ? 'pro' : 'free',
+    subscriptionStatus: user.subscriptionStatus ?? 'none',
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
+    lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt).toISOString() : null,
   };
 }
-
-import type { TefModule } from '../db/schemas/tefEvaluation.schema.js';
 
 export async function getLatestEvaluation(userId: string, module?: TefModule) {
   const filter: Record<string, string> = { userId };

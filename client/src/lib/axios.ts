@@ -20,8 +20,18 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    const data = error.response?.data;
+    if (error.response?.status === 403 && data?.code === 'PAYWALL') {
+      const paywallErr = new Error(data.error || 'Upgrade required') as Error & {
+        paywall: true;
+        feature?: 'reading' | 'writing';
+      };
+      paywallErr.paywall = true;
+      paywallErr.feature = data.feature;
+      return Promise.reject(paywallErr);
+    }
     const message =
-      error.response?.data?.error ||
+      data?.error ||
       error.message ||
       `Request failed (${error.response?.status ?? 'network'})`;
     if (error.response?.status === 401) {

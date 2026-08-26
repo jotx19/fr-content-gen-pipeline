@@ -28,36 +28,57 @@ function SignInCard({
   onSuccess: (response: CredentialResponse) => void;
 }) {
   const { t } = useI18n();
+  const iconStyles = [
+    'bg-[#DFFF4F] text-black',
+    'bg-[#EDE9FE] text-[#1A3D2E]',
+    'bg-white/15 text-white',
+  ] as const;
+
   return (
     <div
       className={cn(
-        'flex w-full max-w-[460px] flex-col rounded-[28px] px-9 py-11 sm:px-11 sm:py-12',
-        'bg-[#1C1C1C] text-white',
+        'flex w-full max-w-[460px] flex-col rounded-[28px] px-8 py-10 sm:px-10 sm:py-11',
+        'bg-[#1C1C1C] text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)]',
       )}
     >
-      <h1
-        className={cn(
-          bricolage.className,
-          'text-center text-[1.35rem] font-medium tracking-tight text-white sm:text-[1.5rem]',
-        )}
-      >
-        {t('auth.welcomeBack')}
-      </h1>
-
-      <div className="-mx-9 m-8 h-px bg-white/12 sm:-mx-11" aria-hidden />
-
-      <div className="mt-7 flex items-center justify-center gap-3">
-        {SIGNIN_ICONS.map((Icon, i) => (
-          <span
-            key={i}
-            className="flex h-11 w-11 items-center justify-center rounded-[12px] border border-white/10 bg-white/[0.04] text-white/50"
-          >
-            <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-          </span>
-        ))}
+      <div className="flex flex-col items-center">
+        <BrandLogo
+          href="/"
+          showText={false}
+          iconSize={40}
+          iconRounded="lg"
+          className="mb-5"
+        />
+        <h1
+          className={cn(
+            bricolage.className,
+            'text-center text-[1.35rem] font-semibold tracking-tight text-white sm:text-[1.5rem]',
+          )}
+        >
+          {t('auth.welcomeBack')}
+        </h1>
       </div>
 
-      <div ref={googleWrapRef} className="group relative mt-9 w-full">
+      <div className="mt-8 rounded-[20px] bg-white/[0.06] px-5 py-5">
+        <div className="flex items-center justify-center gap-3 sm:gap-4">
+          {SIGNIN_ICONS.map((Icon, i) => (
+            <span
+              key={i}
+              className={cn(
+                'flex h-12 w-12 items-center justify-center rounded-[14px] sm:h-[52px] sm:w-[52px]',
+                iconStyles[i],
+              )}
+            >
+              <Icon className="h-5 w-5" strokeWidth={2} />
+            </span>
+          ))}
+        </div>
+        <p className={cn(inter.className, 'mt-4 text-center text-xs leading-relaxed text-white/50')}>
+          {t('auth.sideBody')}
+        </p>
+      </div>
+
+      <div ref={googleWrapRef} className="group relative mt-8 w-full">
         {isPending ? (
           <button
             type="button"
@@ -120,7 +141,7 @@ function SignInCard({
       <p
         className={cn(
           inter.className,
-          'mt-5 text-center text-[11px] leading-relaxed text-white/40',
+          'mt-5 text-center text-[11px] leading-relaxed text-white/45',
         )}
       >
         {t('auth.agreePrefix')}{' '}

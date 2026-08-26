@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronDown, Copy, Info, Loader2, RefreshCw, Trash2 } from '@/components/icons';
+import { Check, ChevronDown, Copy, Energy, Info, Loader2, RefreshCw, Trash2 } from '@/components/icons';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -477,8 +477,8 @@ export function WritingView() {
 
                   <Badge
                     asChild
-                    variant="purple"
-                    className={cn(showExample && 'ring-2 ring-[#7130FF]/25')}
+                    variant="lime"
+                    className={cn(showExample && 'ring-2 ring-black/15 dark:ring-black/25')}
                   >
                     <button
                       type="button"
@@ -488,7 +488,9 @@ export function WritingView() {
                     >
                       {example.isPending ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : null}
+                      ) : (
+                        <Energy className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      )}
                       {showExample ? t('writing.hideExample') : t('writing.generateAi')}
                     </button>
                   </Badge>

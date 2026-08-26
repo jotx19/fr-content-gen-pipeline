@@ -122,15 +122,81 @@ function accessPeriodEnd(interval: BillingInterval): Date {
   return end;
 }
 
-async function assertOneTimePrice(priceId: string, interval: BillingInterval): Promise<void> {
+function mapSubscriptionStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
+  switch (status) {
+    case 'active':
+      return 'active';
+    case 'trialing':
+      return 'trialing';
+    case 'past_due':
+      return 'past_due';
+    case 'canceled':
+    case 'unpaid':
+    case 'incomplete_expired':
+      return 'canceled';
+    default:
+      return 'none';
+  }
+}
+
+function isActiveSubscription(status: Stripe.Subscription.Status): boolean {
+  return status === 'active' || status === 'trialing';
+}
+
+function subscriptionPeriodEnd(subscription: Stripe.Subscription): Date | null {
+  const end =
+    subscription.items.data[0]?.current_period_end ??
+    (subscription as Stripe.Subscription & { current_period_end?: number }).current_period_end;
+  return end ? new Date(end * 1000) : null;
+}
+
+function subscriptionInterval(subscription: Stripe.Subscription): BillingInterval {
+  const interval = subscription.items.data[0]?.price?.recurring?.interval;
+  return interval === 'year' ? 'year' : 'month';
+}
+
+async function syncUserFromSubscription(
+  userId: string,
+  subscription: Stripe.Subscription,
+): Promise<void> {
+  const pro = isActiveSubscription(subscription.status);
+
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      plan: pro ? ('pro' as UserPlan) : ('free' as UserPlan),
+      subscriptionStatus: mapSubscriptionStatus(subscription.status),
+      stripeSubscriptionId: pro ? subscription.id : null,
+      subscriptionInterval: pro ? subscriptionInterval(subscription) : null,
+      currentPeriodEnd: pro ? subscriptionPeriodEnd(subscription) : null,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+async function findUserIdForSubscription(
+  subscription: Stripe.Subscription,
+): Promise<string | null> {
+  const customerId =
+    typeof subscription.customer === 'string'
+      ? subscription.customer
+      : subscription.customer?.id;
+  if (!customerId) return null;
+
+  const user = await User.findOne({
+    $or: [{ stripeCustomerId: customerId }, { stripeSubscriptionId: subscription.id }],
+  });
+  return user?._id.toString() ?? null;
+}
+
+async function assertRecurringPrice(priceId: string, interval: BillingInterval): Promise<void> {
   const stripe = getStripe();
   if (!stripe) return;
 
   const price = await stripe.prices.retrieve(priceId);
-  if (price.type !== 'one_time') {
+  if (price.type !== 'recurring') {
     throw new Error(
-      `Stripe price for ${interval}ly plan must be one-time (not recurring). ` +
-        'In Stripe Dashboard create a product with a One time price.',
+      `Stripe price for ${interval}ly plan must be recurring. ` +
+        'In Stripe Dashboard create a product with a Recurring price (monthly or yearly).',
     );
   }
 }
@@ -146,7 +212,7 @@ export async function createCheckoutSession(userId: string, interval: BillingInt
     throw new Error(`Missing Stripe price ID for ${interval}ly plan`);
   }
 
-  await assertOneTimePrice(priceId, interval);
+  await assertRecurringPrice(priceId, interval);
 
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
@@ -165,7 +231,7 @@ export async function createCheckoutSession(userId: string, interval: BillingInt
   }
 
   const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
+    mode: 'subscription',
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${config.clientUrl}/learn?billing=success`,
@@ -179,8 +245,24 @@ export async function createCheckoutSession(userId: string, interval: BillingInt
   return { url: session.url, sessionId: session.id };
 }
 
-export async function createBillingPortalSession(_userId: string) {
-  throw new Error('Billing portal is not available for one-time purchases');
+export async function createBillingPortalSession(userId: string) {
+  const stripe = getStripe();
+  if (!stripe) {
+    throw new Error('Billing is not configured');
+  }
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error('User not found');
+  if (!user.stripeCustomerId) {
+    throw new Error('No billing account found. Subscribe to Pro first.');
+  }
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: user.stripeCustomerId,
+    return_url: `${config.clientUrl}/dashboard`,
+  });
+
+  return { url: session.url };
 }
 
 async function applyOneTimePurchase(userId: string, interval: BillingInterval): Promise<void> {
@@ -198,7 +280,7 @@ async function applyOneTimePurchase(userId: string, interval: BillingInterval): 
 
 export async function handleStripeWebhook(
   rawBody: Buffer | string,
-  signature: string | undefined
+  signature: string | undefined,
 ) {
   const stripe = getStripe();
   if (!stripe || !config.stripeWebhookSecret) {
@@ -211,12 +293,30 @@ export async function handleStripeWebhook(
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
-      if (!userId || session.mode !== 'payment' || session.payment_status !== 'paid') {
+      if (!userId) break;
+
+      if (session.mode === 'subscription' && session.subscription) {
+        const subscriptionId =
+          typeof session.subscription === 'string'
+            ? session.subscription
+            : session.subscription.id;
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        await syncUserFromSubscription(userId, subscription);
         break;
       }
-      const interval: BillingInterval =
-        session.metadata?.interval === 'year' ? 'year' : 'month';
-      await applyOneTimePurchase(userId, interval);
+
+      if (session.mode === 'payment' && session.payment_status === 'paid') {
+        const interval: BillingInterval =
+          session.metadata?.interval === 'year' ? 'year' : 'month';
+        await applyOneTimePurchase(userId, interval);
+      }
+      break;
+    }
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object as Stripe.Subscription;
+      const userId = await findUserIdForSubscription(subscription);
+      if (userId) await syncUserFromSubscription(userId, subscription);
       break;
     }
     default:
@@ -227,11 +327,15 @@ export async function handleStripeWebhook(
 }
 
 export async function getBillingStatus(userId: string) {
+  const user = await User.findById(userId);
   const usage = await getUsageStatus(userId);
   const { prices } = await getBillingPrices();
+  const billingConfigured = isBillingConfigured();
+
   return {
     ...usage,
-    billingConfigured: isBillingConfigured(),
+    billingConfigured,
+    canManageBilling: Boolean(billingConfigured && user?.stripeCustomerId),
     prices,
   };
 }

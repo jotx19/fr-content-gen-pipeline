@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { BRAND } from '@/lib/brand';
 import { LOGO_PATH } from '@/lib/logo-path';
-import { bricolage } from '@/lib/fonts';
+import { bricolage, inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
 type LogoProps = {
@@ -93,6 +93,70 @@ export function BrandLogo({
   if (href) {
     return (
       <Link href={href} className={rootClass} aria-label={BRAND.name}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <span className={rootClass}>{content}</span>;
+}
+
+type BrandPlanPillProps = {
+  className?: string;
+  href?: string;
+  pillLabel: string;
+  variant?: 'pro' | 'trial';
+  textClassName?: string;
+};
+
+const brandNameClass = cn(
+  bricolage.className,
+  'text-xl font-semibold tracking-tight text-foreground sm:text-2xl',
+);
+
+/** Plan pill (icon + label) with brand name outside — matches BrandLogo text size */
+export function BrandPlanPill({
+  className,
+  href = '/learn',
+  pillLabel,
+  variant = 'pro',
+  textClassName,
+}: BrandPlanPillProps) {
+  const pillClass =
+    variant === 'pro'
+      ? 'bg-[#DFFF4F] text-black'
+      : 'border border-[#675549]/20 bg-[#675549]/8 text-[#675549] dark:border-white/15 dark:bg-white/10 dark:text-white/90';
+
+  const content = (
+    <>
+      <span
+        className={cn(
+          'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1',
+          pillClass,
+        )}
+      >
+        <Logo
+          size={15}
+          className={cn('shrink-0', variant === 'pro' ? 'text-black' : 'currentColor')}
+        />
+        <span
+          className={cn(
+            inter.className,
+            'text-[10px] font-semibold uppercase tracking-wide',
+          )}
+        >
+          {pillLabel}
+        </span>
+      </span>
+      <span className={cn(brandNameClass, textClassName)}>{BRAND.name}</span>
+    </>
+  );
+
+  const rootClass = cn('inline-flex shrink-0 items-center gap-2', className);
+
+  if (href) {
+    return (
+      <Link href={href} className={rootClass} aria-label={`${BRAND.name} ${pillLabel}`}>
         {content}
       </Link>
     );

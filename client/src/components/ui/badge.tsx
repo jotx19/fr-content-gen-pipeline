@@ -21,6 +21,8 @@ const badgeVariants = cva(
         rose: 'bg-[#FEE8EC] text-[#F43F5E] dark:bg-[#F43F5E]/18 dark:text-[#FDA4AF]',
         /** Pastel purple — time, duration, AI actions */
         purple: 'bg-[#F1EAFF] text-[#7130FF] dark:bg-[#7130FF]/18 dark:text-[#A978FF]',
+        /** Fringo lime — primary brand actions */
+        lime: 'bg-[#DFFF4F] text-black dark:bg-[#DFFF4F] dark:text-black [a&]:hover:bg-[#D4F244] [button&]:hover:bg-[#D4F244]',
 
         default:
           'bg-primary text-primary-foreground [a&]:hover:bg-primary/90',

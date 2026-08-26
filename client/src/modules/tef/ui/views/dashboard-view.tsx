@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   ArrowRight,
   Award,
   BookOpen,
   Calendar,
   Energy,
+  Loader2,
   PenLine,
   Star,
   Target,
@@ -21,7 +23,10 @@ import { useI18n, useLocaleDate } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
 import { overallLevelAndConfidence } from '@/modules/tef/lib/overall-progress';
-import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
+import {
+  useBillingPortalMutation,
+  useBillingStatusQuery,
+} from '@/modules/billing/hooks/use-billing-queries';
 import { useWritingProfileQuery } from '@/modules/writing/hooks/use-writing-queries';
 import { useAuthStore } from '@/store/authStore';
 import { usePaywallStore } from '@/store/paywallStore';
@@ -69,7 +74,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 
 function DashboardSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pb-10 sm:px-6">
+    <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pt-10 pb-10 sm:px-6">
       <Skeleton className={cn(panel, 'h-40 w-full')} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Skeleton className={cn(panel, 'h-44 w-full')} />
@@ -90,6 +95,7 @@ export function DashboardView() {
   const { data: profile, isLoading } = useTefProfileQuery(Boolean(user));
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));
   const { data: billing, isLoading: billingLoading } = useBillingStatusQuery(Boolean(user));
+  const billingPortal = useBillingPortalMutation();
   const openPaywall = usePaywallStore((s) => s.openPaywall);
 
   useEffect(() => {
@@ -205,7 +211,7 @@ export function DashboardView() {
           </div>
 
           {(onboarded || lastLogin) && (
-            <div className="mt-5 border-t border-[#675549]/12 pt-4 dark:border-white/10">
+            <div className="mt-5 border-t border-[#675549]/12 dark:border-white/10">
               {onboarded && <MetaRow label={t('dashboard.readingOnboarded')} value={onboarded} />}
               {lastLogin && <MetaRow label={t('dashboard.lastLogin')} value={lastLogin} />}
             </div>
@@ -223,25 +229,61 @@ export function DashboardView() {
                 {t('dashboard.planAndBilling')}
               </h2>
             </div>
-            {isPro ? (
-              <span
-                className={cn(
-                  inter.className,
-                  'rounded-full bg-[#1A3D2E] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white',
-                )}
-              >
-                {t('common.pro')}
-              </span>
-            ) : (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => openPaywall('reading')}
-                className={cn(inter.className, 'h-8 rounded-full bg-[#1A3D2E] text-xs font-semibold text-white hover:bg-[#1A3D2E]/90')}
-              >
-                {t('dashboard.upgradeToPro')}
-              </Button>
-            )}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {isPro ? (
+                <>
+                  {billing?.canManageBilling ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={billingPortal.isPending}
+                      onClick={() =>
+                        billingPortal.mutate(undefined, {
+                          onError: (err) =>
+                            toast.error(
+                              err instanceof Error ? err.message : t('dashboard.portalFailed'),
+                            ),
+                        })
+                      }
+                      className={cn(
+                        inter.className,
+                        'h-8 rounded-full border-[#675549]/20 text-xs font-semibold dark:border-white/15',
+                      )}
+                    >
+                      {billingPortal.isPending ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          {t('dashboard.openingPortal')}
+                        </>
+                      ) : (
+                        t('dashboard.manageSubscription')
+                      )}
+                    </Button>
+                  ) : null}
+                  <span
+                    className={cn(
+                      inter.className,
+                      'rounded-full bg-[#1A3D2E] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white',
+                    )}
+                  >
+                    {t('common.pro')}
+                  </span>
+                </>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => openPaywall('reading')}
+                  className={cn(
+                    inter.className,
+                    'h-8 rounded-full bg-[#1A3D2E] text-xs font-semibold text-white hover:bg-[#1A3D2E]/90',
+                  )}
+                >
+                  {t('dashboard.upgradeToPro')}
+                </Button>
+              )}
+            </div>
           </div>
 
           {billingLoading ? (
@@ -252,10 +294,10 @@ export function DashboardView() {
             </div>
           ) : (
             <div className="space-y-0">
-              <MetaRow
+              {/* <MetaRow
                 label={t('dashboard.currentPlan')}
                 value={isPro ? t('common.pro') : t('common.freePlan')}
-              />
+              /> */}
               <MetaRow label={t('dashboard.planStatus')} value={planStatus} />
               {isPro ? (
                 <>

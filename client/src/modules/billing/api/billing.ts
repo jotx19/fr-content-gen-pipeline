@@ -21,6 +21,7 @@ export type BillingStatus = {
   subscriptionInterval: BillingInterval | null;
   currentPeriodEnd: string | null;
   billingConfigured: boolean;
+  canManageBilling: boolean;
   limits: {
     readingSessionsPerDay: number | null;
     writingSessionsPerDay: number | null;

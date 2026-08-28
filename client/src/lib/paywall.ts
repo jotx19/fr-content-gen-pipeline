@@ -9,17 +9,41 @@ export function handlePaywallError(error: unknown, fallback: PaywallFeature = 'r
   return false;
 }
 
-export function isAtDailyLimit(
-  billing:
-    | {
-        plan: string;
-        limits: { readingSessionsPerDay: number | null; writingSessionsPerDay: number | null };
-        usage: { readingSessions: number; writingSessions: number };
-      }
-    | undefined,
-  feature: PaywallFeature,
-) {
+type BillingLike =
+  | {
+      plan: string;
+      limits: {
+        readingSessionsPerDay: number | null;
+        writingSessionsPerDay: number | null;
+        notesMax?: number | null;
+        translationsMax?: number | null;
+      };
+      usage: {
+        readingSessions: number;
+        writingSessions: number;
+        notesCount?: number;
+        translationsTotal?: number;
+      };
+    }
+  | undefined;
+
+export function isAtDailyLimit(billing: BillingLike, feature: PaywallFeature) {
   if (!billing || billing.plan === 'pro') return false;
+
+  if (feature === 'notes') {
+    const limit = billing.limits.notesMax;
+    const used = billing.usage.notesCount ?? 0;
+    if (limit == null) return false;
+    return used >= limit;
+  }
+
+  if (feature === 'translate') {
+    const limit = billing.limits.translationsMax;
+    const used = billing.usage.translationsTotal ?? 0;
+    if (limit == null) return false;
+    return used >= limit;
+  }
+
   const limit =
     feature === 'reading'
       ? billing.limits.readingSessionsPerDay
@@ -28,4 +52,21 @@ export function isAtDailyLimit(
     feature === 'reading' ? billing.usage.readingSessions : billing.usage.writingSessions;
   if (limit == null) return false;
   return used >= limit;
+}
+
+export function remainingQuota(
+  billing: BillingLike,
+  feature: 'notes' | 'translate',
+): { used: number; limit: number | null; remaining: number | null } {
+  if (!billing || billing.plan === 'pro') {
+    return { used: 0, limit: null, remaining: null };
+  }
+  if (feature === 'notes') {
+    const limit = billing.limits.notesMax ?? null;
+    const used = billing.usage.notesCount ?? 0;
+    return { used, limit, remaining: limit == null ? null : Math.max(0, limit - used) };
+  }
+  const limit = billing.limits.translationsMax ?? null;
+  const used = billing.usage.translationsTotal ?? 0;
+  return { used, limit, remaining: limit == null ? null : Math.max(0, limit - used) };
 }

@@ -24,7 +24,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 403 && data?.code === 'PAYWALL') {
       const paywallErr = new Error(data.error || 'Upgrade required') as Error & {
         paywall: true;
-        feature?: 'reading' | 'writing';
+        feature?: 'reading' | 'writing' | 'notes' | 'translate';
       };
       paywallErr.paywall = true;
       paywallErr.feature = data.feature;

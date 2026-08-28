@@ -33,7 +33,7 @@ export function LearnHomeView() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const setMode = useLessonStore((s) => s.setMode);
-  const { data: profile, isLoading, isError } = useTefProfileQuery(true, {
+  const { data: profile, isLoading, isError } = useTefProfileQuery(Boolean(user), {
     pollWhilePreparing: true,
   });
   const { data: writingProfile } = useWritingProfileQuery(Boolean(profile?.level));

@@ -1,4 +1,5 @@
 import type { TranslateBody } from '../schemas/translate.schema.js';
+import { assertFeatureAccess, consumeFeatureUsage } from '../../billing/freemium.js';
 
 const DEEPL_FREE_URL = 'https://api-free.deepl.com/v2/translate';
 const DEEPL_PRO_URL = 'https://api.deepl.com/v2/translate';
@@ -15,7 +16,7 @@ function deeplEndpoint(authKey: string) {
   return process.env.DEEPL_API_URL?.trim() || DEEPL_PRO_URL;
 }
 
-export async function translateText(body: TranslateBody) {
+export async function translateText(userId: string, body: TranslateBody) {
   const authKey = deeplAuthKey();
   if (!authKey) {
     throw new Error('DeepL is not configured — set DEEPL_AUTH_KEY');
@@ -31,6 +32,8 @@ export async function translateText(body: TranslateBody) {
       targetLang,
     };
   }
+
+  await assertFeatureAccess(userId, 'translate');
 
   const res = await fetch(deeplEndpoint(authKey), {
     method: 'POST',
@@ -67,6 +70,8 @@ export async function translateText(body: TranslateBody) {
   if (!translation?.text) {
     throw new Error('DeepL returned an empty translation');
   }
+
+  await consumeFeatureUsage(userId, 'translate');
 
   return {
     text: translation.text,

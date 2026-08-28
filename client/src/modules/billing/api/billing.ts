@@ -12,6 +12,8 @@ export type BillingPricesResponse = {
   limits: {
     readingSessionsPerDay: number;
     writingSessionsPerDay: number;
+    notesMax: number;
+    translationsMax: number;
   };
 };
 
@@ -25,11 +27,15 @@ export type BillingStatus = {
   limits: {
     readingSessionsPerDay: number | null;
     writingSessionsPerDay: number | null;
+    notesMax: number | null;
+    translationsMax: number | null;
   };
   usage: {
     date: string;
     readingSessions: number;
     writingSessions: number;
+    notesCount: number;
+    translationsTotal: number;
   };
   prices: BillingPrices;
 };

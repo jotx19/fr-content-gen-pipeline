@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Note } from '../../../app/db/mongo.js';
+import { assertFeatureAccess } from '../../billing/freemium.js';
 import type { CreateNoteBody, UpdateNoteBody } from '../schemas/notes.schema.js';
 
 function serialize(doc: {
@@ -42,6 +43,7 @@ export async function getPublicNote(id: string) {
 }
 
 export async function createNote(userId: string, body: CreateNoteBody) {
+  await assertFeatureAccess(userId, 'notes');
   const doc = await Note.create({
     userId,
     title: body.title?.trim() || 'Untitled',

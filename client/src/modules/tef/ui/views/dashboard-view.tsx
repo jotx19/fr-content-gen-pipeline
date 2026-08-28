@@ -171,6 +171,16 @@ export function DashboardView() {
       ? t('dashboard.unlimited')
       : `${billing.usage.writingSessions}/${billing.limits.writingSessionsPerDay ?? '—'}`
     : '—';
+  const notesUsage = billing
+    ? isPro
+      ? t('dashboard.unlimited')
+      : `${billing.usage.notesCount ?? 0}/${billing.limits.notesMax ?? '—'}`
+    : '—';
+  const translationsUsage = billing
+    ? isPro
+      ? t('dashboard.unlimited')
+      : `${billing.usage.translationsTotal ?? 0}/${billing.limits.translationsMax ?? '—'}`
+    : '—';
 
   return (
     <div className="min-h-dvh p-10">
@@ -271,17 +281,27 @@ export function DashboardView() {
                   </span>
                 </>
               ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => openPaywall('reading')}
-                  className={cn(
-                    inter.className,
-                    'h-8 rounded-full bg-[#1A3D2E] text-xs font-semibold text-white hover:bg-[#1A3D2E]/90',
-                  )}
-                >
-                  {t('dashboard.upgradeToPro')}
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => openPaywall('reading')}
+                    className={cn(
+                      inter.className,
+                      'h-8 rounded-full bg-[#1A3D2E] text-xs font-semibold text-white hover:bg-[#1A3D2E]/90',
+                    )}
+                  >
+                    {t('dashboard.upgradeToPro')}
+                  </Button>
+                  <span
+                    className={cn(
+                      inter.className,
+                      'rounded-full border border-[#675549]/20 bg-[#675549]/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#675549] dark:border-white/15 dark:bg-white/10 dark:text-white/80',
+                    )}
+                  >
+                    {t('common.freePlan')}
+                  </span>
+                </>
               )}
             </div>
           </div>
@@ -294,22 +314,29 @@ export function DashboardView() {
             </div>
           ) : (
             <div className="space-y-0">
-              {/* <MetaRow
-                label={t('dashboard.currentPlan')}
-                value={isPro ? t('common.pro') : t('common.freePlan')}
-              /> */}
-              <MetaRow label={t('dashboard.planStatus')} value={planStatus} />
               {isPro ? (
                 <>
+                  <MetaRow label={t('dashboard.planStatus')} value={planStatus} />
                   <MetaRow label={t('dashboard.accessType')} value={accessType} />
                   <MetaRow
                     label={t('dashboard.accessExpires')}
                     value={accessExpires ?? t('dashboard.noExpiry')}
                   />
+                  <MetaRow label={t('dashboard.readingToday')} value={readingUsage} />
+                  <MetaRow label={t('dashboard.writingToday')} value={writingUsage} />
+                  <MetaRow label={t('dashboard.notesUsage')} value={notesUsage} />
+                  <MetaRow label={t('dashboard.translationsUsage')} value={translationsUsage} />
                 </>
-              ) : null}
-              <MetaRow label={t('dashboard.readingToday')} value={readingUsage} />
-              <MetaRow label={t('dashboard.writingToday')} value={writingUsage} />
+              ) : (
+                <>
+                  <MetaRow label={t('dashboard.currentPlan')} value={t('common.freePlan')} />
+                  <MetaRow label={t('dashboard.planStatus')} value={t('dashboard.statusFree')} />
+                  <MetaRow label={t('dashboard.readingToday')} value={readingUsage} />
+                  <MetaRow label={t('dashboard.writingToday')} value={writingUsage} />
+                  <MetaRow label={t('dashboard.notesUsage')} value={notesUsage} />
+                  <MetaRow label={t('dashboard.translationsUsage')} value={translationsUsage} />
+                </>
+              )}
             </div>
           )}
         </section>

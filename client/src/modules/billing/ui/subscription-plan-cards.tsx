@@ -44,13 +44,15 @@ function buildFreePerks(
   t: (key: string, vars?: Record<string, string | number>) => string,
   readingLimit: number,
   writingLimit: number,
+  notesLimit: number,
+  translationsLimit: number,
 ): string[] {
   return [
     t('paywall.featPlacement'),
     t('paywall.freeReading', { count: readingLimit }),
     t('paywall.freeWriting', { count: writingLimit }),
-    t('paywall.featNotes'),
-    t('paywall.featTranslate'),
+    t('paywall.freeNotes', { count: notesLimit }),
+    t('paywall.freeTranslate', { count: translationsLimit }),
     t('paywall.featStreaks'),
   ];
 }
@@ -59,8 +61,8 @@ function buildProPerks(t: (key: string, vars?: Record<string, string | number>) 
   return [
     t('paywall.proUnlimitedReading'),
     t('paywall.proUnlimitedWriting'),
-    t('paywall.featNotes'),
-    t('paywall.featTranslate'),
+    t('paywall.proUnlimitedNotes'),
+    t('paywall.proUnlimitedTranslate'),
     t('paywall.featReports'),
     t('paywall.featAdaptive'),
   ];
@@ -113,6 +115,8 @@ export function SubscriptionPlanCards({
   const savePercent = priceSource?.prices.yearly.savePercent ?? 0;
   const readingLimit = priceSource?.limits.readingSessionsPerDay ?? 1;
   const writingLimit = priceSource?.limits.writingSessionsPerDay ?? 1;
+  const notesLimit = priceSource?.limits.notesMax ?? 2;
+  const translationsLimit = priceSource?.limits.translationsMax ?? 500;
 
   const formatPrice = (amount: number) => {
     if (Number.isInteger(amount)) return String(amount);
@@ -121,7 +125,7 @@ export function SubscriptionPlanCards({
 
   const plans = useMemo<PlanCard[]>(
     () => {
-      const freePerks = buildFreePerks(t, readingLimit, writingLimit);
+      const freePerks = buildFreePerks(t, readingLimit, writingLimit, notesLimit, translationsLimit);
       const proPerks = buildProPerks(t);
 
       return [
@@ -159,7 +163,7 @@ export function SubscriptionPlanCards({
         },
       ];
     },
-    [t, readingLimit, writingLimit, monthly, yearly, savePercent],
+    [t, readingLimit, writingLimit, notesLimit, translationsLimit, monthly, yearly, savePercent],
   );
 
   const handlePlanAction = (planId: PlanId) => {

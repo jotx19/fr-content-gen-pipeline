@@ -5,17 +5,31 @@ import { useAuthStore } from '@/store/authStore';
 import { useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
 import { OnboardModalView } from '@/modules/tef/ui/views/onboard-modal-view';
 
+const SKIP_PREFIXES = [
+  '/signin',
+  '/learn/lesson',
+  '/learn/writing',
+  '/learn/results',
+  '/notes/p/',
+] as const;
+
+function shouldSkipOnboarding(pathname: string) {
+  return SKIP_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix),
+  );
+}
+
 export function OnboardingGate() {
   const pathname = usePathname();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const onLearn = pathname === '/learn' || pathname.startsWith('/learn/');
-  const onLesson =
-    pathname.startsWith('/learn/lesson') || pathname.startsWith('/learn/writing');
-  const { data: profile, isLoading } = useTefProfileQuery(
-    isAuthenticated && onLearn && !onLesson
-  );
+  const user = useAuthStore((s) => s.user);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
-  if (!isAuthenticated || !onLearn || onLesson || isLoading) return null;
+  const active =
+    hasHydrated && Boolean(user) && !shouldSkipOnboarding(pathname);
+
+  const { data: profile, isLoading, isFetched } = useTefProfileQuery(active);
+
+  if (!active || isLoading || !isFetched) return null;
   if (profile?.level) return null;
 
   return <OnboardModalView />;

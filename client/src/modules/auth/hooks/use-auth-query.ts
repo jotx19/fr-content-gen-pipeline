@@ -5,6 +5,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAuthMe, loginWithGoogleCredential, logoutRequest } from '../api/auth';
 import { authKeys } from './keys';
 import { useAuthStore } from '@/store/authStore';
+import { tefKeys } from '@/modules/tef/hooks/keys';
+import { writingKeys } from '@/modules/writing/hooks/keys';
+
+function clearUserScopedQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.removeQueries({ queryKey: tefKeys.all });
+  queryClient.removeQueries({ queryKey: writingKeys.all });
+  queryClient.removeQueries({ queryKey: ['billing', 'status'] });
+  queryClient.removeQueries({ queryKey: ['notes'] });
+}
 
 export function useAuthBootstrapQuery() {
   const setSession = useAuthStore((s) => s.setSession);
@@ -38,6 +47,7 @@ export function useGoogleLoginMutation() {
   return useMutation({
     mutationFn: loginWithGoogleCredential,
     onSuccess: (user) => {
+      clearUserScopedQueries(queryClient);
       setSession(user, true);
       queryClient.setQueryData(authKeys.me(), {
         authRequired: true,
@@ -55,6 +65,7 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: logoutRequest,
     onSettled: () => {
+      clearUserScopedQueries(queryClient);
       clearSession(true);
       queryClient.setQueryData(authKeys.me(), {
         authRequired: true,

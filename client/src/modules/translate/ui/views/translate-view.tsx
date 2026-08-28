@@ -6,8 +6,11 @@ import { toast } from 'sonner';
 import { ArrowUpDown, Check, Copy, Loader2, X } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
 import { useI18n } from '@/lib/i18n';
+import { handlePaywallError, isAtDailyLimit, remainingQuota } from '@/lib/paywall';
 import { cn } from '@/lib/utils';
+import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
 import { useTranslateMutation } from '@/modules/translate/hooks/use-translate-queries';
+import { usePaywallStore } from '@/store/paywallStore';
 
 const panel = 'rounded-[28px] bg-[#FCFCFC] dark:bg-[#1C1C1C] sm:rounded-[32px]';
 const ink = 'text-[#675549] dark:text-white';
@@ -17,6 +20,7 @@ type Lang = 'EN' | 'FR';
 
 export function TranslateView() {
   const { t } = useI18n();
+  const { data: billing } = useBillingStatusQuery();
   const translate = useTranslateMutation();
   const [sourceLang, setSourceLang] = useState<Lang>('EN');
   const [targetLang, setTargetLang] = useState<Lang>('FR');
@@ -27,6 +31,9 @@ export function TranslateView() {
 
   const langLabel = (lang: Lang) =>
     lang === 'EN' ? t('common.english') : t('common.french');
+
+  const translateQuota = remainingQuota(billing, 'translate');
+  const translateLimitReached = isAtDailyLimit(billing, 'translate');
 
   useEffect(() => {
     return () => {
@@ -40,6 +47,10 @@ export function TranslateView() {
       toast.error(t('translate.enterText'));
       return;
     }
+    if (translateLimitReached) {
+      usePaywallStore.getState().openPaywall('translate');
+      return;
+    }
     try {
       const result = await translate.mutateAsync({
         text: trimmed,
@@ -48,6 +59,7 @@ export function TranslateView() {
       });
       setTranslatedText(result.text);
     } catch (err) {
+      if (handlePaywallError(err, 'translate')) return;
       toast.error(err instanceof Error ? err.message : t('translate.failed'));
     }
   };
@@ -89,6 +101,11 @@ export function TranslateView() {
             <span className="text-[#675549] font-bold dark:text-white">EN</span> to{' '}
             <span className="text-[#675549] font-bold dark:text-white">FR</span>{' '}
             {t('translate.subtitleSuffix')}
+            {translateQuota.limit != null ? (
+              <span className="ml-1 tabular-nums text-[#675549]/60 dark:text-white/50">
+                ({translateQuota.used}/{translateQuota.limit})
+              </span>
+            ) : null}
           </p>
         </div>
 

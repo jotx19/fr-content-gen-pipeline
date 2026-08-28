@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getSessionUserId } from '../../app/gateway/auth.js';
+import { config } from '../../config.js';
 import { PaywallError } from './freemium.js';
 import {
   createBillingPortalSession,
@@ -67,15 +68,15 @@ export async function portal(req: AuthedRequest, reply: FastifyReply) {
 
 export async function webhook(req: FastifyRequest, reply: FastifyReply) {
   try {
-    const rawBody = req.rawBody ?? req.body;
-    const payload =
-      typeof rawBody === 'string'
-        ? rawBody
-        : Buffer.isBuffer(rawBody)
-          ? rawBody
-          : JSON.stringify(req.body);
+    if (!req.rawBody || !Buffer.isBuffer(req.rawBody)) {
+      throw new Error('Missing raw webhook body — check Stripe webhook raw-body middleware');
+    }
+    if (!config.stripeWebhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET is not set — copy whsec_... from `stripe listen`');
+    }
+
     const signature = req.headers['stripe-signature'] as string | undefined;
-    const result = await handleStripeWebhook(payload, signature);
+    const result = await handleStripeWebhook(req.rawBody, signature);
     return reply.send(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Webhook failed';

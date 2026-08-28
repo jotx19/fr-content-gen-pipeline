@@ -84,7 +84,7 @@ export function OnboardModalView() {
         <div
           className={cn(
             bricolage.className,
-            'flex h-[85vh] w-full max-w-[780px] flex-col overflow-hidden rounded-2xl border border-black/10 bg-white text-black shadow-2xl md:h-[500px] dark:border-white/10 dark:bg-black/75 dark:text-white/80'
+            'flex h-[85vh] w-full max-w-[780px] flex-col overflow-hidden rounded-2xl border border-black/10 bg-white text-black shadow-2xl md:h-[500px] dark:border-white/10 dark:bg-black dark:text-white/80'
           )}
         >
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">

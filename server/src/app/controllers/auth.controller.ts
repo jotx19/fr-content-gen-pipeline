@@ -10,6 +10,11 @@ import {
   SESSION_COOKIE,
   verifySessionToken,
 } from '../gateway/auth.js';
+import {
+  clearLoginFailures,
+  getClientIp,
+  recordLoginFailure,
+} from '../gateway/security.js';
 import { config } from '../../config.js';
 import {
   exchangeGoogleCode,
@@ -23,11 +28,13 @@ import type { GoogleCredentialBody } from '../schemas/auth.schema.js';
 
 async function signInWithProfile(
   reply: FastifyReply,
-  profile: Awaited<ReturnType<typeof verifyGoogleCredential>>
+  profile: Awaited<ReturnType<typeof verifyGoogleCredential>>,
+  ip: string,
 ) {
   const user = await findOrCreateGoogleUser(profile);
   const token = createSessionToken(user._id.toString());
   reply.setCookie(SESSION_COOKIE, token, sessionCookieOptions(token));
+  clearLoginFailures(ip);
   return { ok: true, user: toPublicUser(user) };
 }
 
@@ -62,9 +69,10 @@ export async function googleCallback(req: FastifyRequest, reply: FastifyReply) {
 
   try {
     const profile = await exchangeGoogleCode(query.code);
-    await signInWithProfile(reply, profile);
+    await signInWithProfile(reply, profile, getClientIp(req));
     return reply.redirect(`${config.clientUrl}?auth=success`);
   } catch (err) {
+    recordLoginFailure(getClientIp(req));
     console.warn('[auth] Google callback failed:', err instanceof Error ? err.message : err);
     return reply.redirect(`${config.clientUrl}?auth=failed`);
   }
@@ -80,9 +88,10 @@ export async function googleCredential(
 
   try {
     const profile = await verifyGoogleCredential(req.body.credential);
-    const result = await signInWithProfile(reply, profile);
+    const result = await signInWithProfile(reply, profile, getClientIp(req));
     return reply.send(result);
   } catch (err) {
+    recordLoginFailure(getClientIp(req));
     console.warn('[auth] Google credential failed:', err instanceof Error ? err.message : err);
     return reply.status(401).send({ error: 'Invalid Google sign-in' });
   }

@@ -15,6 +15,7 @@ export type UserUsage = {
   date?: string | null;
   readingSessions?: number;
   writingSessions?: number;
+  translationsTotal?: number;
 };
 
 export interface IUser {
@@ -62,6 +63,7 @@ const userSchema = new mongoose.Schema<IUser>(
       date: { type: String, default: null },
       readingSessions: { type: Number, default: 0 },
       writingSessions: { type: Number, default: 0 },
+      translationsTotal: { type: Number, default: 0 },
     },
     lastLoginAt: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },

@@ -61,12 +61,19 @@ export function isAuthenticatedRequest(req: FastifyRequest) {
   return verifySessionToken(req.cookies[SESSION_COOKIE]);
 }
 
+function sessionCookieSameSite() {
+  const mode = config.sessionCookieSameSite;
+  if (mode === 'none' || mode === 'strict' || mode === 'lax') return mode;
+  return 'lax';
+}
+
 export function sessionCookieOptions(token: string) {
+  const sameSite = sessionCookieSameSite();
   return {
     path: '/',
     httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: config.nodeEnv === 'production',
+    sameSite,
+    secure: sameSite === 'none' || config.nodeEnv === 'production',
     maxAge: Math.floor(MAX_AGE_MS / 1000),
     value: token,
   };
@@ -77,11 +84,12 @@ export function createOAuthState() {
 }
 
 export function oauthStateCookieOptions(state: string) {
+  const sameSite = sessionCookieSameSite();
   return {
     path: '/',
     httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: config.nodeEnv === 'production',
+    sameSite,
+    secure: sameSite === 'none' || config.nodeEnv === 'production',
     maxAge: 600,
     value: state,
   };

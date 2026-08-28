@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { User, type SubscriptionStatus, type UserPlan } from '../../app/db/schemas/user.schema.js';
+import { User, type SubscriptionStatus, type UserDocument, type UserPlan } from '../../app/db/schemas/user.schema.js';
 import { config } from '../../config.js';
 import { getUsageStatus } from './freemium.js';
 
@@ -80,7 +80,12 @@ async function fetchStripeDisplayPrices(): Promise<BillingPrices | null> {
 
 export async function getBillingPrices(): Promise<{
   prices: BillingPrices;
-  limits: { readingSessionsPerDay: number; writingSessionsPerDay: number };
+  limits: {
+    readingSessionsPerDay: number;
+    writingSessionsPerDay: number;
+    notesMax: number;
+    translationsMax: number;
+  };
 }> {
   const fromStripe = await fetchStripeDisplayPrices();
   if (fromStripe) {
@@ -89,6 +94,8 @@ export async function getBillingPrices(): Promise<{
       limits: {
         readingSessionsPerDay: config.freemiumReadingPerDay,
         writingSessionsPerDay: config.freemiumWritingPerDay,
+        notesMax: config.freemiumNotesMax,
+        translationsMax: config.freemiumTranslationsMax,
       },
     };
   }
@@ -110,6 +117,8 @@ export async function getBillingPrices(): Promise<{
     limits: {
       readingSessionsPerDay: config.freemiumReadingPerDay,
       writingSessionsPerDay: config.freemiumWritingPerDay,
+      notesMax: config.freemiumNotesMax,
+      translationsMax: config.freemiumTranslationsMax,
     },
   };
 }
@@ -160,11 +169,16 @@ async function syncUserFromSubscription(
   subscription: Stripe.Subscription,
 ): Promise<void> {
   const pro = isActiveSubscription(subscription.status);
+  const customerId =
+    typeof subscription.customer === 'string'
+      ? subscription.customer
+      : subscription.customer?.id;
 
   await User.findByIdAndUpdate(userId, {
     $set: {
       plan: pro ? ('pro' as UserPlan) : ('free' as UserPlan),
       subscriptionStatus: mapSubscriptionStatus(subscription.status),
+      stripeCustomerId: customerId ?? null,
       stripeSubscriptionId: pro ? subscription.id : null,
       subscriptionInterval: pro ? subscriptionInterval(subscription) : null,
       currentPeriodEnd: pro ? subscriptionPeriodEnd(subscription) : null,
@@ -201,6 +215,56 @@ async function assertRecurringPrice(priceId: string, interval: BillingInterval):
   }
 }
 
+function isStripeResourceMissing(err: unknown): boolean {
+  return (
+    err instanceof Stripe.errors.StripeInvalidRequestError &&
+    err.code === 'resource_missing'
+  );
+}
+
+async function ensureStripeCustomer(stripe: Stripe, user: UserDocument): Promise<string> {
+  if (user.stripeCustomerId) {
+    try {
+      await stripe.customers.retrieve(user.stripeCustomerId);
+      return user.stripeCustomerId;
+    } catch (err) {
+      if (!isStripeResourceMissing(err)) throw err;
+      user.stripeCustomerId = null;
+      user.stripeSubscriptionId = null;
+      user.updatedAt = new Date();
+      await user.save();
+    }
+  }
+
+  const customer = await stripe.customers.create({
+    email: user.email,
+    name: user.name || undefined,
+    metadata: { userId: user._id.toString() },
+  });
+  user.stripeCustomerId = customer.id;
+  user.updatedAt = new Date();
+  await user.save();
+  return customer.id;
+}
+
+async function assertStripeCustomer(stripe: Stripe, user: UserDocument): Promise<string> {
+  if (!user.stripeCustomerId) {
+    throw new Error('No billing account found. Subscribe to Pro first.');
+  }
+
+  try {
+    await stripe.customers.retrieve(user.stripeCustomerId);
+    return user.stripeCustomerId;
+  } catch (err) {
+    if (!isStripeResourceMissing(err)) throw err;
+    user.stripeCustomerId = null;
+    user.stripeSubscriptionId = null;
+    user.updatedAt = new Date();
+    await user.save();
+    throw new Error('Billing account expired. Subscribe to Pro again.');
+  }
+}
+
 export async function createCheckoutSession(userId: string, interval: BillingInterval) {
   const stripe = getStripe();
   if (!stripe) {
@@ -217,18 +281,7 @@ export async function createCheckoutSession(userId: string, interval: BillingInt
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
 
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      name: user.name || undefined,
-      metadata: { userId: user._id.toString() },
-    });
-    customerId = customer.id;
-    user.stripeCustomerId = customerId;
-    user.updatedAt = new Date();
-    await user.save();
-  }
+  const customerId = await ensureStripeCustomer(stripe, user);
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -253,12 +306,11 @@ export async function createBillingPortalSession(userId: string) {
 
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
-  if (!user.stripeCustomerId) {
-    throw new Error('No billing account found. Subscribe to Pro first.');
-  }
+
+  const customerId = await assertStripeCustomer(stripe, user);
 
   const session = await stripe.billingPortal.sessions.create({
-    customer: user.stripeCustomerId,
+    customer: customerId,
     return_url: `${config.clientUrl}/dashboard`,
   });
 

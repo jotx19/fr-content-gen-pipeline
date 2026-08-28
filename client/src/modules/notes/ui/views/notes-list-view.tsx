@@ -7,7 +7,10 @@ import { toast } from 'sonner';
 import { Loader2, Note, Plus, Trash2 } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
 import { useI18n, useLocaleDate } from '@/lib/i18n';
+import { handlePaywallError, isAtDailyLimit } from '@/lib/paywall';
 import { cn } from '@/lib/utils';
+import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
+import { usePaywallStore } from '@/store/paywallStore';
 import {
   useCreateNoteMutation,
   useDeleteNoteMutation,
@@ -23,15 +26,22 @@ export function NotesListView() {
   const { t } = useI18n();
   const formatDate = useLocaleDate();
   const user = useAuthStore((s) => s.user);
+  const { data: billing } = useBillingStatusQuery(Boolean(user));
   const { data: notes, isLoading, isError } = useNotesQuery(Boolean(user));
   const createNote = useCreateNoteMutation();
   const removeNote = useDeleteNoteMutation();
+  const notesLimitReached = isAtDailyLimit(billing, 'notes');
 
   const handleCreate = async () => {
+    if (notesLimitReached) {
+      usePaywallStore.getState().openPaywall('notes');
+      return;
+    }
     try {
       const note = await createNote.mutateAsync({ title: t('notes.untitled') });
       router.push(`/notes/${note.id}`);
     } catch (err) {
+      if (handlePaywallError(err, 'notes')) return;
       toast.error(err instanceof Error ? err.message : t('notes.createFailed'));
     }
   };
@@ -62,6 +72,11 @@ export function NotesListView() {
             </h1>
             <p className={cn(inter.className, 'mt-1 text-sm text-black/55 dark:text-white/55')}>
               {t('notes.subtitle')}
+              {billing?.plan === 'free' && billing.limits.notesMax != null ? (
+                <span className="ml-1 tabular-nums text-black/40 dark:text-white/40">
+                  ({billing.usage.notesCount}/{billing.limits.notesMax})
+                </span>
+              ) : null}
             </p>
           </div>
           <button
@@ -72,6 +87,7 @@ export function NotesListView() {
               inter.className,
               'inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-black px-3.5 text-sm font-medium text-white sm:gap-2 sm:px-4',
               'transition-opacity hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black',
+              notesLimitReached && 'opacity-70',
             )}
           >
             {createNote.isPending ? (

@@ -8,10 +8,15 @@ import {
   deleteNote,
 } from '../methods/notes.methods.js';
 import type { CreateNoteBody, UpdateNoteBody } from '../schemas/notes.schema.js';
+import { PaywallError } from '../../billing/freemium.js';
+import { sendPaywall } from '../../billing/billing.controller.js';
 
 type AuthedRequest = FastifyRequest & { userId: string };
 
 function mapError(reply: FastifyReply, err: unknown) {
+  if (err instanceof PaywallError) {
+    return sendPaywall(reply, err);
+  }
   const message = err instanceof Error ? err.message : 'Internal server error';
   if (message.includes('Cast to ObjectId') || message.includes('not found')) {
     return reply.status(404).send({ error: 'Note not found' });

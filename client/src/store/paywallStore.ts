@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type PaywallFeature = 'reading' | 'writing';
+export type PaywallFeature = 'reading' | 'writing' | 'notes' | 'translate';
 
 type PaywallState = {
   open: boolean;

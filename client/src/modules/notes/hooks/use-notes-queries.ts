@@ -42,6 +42,7 @@ export function useCreateNoteMutation() {
     mutationFn: createNote,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notesKeys.list() });
+      qc.invalidateQueries({ queryKey: ['billing', 'status'] });
     },
   });
 }
@@ -72,6 +73,7 @@ export function useDeleteNoteMutation() {
     mutationFn: deleteNote,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notesKeys.list() });
+      qc.invalidateQueries({ queryKey: ['billing', 'status'] });
     },
   });
 }

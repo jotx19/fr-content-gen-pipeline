@@ -1,26 +1,52 @@
 import Fastify from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCors from '@fastify/cors';
+import { Readable } from 'node:stream';
 import { config } from '../../config.js';
 import { connectDB } from '../db/mongo.js';
 import { ensureCollection } from '../db/qdrant.js';
 import { loadSubagents } from '../../content-pipeline/agent/subagent_registry.js';
 import { registerRoutes } from '../routes/index.js';
+import { registerSecurity } from './security.js';
 
 export async function buildServer() {
   const app = Fastify({
     logger: config.nodeEnv !== 'production',
+    trustProxy: true,
     // Writing evaluation via OpenRouter can take 30–90s on a single model.
     connectionTimeout: 180_000,
     requestTimeout: 180_000,
   });
 
+  const allowedOrigins = new Set(config.corsOrigins);
   await app.register(fastifyCors, {
-    origin: config.clientUrl,
+    origin(origin, cb) {
+      if (!origin || allowedOrigins.has(origin)) {
+        cb(null, true);
+        return;
+      }
+      cb(null, false);
+    },
     credentials: true,
   });
 
   await app.register(fastifyCookie);
+
+  await registerSecurity(app);
+
+  // Stripe webhook signature verification requires the untouched raw body.
+  app.addHook('preParsing', async (request, _reply, payload) => {
+    const path = request.url.split('?')[0];
+    if (path !== '/api/billing/webhook') return payload;
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of payload) {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+    }
+    const raw = Buffer.concat(chunks);
+    request.rawBody = raw;
+    return Readable.from(raw);
+  });
 
   app.setErrorHandler((err, _req, reply) => {
     const error = err as Error & { name?: string };

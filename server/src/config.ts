@@ -14,6 +14,15 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   appUrl: process.env.APP_URL || 'http://localhost:3000',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
+  /** Comma-separated allowed browser origins (defaults to CLIENT_URL). Use for localhost → prod API testing. */
+  corsOrigins: (process.env.CORS_ORIGINS?.trim() || process.env.CLIENT_URL || 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean),
+  /** lax (default) | none — use `none` when the frontend runs on a different site than the API (e.g. localhost → Render). */
+  sessionCookieSameSite:
+    (process.env.SESSION_COOKIE_SAME_SITE?.trim().toLowerCase() as 'lax' | 'none' | 'strict') ||
+    'lax',
   appName: process.env.APP_NAME || 'TEF Canada Coach',
   tefPlacementCount: Number(process.env.TEF_PLACEMENT_COUNT) || 6,
   /** TEF practice mini-exam: 14 Q across 7 sections (~35% of full 40 Q exam). */
@@ -57,6 +66,26 @@ export const config = {
   freemiumReadingPerDay: Number(process.env.FREEMIUM_READING_PER_DAY) || 1,
   /** Free tier: writing submissions per calendar day */
   freemiumWritingPerDay: Number(process.env.FREEMIUM_WRITING_PER_DAY) || 1,
+  /** Free tier: maximum notes per account */
+  freemiumNotesMax: Number(process.env.FREEMIUM_NOTES_MAX) || 2,
+  /** Free tier: lifetime translation requests */
+  freemiumTranslationsMax: Number(process.env.FREEMIUM_TRANSLATIONS_MAX) || 500,
+
+  /** Security — comma-separated IPs to block (BLOCKED_IPS=1.2.3.4,5.6.7.8) */
+  blockedIps: (process.env.BLOCKED_IPS?.trim() || '')
+    .split(',')
+    .map((ip) => ip.trim())
+    .filter(Boolean),
+  /** Max requests per IP per minute (global) */
+  securityGlobalRateLimit: Number(process.env.SECURITY_GLOBAL_RATE_LIMIT) || 120,
+  /** Max auth attempts per IP per window */
+  securityAuthRateLimit: Number(process.env.SECURITY_AUTH_RATE_LIMIT) || 15,
+  /** Auth rate-limit window (ms) */
+  securityAuthWindowMs: Number(process.env.SECURITY_AUTH_WINDOW_MS) || 15 * 60 * 1000,
+  /** Failed logins before temporary IP block */
+  securityLoginBlockThreshold: Number(process.env.SECURITY_LOGIN_BLOCK_THRESHOLD) || 20,
+  /** Temporary IP block duration (ms) */
+  securityLoginBlockMs: Number(process.env.SECURITY_LOGIN_BLOCK_MS) || 24 * 60 * 60 * 1000,
 
   authSecret: process.env.AUTH_SECRET?.trim() || '',
   googleClientId: process.env.GOOGLE_CLIENT_ID?.trim() || '',

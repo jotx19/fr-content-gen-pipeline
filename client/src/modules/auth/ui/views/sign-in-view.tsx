@@ -28,11 +28,7 @@ function SignInCard({
   onSuccess: (response: CredentialResponse) => void;
 }) {
   const { t } = useI18n();
-  const iconStyles = [
-    'bg-[#DFFF4F] text-black',
-    'bg-[#EDE9FE] text-[#1A3D2E]',
-    'bg-white/15 text-white',
-  ] as const;
+  const iconClass = 'bg-white/15 text-white';
 
   return (
     <div
@@ -66,7 +62,7 @@ function SignInCard({
               key={i}
               className={cn(
                 'flex h-12 w-12 items-center justify-center rounded-[14px] sm:h-[52px] sm:w-[52px]',
-                iconStyles[i],
+                iconClass,
               )}
             >
               <Icon className="h-5 w-5" strokeWidth={2} />

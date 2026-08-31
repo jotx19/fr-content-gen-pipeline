@@ -114,6 +114,45 @@ const brandNameClass = cn(
   'text-xl font-semibold tracking-tight text-foreground sm:text-2xl',
 );
 
+const planPillClass = {
+  pro: 'bg-[#DFFF4F] text-black',
+  trial:
+    'border border-[#675549]/20 bg-[#675549]/8 text-[#675549] dark:border-white/15 dark:bg-white/10 dark:text-white/90',
+} as const;
+
+type PlanPillBadgeProps = {
+  className?: string;
+  label: string;
+  variant?: 'pro' | 'trial';
+};
+
+/** Compact plan badge — logo + uppercase label (Pro / Trial) */
+export function PlanPillBadge({
+  className,
+  label,
+  variant = 'pro',
+}: PlanPillBadgeProps) {
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1',
+        planPillClass[variant],
+        className,
+      )}
+    >
+      <Logo
+        size={15}
+        className={cn('shrink-0', variant === 'pro' ? 'text-black' : 'currentColor')}
+      />
+      <span
+        className={cn(inter.className, 'text-[10px] font-semibold uppercase tracking-wide')}
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+
 /** Plan pill (icon + label) with brand name outside — matches BrandLogo text size */
 export function BrandPlanPill({
   className,
@@ -122,32 +161,9 @@ export function BrandPlanPill({
   variant = 'pro',
   textClassName,
 }: BrandPlanPillProps) {
-  const pillClass =
-    variant === 'pro'
-      ? 'bg-[#DFFF4F] text-black'
-      : 'border border-[#675549]/20 bg-[#675549]/8 text-[#675549] dark:border-white/15 dark:bg-white/10 dark:text-white/90';
-
   const content = (
     <>
-      <span
-        className={cn(
-          'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1',
-          pillClass,
-        )}
-      >
-        <Logo
-          size={15}
-          className={cn('shrink-0', variant === 'pro' ? 'text-black' : 'currentColor')}
-        />
-        <span
-          className={cn(
-            inter.className,
-            'text-[10px] font-semibold uppercase tracking-wide',
-          )}
-        >
-          {pillLabel}
-        </span>
-      </span>
+      <PlanPillBadge label={pillLabel} variant={variant} />
       <span className={cn(brandNameClass, textClassName)}>{BRAND.name}</span>
     </>
   );

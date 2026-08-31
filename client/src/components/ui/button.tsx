@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { glassButtonPill, glassSurface, glassTop } from "@/lib/glass-button-styles"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -9,22 +10,27 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: cn(
+          "bg-primary text-primary-foreground hover:bg-primary/90",
+          "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35)]",
+        ),
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        outline: cn(glassSurface, glassTop, "hover:text-accent-foreground"),
+        secondary: cn(glassSurface, glassTop, "text-secondary-foreground"),
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+          "hover:bg-black/[0.04] hover:text-accent-foreground dark:hover:bg-white/10 dark:hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         elevated:
           "bg-primary hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-[4px] hover:-translate-y-[4px] transition-all",
-        pillPrimary:
-          "rounded-full border-0 bg-[#ededed] font-semibold text-black shadow-none hover:bg-[#EFEFEF] active:scale-[0.98]",
-        pillGlass:
-          "rounded-full border border-black/10 bg-black/5 font-semibold text-neutral-700 shadow-none backdrop-blur-md hover:bg-black/8 active:scale-[0.98] dark:border-white/12 dark:bg-white/8 dark:text-neutral-300 dark:hover:bg-white/12",
+        pillPrimary: cn(
+          "rounded-full border-0 bg-[#ededed] font-semibold text-black hover:bg-[#EFEFEF] active:scale-[0.98]",
+          glassTop,
+        ),
+        pillGlass: cn(
+          glassButtonPill,
+          "font-semibold text-neutral-700 backdrop-blur-md active:scale-[0.98] dark:text-neutral-300",
+        ),
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

@@ -1,87 +1,103 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-import { cn } from '@/lib/utils';
-import { bricolage } from '@/lib/fonts';
+import { Logo } from '@/components/logo';
+import { interTight } from '@/lib/fonts';
 import { useI18n } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
-import { LandingCraftCards } from './landing-craft-cards';
 
-const ease = [0.22, 1, 0.36, 1] as const;
-const fade = { duration: 0.28, ease };
+import { AnimatedWords } from './landing-animated-words';
+import {
+  landingCtaOutlineClass,
+  landingCtaPrimaryClass,
+  landingEyebrowClass,
+} from './landing-button-styles';
 
 export function LandingHeroSection() {
-  const reduceMotion = useReducedMotion() ?? false;
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { t } = useI18n();
-  const href = isAuthenticated ? '/learn' : '/signin';
-  const label = isAuthenticated ? t('landing.explore') : t('landing.startFree');
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const ctaHref = isAuthenticated ? '/learn' : '/signin';
 
   return (
     <section
-      id="features"
       className={cn(
-        'relative z-10 flex flex-col px-2 sm:pb-12',
-        'h-[calc(100dvh-10rem)] justify-center overflow-hidden pb-4',
-        'sm:h-auto sm:min-h-[calc(100dvh-3.5rem)] sm:justify-start sm:overflow-visible',
+        interTight.className,
+        'mx-auto flex w-full max-w-[1050px] flex-col items-center justify-start px-2 pb-8 pt-14 text-center md:flex-1 md:pb-[30vh] md:pt-12',
       )}
-      aria-label={t('landing.homeAria')}
     >
-      <div className="relative z-10 mx-auto pt-0 sm:pt-10 flex w-full max-w-3xl shrink-0 flex-col items-center justify-center text-center">
-        <motion.h1
-          className={cn(
-            bricolage.className,
-            'max-w-[20ch] text-[2.15rem] leading-[1.1] font-semibold tracking-[-0.035em] text-black dark:text-white sm:max-w-4xl sm:text-[3.25rem] sm:leading-[1.05] lg:text-[3.5rem]',
-          )}
-          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={fade}
-        >
-          {t('landing.heroTitle')}
-        </motion.h1>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.35 }}
+        className={landingEyebrowClass}
+      >
+        <span className="inline-flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-card px-1.5 text-[9px] font-semibold leading-none tracking-wide text-foreground dark:bg-background md:h-6 md:min-w-6 md:px-2 md:text-[10px]">
+          AI
+        </span>
+        <span className="text-[13px] leading-none text-foreground md:text-sm">{t('landing.promo.eyebrow')}</span>
+      </motion.div>
 
-        <motion.p
-          className=" w-4/5 max-w-md mt-2 text-[8px] leading-[1.7] text-black/70 dark:text-white/70 sm:text-xs md:text-xs"
-          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={fade}
+      <h1
+        id="landing-hero-heading"
+        className="mx-auto mt-4 max-w-[1050px] text-[clamp(2.25rem,9vw,3.25rem)] font-medium leading-[1.05] tracking-[-0.035em] text-foreground md:mt-5 md:text-[clamp(2rem,4.8vw,4.25rem)]"
+      >
+        <AnimatedWords text={t('landing.promo.headlineLine1')} delayStart={0.45} stagger={0.04} />
+        <br />
+        <AnimatedWords text={t('landing.promo.headlineLine2a')} delayStart={0.65} stagger={0.04} />
+        {'\u00A0'}
+        <motion.span
+          className="relative mx-1 inline-flex -translate-y-[0.16em] align-middle"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1], delay: 0.85 }}
         >
-          {t('landing.heroSubtitle')}
-        </motion.p>
+          <span className="inline-flex h-[0.92em] w-[0.92em] min-h-8 min-w-8 items-center justify-center rounded-sm bg-[#DFFF4F] md:min-h-11 md:min-w-11">
+            <Logo size={20} className="h-[0.58em] w-[0.58em] min-h-4 min-w-4 md:min-h-6 md:min-w-6 text-[#1F3818]" />
+          </span>
+        </motion.span>
+        {'\u00A0'}
+        <AnimatedWords
+          text={t('landing.promo.headlineLine2b')}
+          className="text-foreground/25 dark:text-white/25"
+          delayStart={0.75}
+          stagger={0.04}
+        />
+      </h1>
 
+      <motion.p
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.95 }}
+        className="mx-auto mt-3 max-w-[400px] text-[10px] leading-[1.35] text-muted-foreground dark:text-white/55 md:mt-5 md:max-w-[560px] md:text-[15px] md:leading-relaxed"
+      >
+        {t('landing.promo.subheadline')}
+      </motion.p>
+
+      <div className="relative z-20 mt-6 flex flex-wrap items-center justify-center gap-3 md:mt-7">
         <motion.div
-          className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6"
-          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={fade}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1], delay: 1.05 }}
         >
-          <Link
-            href={href}
-            className={cn(
-              'inline-flex h-8 items-center rounded-full bg-black px-4 text-[12px] font-medium text-white',
-              'transition-opacity hover:opacity-80 active:opacity-70',
-              'dark:bg-white dark:text-black',
-            )}
-          >
-            {label}
-          </Link>
-          <Link
-            href="#pricing"
-            className={cn(
-              'inline-flex h-8 items-center rounded-full bg-black/5 px-4 text-[12px] font-medium text-black',
-              'transition-opacity hover:opacity-80 active:opacity-70',
-              'dark:bg-white/10 dark:text-white',
-            )}
-          >
-            {t('landing.seePricing')}
+          <Link href={ctaHref} className={cn(landingCtaOutlineClass, 'px-6 py-2.5 text-[15px] md:px-7 md:py-3')}>
+            {t('landing.promo.headerCta')}
           </Link>
         </motion.div>
-      </div>
-
-      <div className="relative z-20 mt-8 flex w-full shrink-0 items-center justify-center sm:mt-10 sm:flex-1">
-        <LandingCraftCards eager />
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1], delay: 1.12 }}
+        >
+          <Link
+            href={ctaHref}
+            className={cn(landingCtaPrimaryClass, 'px-6 py-2.5 text-[15px] md:px-7 md:py-3')}
+          >
+            {t('landing.promo.primaryCta')}
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

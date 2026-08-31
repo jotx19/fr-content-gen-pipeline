@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { ArrowUpDown, Check, Copy, Loader2, X } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
+import { glassButtonPill, glassIconButton, glassTopOnDark } from '@/lib/glass-button-styles';
 import { useI18n } from '@/lib/i18n';
 import { handlePaywallError, isAtDailyLimit, remainingQuota } from '@/lib/paywall';
 import { cn } from '@/lib/utils';
@@ -112,35 +113,19 @@ export function TranslateView() {
         <section className={cn(panel, 'overflow-hidden')}>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#675549]/12 px-5 py-3.5 sm:px-6 dark:border-white/10">
             <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  inter.className,
-                  'rounded-full bg-[#675549]/10 px-3 py-1.5 text-xs font-medium dark:bg-white/10',
-                  ink,
-                )}
-              >
+              <span className={cn(inter.className, glassButtonPill, 'px-3 py-1.5 text-xs font-medium', ink)}>
                 {langLabel(sourceLang)}
               </span>
               <button
                 type="button"
                 onClick={handleSwap}
-                className={cn(
-                  'inline-flex h-8 w-8 items-center justify-center rounded-[10px]',
-                  inkMuted,
-                  'hover:bg-[#675549]/10 hover:text-[#675549] dark:hover:bg-white/10 dark:hover:text-white',
-                )}
+                className={cn(glassIconButton, 'h-8 w-8', inkMuted)}
                 aria-label={t('translate.swap')}
                 title={t('translate.swap')}
               >
                 <ArrowUpDown className="h-3.5 w-3.5" strokeWidth={1.75} />
               </button>
-              <span
-                className={cn(
-                  inter.className,
-                  'rounded-full bg-[#675549]/10 px-3 py-1.5 text-xs font-medium dark:bg-white/10',
-                  ink,
-                )}
-              >
+              <span className={cn(inter.className, glassButtonPill, 'px-3 py-1.5 text-xs font-medium', ink)}>
                 {langLabel(targetLang)}
               </span>
             </div>
@@ -149,11 +134,7 @@ export function TranslateView() {
                 type="button"
                 onClick={handleClear}
                 disabled={!sourceText && !translatedText}
-                className={cn(
-                  'inline-flex h-8 w-8 items-center justify-center rounded-[10px]',
-                  inkMuted,
-                  'hover:bg-[#675549]/10 hover:text-[#675549] disabled:opacity-40 dark:hover:bg-white/10 dark:hover:text-white',
-                )}
+                className={cn(glassIconButton, 'h-8 w-8 disabled:opacity-40', inkMuted)}
                 aria-label={t('common.clear')}
                 title={t('common.clear')}
               >
@@ -167,7 +148,8 @@ export function TranslateView() {
                   inter.className,
                   'inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-medium',
                   'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900',
-                  'transition-opacity hover:opacity-90 disabled:opacity-50',
+                  glassTopOnDark,
+                  'disabled:opacity-50',
                 )}
               >
                 {translate.isPending ? (
@@ -216,11 +198,7 @@ export function TranslateView() {
                   type="button"
                   onClick={handleCopy}
                   disabled={!translatedText}
-                  className={cn(
-                    'inline-flex h-8 w-8 items-center justify-center rounded-[10px]',
-                    inkMuted,
-                    'hover:bg-[#675549]/10 hover:text-[#675549] disabled:opacity-30 dark:hover:bg-white/10 dark:hover:text-white',
-                  )}
+                  className={cn(glassIconButton, 'h-8 w-8 disabled:opacity-30', inkMuted)}
                   aria-label={copied ? t('common.copied') : t('translate.copyTranslation')}
                   title={copied ? t('common.copied') : t('common.copy')}
                 >

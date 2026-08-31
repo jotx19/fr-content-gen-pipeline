@@ -9,14 +9,14 @@ import { OnboardingChecklist } from '@/components/ui/onboarding-checklist';
 import { Separator } from '@/components/ui/separator';
 import { BRAND } from '@/lib/brand';
 import { bricolage } from '@/lib/fonts';
+import { glassButtonPill } from '@/lib/glass-button-styles';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useSelfSelectLevelMutation } from '@/modules/tef/hooks/use-tef-queries';
 import { toast } from 'sonner';
 
-/** Matches bento “Evaluate level” — rounded-sm, static border, bg-only hover */
-const ONBOARD_BTN =
-  'group inline-flex h-10 items-center justify-center rounded-sm border border-black/25 bg-black/10 px-4 text-sm font-medium text-black/90 transition-colors hover:bg-black/15 disabled:opacity-50 dark:border-white/25 dark:bg-white/10 dark:text-white/90 dark:hover:bg-white/15';
+/** Glass pill — matches learn / landing controls */
+const ONBOARD_BTN = cn(glassButtonPill, 'h-10 px-4 text-sm font-medium text-foreground disabled:opacity-50');
 
 const ONBOARD_BTN_INNER =
   'inline-flex items-center justify-center gap-2 transition-transform group-active:scale-[0.95]';

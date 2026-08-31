@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { bricolage, inter } from "@/lib/fonts";
+import { glassButtonPill, glassCard, glassTopOnDark } from "@/lib/glass-button-styles";
 import { useI18n } from "@/lib/i18n";
 import { BrandPlanPill } from "@/components/logo";
 import {
@@ -466,7 +467,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
               <button
                 type="button"
                 onClick={onStartPlacement}
-                className={`${inter.className} inline-flex h-9 items-center rounded-full border border-[#675549]/25 bg-[#675549]/10 px-4 text-xs font-medium text-[#675549] transition-colors hover:border-[#675549]/40 hover:bg-[#675549]/15 dark:border-white/25 dark:bg-white/10 dark:text-white dark:hover:border-white/40 dark:hover:bg-white/15 sm:text-sm`}
+                className={cn(inter.className, glassButtonPill, 'h-9 px-4 text-xs font-medium text-foreground sm:text-sm')}
               >
                 {t("learn.evaluateLevel")}
               </button>
@@ -532,8 +533,9 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
               type="button"
               onClick={onStartPlacement}
               className={cn(
-                "flex h-full min-h-[140px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-opacity hover:opacity-90 sm:rounded-[26px] sm:px-6 sm:py-6",
+                "flex h-full min-h-[140px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left sm:rounded-[26px] sm:px-6 sm:py-6",
                 "bg-neutral-900 text-white dark:bg-white dark:text-[#1C1C1C]",
+                glassTopOnDark,
               )}
             >
               <span
@@ -553,9 +555,9 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 onClick={onStartPractice}
                 disabled={!practiceReady}
                 className={cn(
-                  "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-colors sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
-                  "bg-neutral-200 text-neutral-900 hover:bg-neutral-100 disabled:opacity-50",
-                  "dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
+                  "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
+                  glassCard,
+                  "text-neutral-900 disabled:opacity-50 dark:text-white",
                 )}
               >
                 <span
@@ -582,8 +584,9 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
                 type="button"
                 onClick={onStartWriting}
                 className={cn(
-                  "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left transition-opacity hover:opacity-90 sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
-                  "bg-neutral-200 dark:text-white dark:bg-white/10 text-[#1C1C1C] dark:hover:bg-white/15",
+                  "flex min-h-[100px] flex-1 flex-col items-start justify-between rounded-[22px] px-5 py-5 text-left sm:min-h-0 sm:rounded-[26px] sm:px-6 sm:py-6",
+                  glassCard,
+                  "text-[#1C1C1C] dark:text-white",
                 )}
               >
                 <span

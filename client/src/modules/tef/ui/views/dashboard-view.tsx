@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { bricolage, inter } from '@/lib/fonts';
+import { glassButtonPill } from '@/lib/glass-button-styles';
 import { useI18n, useLocaleDate } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
@@ -256,10 +257,7 @@ export function DashboardView() {
                             ),
                         })
                       }
-                      className={cn(
-                        inter.className,
-                        'h-8 rounded-full border-[#675549]/20 text-xs font-semibold dark:border-white/15',
-                      )}
+                      className={cn(inter.className, 'h-8 rounded-full text-xs font-semibold')}
                     >
                       {billingPortal.isPending ? (
                         <>
@@ -288,7 +286,8 @@ export function DashboardView() {
                     onClick={() => openPaywall('reading')}
                     className={cn(
                       inter.className,
-                      'h-8 rounded-full bg-[#1A3D2E] text-xs font-semibold text-white hover:bg-[#1A3D2E]/90',
+                      'h-8 rounded-full text-xs font-semibold text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:bg-[#1A3D2E]/90',
+                      'bg-[#1A3D2E]',
                     )}
                   >
                     {t('dashboard.upgradeToPro')}
@@ -296,7 +295,8 @@ export function DashboardView() {
                   <span
                     className={cn(
                       inter.className,
-                      'rounded-full border border-[#675549]/20 bg-[#675549]/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#675549] dark:border-white/15 dark:bg-white/10 dark:text-white/80',
+                      glassButtonPill,
+                      'px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#675549] dark:text-white/80',
                     )}
                   >
                     {t('common.freePlan')}

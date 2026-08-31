@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { bricolage } from '@/lib/fonts';
+import { glassButtonPill, glassIconButton } from '@/lib/glass-button-styles';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { handlePaywallError } from '@/lib/paywall';
@@ -47,14 +48,18 @@ import { useWritingStore } from '@/store/writingStore';
 
 const surfaceClass = 'bg-white/80 backdrop-blur-md dark:bg-white/10';
 
-const toolbarIcon =
-  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground/55 transition-[color,background-color] duration-150 hover:bg-white/70 hover:text-foreground disabled:pointer-events-none disabled:opacity-35 dark:text-white/55 dark:hover:bg-white/15';
+const toolbarIcon = cn(
+  glassIconButton,
+  'h-8 w-8 text-foreground/55 hover:text-foreground disabled:pointer-events-none disabled:opacity-35 dark:text-white/55 dark:hover:text-foreground',
+);
 
 const toolbarIconActive =
-  'bg-white/70 text-foreground dark:bg-white/15 dark:text-foreground';
+  'bg-black/[0.06] text-foreground dark:bg-white/15 dark:text-foreground';
 
-const levelBadgeClass =
-  'rounded-full border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold tabular-nums text-foreground dark:border-white/15 dark:bg-white/10 dark:text-white';
+const levelBadgeClass = cn(
+  glassButtonPill,
+  'px-3 py-1 text-xs font-semibold tabular-nums text-foreground',
+);
 
 const xpBadgeClass =
   'rounded-full border-[#C9A227]/30 bg-[#C9A227]/10 px-3 py-1 text-xs font-semibold tabular-nums text-[#A8860D] dark:border-[#A8860D]/40 dark:bg-[#A8860D]/15 dark:text-[#C9A227]';

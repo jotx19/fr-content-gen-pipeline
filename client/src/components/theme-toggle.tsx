@@ -1,6 +1,7 @@
 'use client';
 
 import { Moon, Sun } from '@/components/icons';
+import { glassButtonPill } from '@/lib/glass-button-styles';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -26,8 +27,9 @@ export function ThemeToggleButton({ className }: { className?: string }) {
       onClick={toggle}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className={cn(
-        'pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white/80 text-foreground/80 transition-colors hover:bg-white/90 hover:text-foreground/90 dark:border-white/15 dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/15 dark:hover:text-white/90',
-        className
+        'pointer-events-auto h-9 w-9 text-foreground/80 hover:text-foreground/90 dark:text-white/80 dark:hover:text-white/90',
+        glassButtonPill,
+        className,
       )}
     >
       {!mounted ? (

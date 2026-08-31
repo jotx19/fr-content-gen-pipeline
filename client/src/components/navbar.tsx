@@ -234,7 +234,14 @@ export function Navbar() {
       <NavBlurBackdrop />
 
       <header className="pointer-events-auto relative z-50 mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 md:grid md:h-[4.5rem] md:grid-cols-[1fr_auto_1fr] md:justify-normal">
-        <nav className="hidden items-center gap-6 md:flex">
+        <BrandLogo
+          href="/"
+          iconSize={30}
+          iconRounded="md"
+          className="md:col-start-1 md:justify-self-start"
+        />
+
+        <nav className="hidden items-center gap-6 md:col-start-2 md:flex md:justify-self-center">
           {APP_NAV_LEFT.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -264,15 +271,7 @@ export function Navbar() {
           })}
         </nav>
 
-        <BrandLogo
-          href="/"
-          iconSize={30}
-          iconRounded="md"
-          className="md:col-start-2 md:justify-self-center"
-          textClassName="hidden md:inline"
-        />
-
-        <div className="flex justify-end md:col-start-3">
+        <div className="flex justify-end md:col-start-3 md:justify-self-end">
           {isAuthenticated && user ? (
             <>
               <button

@@ -16,10 +16,10 @@ import {
   Palette,
   PenLine,
   Settings,
-  Star,
   Sun,
   type AppIcon,
 } from '@/components/icons';
+import { PlanPillBadge } from '@/components/logo';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -58,8 +58,14 @@ const subPanelClass = cn(
 );
 
 const iconClass = 'h-[18px] w-[18px] shrink-0 text-foreground/70 dark:text-white/75';
-const chevronClass = 'ml-auto h-3.5 w-3.5 shrink-0 text-foreground/40 dark:text-white/40';
+const chevronClass = 'h-3.5 w-3.5 shrink-0 text-foreground/40 dark:text-white/40';
+const valueClass = 'text-[13px] font-normal text-foreground/45 dark:text-white/45';
 const iconStroke = 1.75;
+
+const radioItemClass = cn(
+  itemClass,
+  'relative pl-2.5 pr-9',
+);
 
 type AccountDropdownContentProps = {
   onLogout: () => void;
@@ -114,6 +120,22 @@ export function AccountDropdownContent({
   const appearanceValue =
     !mounted ? 'system' : theme === 'system' ? 'system' : resolvedTheme === 'dark' ? 'dark' : 'light';
 
+  const appearanceLabel =
+    appearanceValue === 'dark'
+      ? t('common.dark')
+      : appearanceValue === 'light'
+        ? t('common.light')
+        : t('common.system');
+
+  const languageLabel = locale === 'fr' ? t('common.french') : t('common.english');
+
+  const subTriggerTrailing = (value: string) => (
+    <span className="ml-auto flex items-center gap-1.5">
+      <span className={valueClass}>{value}</span>
+      <ChevronRight className={chevronClass} strokeWidth={2} />
+    </span>
+  );
+
   return (
     <DropdownMenuContent
       side={side}
@@ -136,13 +158,10 @@ export function AccountDropdownContent({
         <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground dark:text-white">
           {displayName}
         </span>
-        {isPro ? (
-          <Star
-            className="h-3.5 w-3.5 shrink-0 fill-[#C9A227] text-[#C9A227]"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-        ) : null}
+        <PlanPillBadge
+          label={isPro ? t('common.pro') : t('common.trial')}
+          variant={isPro ? 'pro' : 'trial'}
+        />
       </div>
 
       <DropdownMenuItem asChild className={itemClass}>
@@ -182,7 +201,7 @@ export function AccountDropdownContent({
           <MenuRow
             icon={Palette}
             title={t('common.appearance')}
-            trailing={<ChevronRight className={chevronClass} strokeWidth={2} />}
+            trailing={subTriggerTrailing(appearanceLabel)}
           />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent sideOffset={8} className={subPanelClass}>
@@ -190,15 +209,15 @@ export function AccountDropdownContent({
             value={appearanceValue}
             onValueChange={(value) => setTheme(value)}
           >
-            <DropdownMenuRadioItem value="light" className={itemClass}>
+            <DropdownMenuRadioItem value="light" className={radioItemClass}>
               <Sun className={iconClass} strokeWidth={iconStroke} />
               {t('common.light')}
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="dark" className={itemClass}>
+            <DropdownMenuRadioItem value="dark" className={radioItemClass}>
               <Moon className={iconClass} strokeWidth={iconStroke} />
               {t('common.dark')}
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="system" className={itemClass}>
+            <DropdownMenuRadioItem value="system" className={radioItemClass}>
               <Palette className={iconClass} strokeWidth={iconStroke} />
               {t('common.system')}
             </DropdownMenuRadioItem>
@@ -211,7 +230,7 @@ export function AccountDropdownContent({
           <MenuRow
             icon={Globe}
             title={t('common.language')}
-            trailing={<ChevronRight className={chevronClass} strokeWidth={2} />}
+            trailing={subTriggerTrailing(languageLabel)}
           />
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent sideOffset={8} className={subPanelClass}>
@@ -221,10 +240,10 @@ export function AccountDropdownContent({
               if (value === 'en' || value === 'fr') setLocale(value);
             }}
           >
-            <DropdownMenuRadioItem value="en" className={itemClass}>
+            <DropdownMenuRadioItem value="en" className={radioItemClass}>
               {t('common.english')}
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="fr" className={itemClass}>
+            <DropdownMenuRadioItem value="fr" className={radioItemClass}>
               {t('common.french')}
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>

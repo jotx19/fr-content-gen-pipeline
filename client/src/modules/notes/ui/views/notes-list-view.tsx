@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { Loader2, Note, Plus, Trash2 } from '@/components/icons';
 import { bricolage, inter } from '@/lib/fonts';
+import { glassInvertPill } from '@/lib/glass-button-styles';
 import { useI18n, useLocaleDate } from '@/lib/i18n';
 import { handlePaywallError, isAtDailyLimit } from '@/lib/paywall';
 import { cn } from '@/lib/utils';
@@ -85,8 +86,8 @@ export function NotesListView() {
             disabled={createNote.isPending}
             className={cn(
               inter.className,
-              'inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-black px-3.5 text-sm font-medium text-white sm:gap-2 sm:px-4',
-              'transition-opacity hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black',
+              glassInvertPill,
+              'h-10 shrink-0 gap-1.5 whitespace-nowrap px-3.5 text-sm font-medium sm:gap-2 sm:px-4',
               notesLimitReached && 'opacity-70',
             )}
           >
@@ -128,7 +129,8 @@ export function NotesListView() {
               onClick={handleCreate}
               className={cn(
                 inter.className,
-                'mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-black px-5 text-sm font-medium text-white dark:bg-white dark:text-black',
+                'mt-6 h-10 gap-2 px-5 text-sm font-medium',
+                glassInvertPill,
               )}
             >
               <Plus className="h-4 w-4" />

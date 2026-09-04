@@ -35,7 +35,7 @@ axiosInstance.interceptors.response.use(
       error.message ||
       `Request failed (${error.response?.status ?? 'network'})`;
     if (error.response?.status === 401) {
-      return Promise.reject(new Error('Session expired — please sign in again'));
+      return Promise.reject(new Error('Session expired. Please sign in again'));
     }
     return Promise.reject(new Error(message));
   }

@@ -125,7 +125,7 @@ export const en = {
         label: 'What our learners say',
         date: 'Feb 02, 2026',
         quoteBold: 'They scored 40% higher on practice sets',
-        quoteMuted: 'than textbook drills — and never repeated the same content.',
+        quoteMuted: 'than textbook drills, and never repeated the same content.',
       },
       trustedLine1: 'Trusted by learners preparing for TEF and TCF who do not just follow trends,',
       trustedLine2: 'but define how they move toward exam day.',
@@ -220,7 +220,7 @@ export const en = {
       },
       pro: {
         name: 'Pro',
-        blurb: 'Become exam-ready — unlimited practice, deeper feedback, real progress.',
+        blurb: 'Become exam-ready: unlimited practice, deeper feedback, real progress.',
         features: [
           'Unlimited daily practice',
           'Full writing feedback',
@@ -303,7 +303,7 @@ export const en = {
     placementBody:
       'A short reading test sets your CEFR level and unlocks adaptive MCQ practice and TCF-style writing.',
     defaultSummary:
-      'Adaptive placement, daily practice, and full progress reports — everything you need to reach your French goals.',
+      'Adaptive placement, daily practice, and full progress reports. Everything you need to reach your French goals.',
     evaluateLevel: 'Evaluate level',
     level: 'Level {level}',
     confidence: 'Confidence',
@@ -426,7 +426,7 @@ export const en = {
     questionProgress: 'Question progress: {current} of {total}',
     moduleProgress: 'Module progress: {current} of {total}',
     progress: 'Progress',
-    tefReading: 'TEF Canada — reading comprehension',
+    tefReading: 'TEF Canada · reading comprehension',
     sectionItem: 'Section {section} · Item {item}/{total}',
     chart: 'Chart / data',
     document: 'Document',
@@ -454,7 +454,7 @@ export const en = {
     hideExample: 'Hide example',
     generateAi: 'Generate with AI',
     loadingQuestion: 'Loading question',
-    aiExampleReply: 'AI example — your reply',
+    aiExampleReply: 'AI example · your reply',
     yourReply: 'Your reply',
     nextTask: 'Next task',
     aiExampleFr: 'AI example (French)',
@@ -486,7 +486,7 @@ export const en = {
     headlineReading: 'Continue your TEF prep',
     headlineWriting: 'Keep writing without limits',
     subline:
-      'Unlimited reading and writing — become the French speaker you’re preparing to be.',
+      'Unlimited reading and writing. Become the French speaker you’re preparing to be.',
     free: 'Free',
     perMonthLabel: 'Per month',
     freeReading: '{count} reading / day',

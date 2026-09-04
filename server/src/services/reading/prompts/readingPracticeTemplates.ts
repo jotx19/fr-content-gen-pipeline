@@ -5,8 +5,10 @@ import {
   TEF_PRACTICE_QUESTION_COUNT,
   TEF_READING_EXAM,
   TEF_READING_SECTIONS,
+  isFullReadingExam,
 } from './readingExamStructure.js';
 import { READING_SESSIONS_BY_BAND } from './readingPracticeSessions.js';
+import { assembleFullReadingExam } from './readingFullExamAssembler.js';
 import type {
   FlatReadingItem,
   ReadingModule,
@@ -43,14 +45,19 @@ export function pickReadingPracticeTemplate(seed = '', count = 3) {
 }
 
 /**
- * Pick a TEF-format reading practice session (7 sections, 14 questions by default).
- * Content band follows the learner's CEFR level (A1–A2 / B1–B2 / C1–C2).
+ * Pick a TEF-format reading practice session.
+ * Full exam mode (40 Q): all 7 sections at official counts — freetcf.com-style mock.
+ * Mini mode (14 Q): shortened daily session.
  */
 export function pickReadingPracticeSession(
   seed = '',
   level = 'B1',
   weakAreas: string[] = []
 ): ReadingPracticePickResult {
+  if (isFullReadingExam()) {
+    return assembleFullReadingExam(seed, level, weakAreas);
+  }
+
   const band = readingLevelBand(level);
   const pool = READING_SESSIONS_BY_BAND[band] ?? READING_SESSIONS_BY_BAND.intermediate;
 
@@ -60,7 +67,7 @@ export function pickReadingPracticeSession(
 
   return {
     topic: session.topic,
-    examFormat: 'TEF Canada — compréhension écrite',
+    examFormat: 'TEF Canada · compréhension écrite',
     levelBand: band,
     targetLevel: level,
     sectionCount: TEF_READING_SECTIONS.length,

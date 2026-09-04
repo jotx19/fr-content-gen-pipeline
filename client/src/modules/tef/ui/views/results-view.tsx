@@ -441,7 +441,7 @@ export function ResultsView() {
 
   if (!diagnostic) return null;
 
-  const levelAfter = newLevel ?? levelLabel ?? '—';
+  const levelAfter = newLevel ?? levelLabel ?? '-';
   const isLevelUp = adjustment === 'levelUp';
   const isLevelDown = adjustment === 'levelDown';
 

@@ -5,7 +5,7 @@ import type { ReadingSessionsByBand } from './readingPractice.types.js';
 export const READING_SESSIONS_BY_BAND: ReadingSessionsByBand = {
   beginner: [
     {
-      topic: 'Compréhension écrite — niveau A1–A2',
+      topic: 'Compréhension écrite · niveau A1–A2',
       modules: [
         withTefSection(
           {
@@ -226,7 +226,7 @@ La ville de Laval a inauguré un parc de 5 hectares près du métro. Des aires d
   ],
   intermediate: [
     {
-      topic: 'Compréhension écrite — niveau B1–B2',
+      topic: 'Compréhension écrite · niveau B1–B2',
       modules: [
         withTefSection(
           {
@@ -470,7 +470,7 @@ Selon une étude publiée mardi, 58 % des PME au Québec proposent encore une fo
       ],
     },
     {
-      topic: 'Documents administratifs et presse — B1–B2',
+      topic: 'Documents administratifs et presse · B1–B2',
       modules: [
         withTefSection(
           {
@@ -706,7 +706,7 @@ Malgré une légère hausse de l'offre locative à Montréal, le taux d'inoccupa
   ],
   advanced: [
     {
-      topic: 'Compréhension écrite — niveau C1–C2',
+      topic: 'Compréhension écrite · niveau C1–C2',
       modules: [
         withTefSection(
           {

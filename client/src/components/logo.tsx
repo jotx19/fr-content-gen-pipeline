@@ -124,6 +124,7 @@ type PlanPillBadgeProps = {
   className?: string;
   label: string;
   variant?: 'pro' | 'trial';
+  size?: 'sm' | 'md';
 };
 
 /** Compact plan badge — logo + uppercase label (Pro / Trial) */
@@ -131,21 +132,29 @@ export function PlanPillBadge({
   className,
   label,
   variant = 'pro',
+  size = 'sm',
 }: PlanPillBadgeProps) {
+  const isMd = size === 'md';
+
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1',
+        'inline-flex shrink-0 items-center rounded-full',
+        isMd ? 'h-7 gap-1 px-3.5' : 'gap-1 px-2 py-1',
         planPillClass[variant],
         className,
       )}
     >
       <Logo
-        size={15}
+        size={isMd ? 14 : 15}
         className={cn('shrink-0', variant === 'pro' ? 'text-black' : 'currentColor')}
       />
       <span
-        className={cn(inter.className, 'text-[10px] font-semibold uppercase tracking-wide')}
+        className={cn(
+          inter.className,
+          'font-semibold uppercase tracking-wide',
+          isMd ? 'text-[11px]' : 'text-[10px]',
+        )}
       >
         {label}
       </span>

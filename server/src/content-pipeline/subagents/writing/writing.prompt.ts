@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
-import { getTefModel } from '../../core/llm.js';
 import { config } from '../../../config.js';
 import { writingPromptOutputSchema } from './writing.schemas.js';
 import {
@@ -67,9 +66,8 @@ export default {
         systemPrompt: buildFullPromptSystem(section),
         userPayload: { level, section, topic, minWords: config.minWords, maxWords: config.maxWords },
         schema: writingPromptOutputSchema,
-        maxAttempts: 1,
-        models: [getTefModel()],
-        maxTokens: config.tefWritingLlmMaxTokens,
+      maxAttempts: 1,
+      maxTokens: config.tefWritingLlmMaxTokens,
       });
 
       const rawPrompt = {

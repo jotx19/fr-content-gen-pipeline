@@ -61,13 +61,17 @@ export type PublicUser = {
 
 type PublicUserSource = Pick<
   IUser,
-  'email' | 'name' | 'picture' | 'plan' | 'subscriptionStatus' | 'createdAt' | 'lastLoginAt'
+  'email' | 'name' | 'picture' | 'plan' | 'subscriptionStatus' | 'currentPeriodEnd' | 'createdAt' | 'lastLoginAt'
 > & {
   _id: { toString(): string };
 };
 
 export function toPublicUser(user: PublicUserSource): PublicUser {
-  const pro = isProUser(user);
+  const pro = isProUser({
+    plan: user.plan,
+    subscriptionStatus: user.subscriptionStatus,
+    currentPeriodEnd: user.currentPeriodEnd ?? null,
+  });
   return {
     id: user._id.toString(),
     email: user.email,

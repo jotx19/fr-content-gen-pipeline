@@ -452,7 +452,7 @@ export function WritingResultsView() {
     summary,
   } = result;
 
-  const levelAfter = newLevel ?? '—';
+  const levelAfter = newLevel ?? '-';
   const levelBefore = inferLevelBefore(adjustment, newLevel);
   const isLevelUp = adjustment === 'levelUp';
   const isLevelDown = adjustment === 'levelDown';
@@ -664,9 +664,10 @@ export function WritingResultsView() {
               {summary && (
                 <motion.p
                   className={cn(
-                    `${inter.className} mt-auto shrink-0 border-t border-black/8 pt-2 text-[10px] leading-relaxed sm:text-[11px] dark:border-white/10`,
+                    `${inter.className} mt-auto shrink-0 border-t border-black/8 pt-2 text-[10px] leading-relaxed line-clamp-2 sm:text-[11px] dark:border-white/10`,
                     palette.rose.label,
                   )}
+                  title={summary}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: revealIndex >= 3 ? 1 : 0 }}
                   transition={{ duration: 0.35, delay: 0.1 }}

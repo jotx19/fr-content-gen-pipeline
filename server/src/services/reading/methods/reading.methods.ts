@@ -225,7 +225,7 @@ async function generatePracticeBatch(userId: string, { level, weakAreas }: { lev
   );
 
   console.log(
-    `[reading] TEF practice ready (${session.levelBand}, ${modules.length} sections, ${questions.length}/${session.fullExamQuestionCount} items) for ${userId.slice(0, 8)}`
+    `[reading] TEF practice ready (${session.levelBand}, ${modules.length} sections, ${questions.length} Q) for ${userId.slice(0, 8)}`
   );
   return pendingPractice;
 }

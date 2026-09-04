@@ -99,6 +99,22 @@ export const TEF_PRACTICE_QUESTION_COUNT = TEF_READING_SECTIONS.reduce(
   0
 );
 
+/** Target questions per practice session (env `TEF_PRACTICE_COUNT`, default 40 = full exam). */
+export function getTefPracticeQuestionCount() {
+  const n = Number(process.env.TEF_PRACTICE_COUNT);
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return TEF_READING_EXAM.totalQuestions;
+}
+
+export function isFullReadingExam() {
+  return getTefPracticeQuestionCount() >= TEF_READING_EXAM.totalQuestions;
+}
+
+/** Per-section count for the current practice mode (full exam uses official examCount). */
+export function sectionQuestionCount(section: TefReadingSection) {
+  return isFullReadingExam() ? section.examCount : section.practiceCount;
+}
+
 export type ReadingLevelBand = 'beginner' | 'intermediate' | 'advanced';
 
 function isCefrLevel(value: string): value is CefrLevel {
@@ -132,7 +148,7 @@ export function readingLevelGuidance(level: unknown): string {
 
 export function sectionLabel(section: TefReadingSection, locale: 'en' | 'fr' = 'fr'): string {
   const title = locale === 'en' ? section.titleEn : section.titleFr;
-  return `Section ${section.code} — ${title}`;
+  return `Section ${section.code} · ${title}`;
 }
 
 /** Stamp official TEF section metadata onto a practice module. */

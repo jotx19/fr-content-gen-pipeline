@@ -33,6 +33,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useI18n } from '@/lib/i18n';
 import { inter } from '@/lib/fonts';
+import { getPlanBadge, isBillingPro } from '@/lib/billing-plan';
 import { cn } from '@/lib/utils';
 import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
 
@@ -104,7 +105,7 @@ export function AccountDropdownContent({
   const [mounted, setMounted] = useState(false);
   const { locale, setLocale, t } = useI18n();
   const { data: billing } = useBillingStatusQuery();
-  const isPro = billing?.plan === 'pro';
+  const planBadge = getPlanBadge(billing, { pro: t('common.pro'), trial: t('common.trial') });
 
   useEffect(() => setMounted(true), []);
 
@@ -158,10 +159,9 @@ export function AccountDropdownContent({
         <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground dark:text-white">
           {displayName}
         </span>
-        <PlanPillBadge
-          label={isPro ? t('common.pro') : t('common.trial')}
-          variant={isPro ? 'pro' : 'trial'}
-        />
+        {planBadge ? (
+          <PlanPillBadge label={planBadge.label} variant={planBadge.variant} />
+        ) : null}
       </div>
 
       <DropdownMenuItem asChild className={itemClass}>

@@ -33,10 +33,33 @@ export function aggregateWritingScore(criteria: { score: number }[]) {
   return Math.round((avg / 100) * 1000) / 1000;
 }
 
+/** Overall score 0–100 for client display (TEF-weighted) */
+export function weightedOverallWritingScore(
+  criteria: { criterion: string; score: number }[]
+) {
+  const byKey = Object.fromEntries(criteria.map((c) => [c.criterion, c.score]));
+  const score =
+    (byKey.content_coherence ?? 0) * 0.2 +
+    (byKey.vocabulary ?? 0) * 0.2 +
+    (byKey.language_accuracy ?? 0) * 0.3 +
+    (byKey.task_fulfillment ?? 0) * 0.3;
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
 /** Overall score 0–100 for client display */
 export function overallWritingScore(criteria: { score: number }[]) {
   if (!criteria.length) return 0;
   return Math.round(criteria.reduce((acc, c) => acc + c.score, 0) / criteria.length);
+}
+
+export function resolveWritingOverallScore(
+  evaluation: { overallScore?: number; criteria?: { criterion: string; score: number }[] },
+  criteria: { criterion: string; score: number }[]
+) {
+  if (typeof evaluation.overallScore === 'number' && Number.isFinite(evaluation.overallScore)) {
+    return Math.round(evaluation.overallScore);
+  }
+  return weightedOverallWritingScore(criteria);
 }
 
 export function criteriaToSkillBreakdown(criteria: { criterion: string; score: number }[]) {

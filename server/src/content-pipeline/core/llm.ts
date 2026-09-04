@@ -1,6 +1,57 @@
 // @ts-nocheck
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'openrouter/free';
+
+/** OpenRouter models that do not require purchased credits */
+export const FREE_TEF_MODELS = [
+  'openrouter/free',
+];
+
+export function isFreeOpenRouterModel(model: string) {
+  const m = String(model ?? '').toLowerCase();
+  return m === 'openrouter/free' || m.endsWith(':free');
+}
+
+/** Free-only model chain — no paid credits required */
+export function getFreeTefModelCandidates() {
+  const envModel = process.env.TEF_LLM_MODEL?.trim();
+  const routerModel = process.env.OPENROUTER_MODEL?.trim();
+  const freeOverride = process.env.TEF_FREE_LLM_MODEL?.trim();
+
+  const candidates = [
+    freeOverride,
+    isFreeOpenRouterModel(envModel ?? '') ? envModel : null,
+    isFreeOpenRouterModel(routerModel ?? '') ? routerModel : null,
+    ...FREE_TEF_MODELS,
+  ].filter(Boolean);
+
+  return [...new Set(candidates)];
+}
+
+/** Fixed model for TEF subagents — free models first unless TEF_USE_FREE_MODELS=false */
+export function getTefModelCandidates() {
+  if (process.env.TEF_USE_FREE_MODELS !== 'false') {
+    return getFreeTefModelCandidates();
+  }
+
+  const primary = process.env.TEF_LLM_MODEL?.trim();
+  const withoutFreeSuffix = primary?.replace(/:free$/i, '');
+
+  const candidates = [
+    primary,
+    withoutFreeSuffix && withoutFreeSuffix !== primary ? withoutFreeSuffix : null,
+    process.env.OPENROUTER_MODEL?.trim(),
+    ...FREE_TEF_MODELS,
+    'google/gemini-2.5-flash',
+    'google/gemini-2.5-flash-lite',
+  ].filter(Boolean);
+  return [...new Set(candidates)];
+}
+
+export function getTefModel() {
+  return getTefModelCandidates()[0];
+}
+
 const APP_TITLE = process.env.APP_TITLE || 'TEF Canada';
 
 const MAX_RETRIES = 3;
@@ -14,22 +65,6 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function getModel(override) {
   if (override) return override;
   return process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
-}
-
-/** Fixed model for TEF subagents — tries fallbacks if primary is unavailable. */
-export function getTefModelCandidates() {
-  const candidates = [
-    process.env.TEF_LLM_MODEL,
-    process.env.OPENROUTER_MODEL,
-    'google/gemini-2.5-flash',
-    'google/gemini-2.5-flash-lite',
-    'openrouter/free',
-  ].filter(Boolean);
-  return [...new Set(candidates)];
-}
-
-export function getTefModel() {
-  return getTefModelCandidates()[0];
 }
 
 async function throttleRequests(skip = false) {
@@ -219,6 +254,11 @@ export async function callLLM(messages, systemPrompt = '', options = {}) {
         lastDetail = parseApiError(errText);
 
         if (tokens && isInsufficientCreditsError(res.status, lastDetail)) {
+          const detailLower = String(lastDetail).toLowerCase();
+          if (detailLower.includes('never purchased') || !isFreeOpenRouterModel(model)) {
+            throw new Error(finalErrorMessage(res.status, lastDetail));
+          }
+
           const nextTokens = creditRetryMaxTokens(tokens, lastDetail);
 
           if (nextTokens < tokens) {

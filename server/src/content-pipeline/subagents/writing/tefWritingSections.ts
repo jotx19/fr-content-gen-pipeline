@@ -4,7 +4,7 @@ export const TEF_WRITING_SECTIONS = {
   A: {
     key: 'A',
     label: 'Section A',
-    examLabel: 'TEF Canada — Expression écrite, Section A',
+    examLabel: 'TEF Canada · Expression écrite, Section A',
     description:
       'Shorter production: continue a story, describe a situation, react to a document, or write a brief message/email.',
     minWords: 80,
@@ -21,7 +21,7 @@ export const TEF_WRITING_SECTIONS = {
   B: {
     key: 'B',
     label: 'Section B',
-    examLabel: 'TEF Canada — Expression écrite, Section B',
+    examLabel: 'TEF Canada · Expression écrite, Section B',
     description:
       'Longer production: express and defend an opinion, compare viewpoints, or comment on a social topic.',
     minWords: 200,

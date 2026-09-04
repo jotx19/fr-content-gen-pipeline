@@ -15,6 +15,7 @@ import {
   Star,
   Target,
 } from '@/components/icons';
+import { PlanPillBadge } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,6 +23,7 @@ import { bricolage, inter } from '@/lib/fonts';
 import { glassButtonPill } from '@/lib/glass-button-styles';
 import { useI18n, useLocaleDate } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { getPlanBadge, isBillingPro } from '@/lib/billing-plan';
 import { useTefProfileQuery } from '@/modules/tef/hooks/use-tef-queries';
 import { overallLevelAndConfidence } from '@/modules/tef/lib/overall-progress';
 import {
@@ -121,8 +123,8 @@ export function DashboardView() {
   const onboarded = formatDate(profile?.onboardedAt) || null;
   const lastLogin = formatDate(user.lastLoginAt) || null;
 
-  const readingLevel = profile?.level ?? '—';
-  const writingLevel = writingProfile?.writingLevel ?? writingProfile?.level ?? '—';
+  const readingLevel = profile?.level ?? '-';
+  const writingLevel = writingProfile?.writingLevel ?? writingProfile?.level ?? '-';
   const readingXp = profile?.stats?.readingXp ?? profile?.stats?.xp ?? 0;
   const writingXp = writingProfile?.writingXp ?? profile?.stats?.writingXp ?? 0;
   const streak = profile?.stats?.streakDays ?? 0;
@@ -146,7 +148,8 @@ export function DashboardView() {
     ? writingProfile.taskMode.split('_').join(' ')
     : null;
 
-  const isPro = billing?.plan === 'pro';
+  const isPro = isBillingPro(billing);
+  const planBadge = getPlanBadge(billing, { pro: t('common.pro'), trial: t('common.trial') });
   const accessExpires = billing?.currentPeriodEnd
     ? formatDate(billing.currentPeriodEnd)
     : null;
@@ -155,7 +158,7 @@ export function DashboardView() {
       ? t('dashboard.accessYearly')
       : billing?.subscriptionInterval === 'month'
         ? t('dashboard.accessMonthly')
-        : '—';
+        : '-';
   const planStatus =
     billing?.subscriptionStatus === 'active'
       ? t('dashboard.statusActive')
@@ -165,23 +168,23 @@ export function DashboardView() {
   const readingUsage = billing
     ? isPro
       ? t('dashboard.unlimited')
-      : `${billing.usage.readingSessions}/${billing.limits.readingSessionsPerDay ?? '—'}`
-    : '—';
+      : `${billing.usage.readingSessions}/${billing.limits.readingSessionsPerDay ?? '-'}`
+    : '-';
   const writingUsage = billing
     ? isPro
       ? t('dashboard.unlimited')
-      : `${billing.usage.writingSessions}/${billing.limits.writingSessionsPerDay ?? '—'}`
-    : '—';
+      : `${billing.usage.writingSessions}/${billing.limits.writingSessionsPerDay ?? '-'}`
+    : '-';
   const notesUsage = billing
     ? isPro
       ? t('dashboard.unlimited')
-      : `${billing.usage.notesCount ?? 0}/${billing.limits.notesMax ?? '—'}`
-    : '—';
+      : `${billing.usage.notesCount ?? 0}/${billing.limits.notesMax ?? '-'}`
+    : '-';
   const translationsUsage = billing
     ? isPro
       ? t('dashboard.unlimited')
-      : `${billing.usage.translationsTotal ?? 0}/${billing.limits.translationsMax ?? '—'}`
-    : '—';
+      : `${billing.usage.translationsTotal ?? 0}/${billing.limits.translationsMax ?? '-'}`
+    : '-';
 
   return (
     <div className="min-h-dvh p-10">
@@ -257,7 +260,7 @@ export function DashboardView() {
                             ),
                         })
                       }
-                      className={cn(inter.className, 'h-8 rounded-full text-xs font-semibold')}
+                      className={cn(inter.className, 'h-8 rounded-full px-4 text-xs font-semibold')}
                     >
                       {billingPortal.isPending ? (
                         <>
@@ -269,14 +272,15 @@ export function DashboardView() {
                       )}
                     </Button>
                   ) : null}
-                  <span
-                    className={cn(
-                      inter.className,
-                      'rounded-full bg-[#1A3D2E] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white',
-                    )}
-                  >
-                    {t('common.pro')}
-                  </span>
+                  {planBadge ? (
+                    <PlanPillBadge
+                      label={planBadge.label}
+                      variant={planBadge.variant}
+                      size="md"
+                    />
+                  ) : (
+                    <PlanPillBadge label={t('common.pro')} variant="pro" size="md" />
+                  )}
                 </>
               ) : (
                 <>
@@ -286,7 +290,7 @@ export function DashboardView() {
                     onClick={() => openPaywall('reading')}
                     className={cn(
                       inter.className,
-                      'h-8 rounded-full text-xs font-semibold text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:bg-[#1A3D2E]/90',
+                      'h-8 rounded-full px-4 text-xs font-semibold text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:bg-[#1A3D2E]/90',
                       'bg-[#1A3D2E]',
                     )}
                   >
@@ -296,7 +300,7 @@ export function DashboardView() {
                     className={cn(
                       inter.className,
                       glassButtonPill,
-                      'px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#675549] dark:text-white/80',
+                      'inline-flex h-8 shrink-0 items-center justify-center px-4 text-xs font-semibold uppercase tracking-wide text-[#675549] dark:text-white/80',
                     )}
                   >
                     {t('common.freePlan')}
@@ -459,7 +463,7 @@ export function DashboardView() {
                       {lastReadingScore}%
                     </span>
                   ) : (
-                    <span className={cn(inter.className, 'text-sm', inkMuted)}>—</span>
+                    <span className={cn(inter.className, 'text-sm', inkMuted)}>-</span>
                   )}
                 </div>
                 {profile?.lastEvaluation && (
@@ -485,7 +489,7 @@ export function DashboardView() {
                       {lastWritingScore}%
                     </span>
                   ) : (
-                    <span className={cn(inter.className, 'text-sm', inkMuted)}>—</span>
+                    <span className={cn(inter.className, 'text-sm', inkMuted)}>-</span>
                   )}
                 </div>
                 {writingProfile?.lastEvaluation && (

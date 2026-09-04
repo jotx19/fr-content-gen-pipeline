@@ -9,7 +9,7 @@ import { getEvaluationHistory } from '../../../app/services/userService.js';
 import { WRITING_MODULE, WRITING_EVALUATION_KIND } from '../schemas/writing.mongo.js';
 import {
   aggregateWritingScore,
-  overallWritingScore,
+  resolveWritingOverallScore,
   criteriaToSkillBreakdown,
   weakAreasFromCriteria,
   buildWritingSummary,
@@ -25,9 +25,9 @@ import {
 } from '../normalizeFillBlankPrompt.js';
 import { buildStaticWritingExample } from '../prompts/writingExampleTemplates.js';
 import {
-  scoreFullWritingSubmission,
   scoreSentenceSubmission,
 } from '../scoring/writingOfflineEvaluate.js';
+import { evaluateWritingWithRubric } from '../scoring/writingRubricEvaluate.js';
 import {
   adjustWritingLevelFromXp,
   normalizeCefrLevel,
@@ -42,7 +42,6 @@ import {
   inferTefWritingSection,
   resolveTefWritingSection,
 } from '../../../content-pipeline/subagents/writing/tefWritingSections.js';
-import { applyWordCountToEvaluation } from '../scoring/writingWordCount.js';
 import { assertFeatureAccess, consumeFeatureUsage } from '../../billing/freemium.js';
 
 function requireMongo() {
@@ -365,6 +364,7 @@ export async function submitWriting(
   const previousWritingXp = stats.writingXp ?? 0;
 
   let evaluation: Record<string, unknown>;
+  let evaluationSource: 'rubric' | 'llm' | 'offline' = 'rubric';
   let submission = '';
   let wordCount = 0;
 
@@ -402,11 +402,14 @@ export async function submitWriting(
         },
       });
       evaluation = llmEvaluation as Record<string, unknown>;
+      evaluationSource =
+        evaluation.evaluationMethod === 'llm_polish' ? 'llm' : 'rubric';
     } catch (err) {
       console.warn(
         `[writing] sentence evaluation LLM failed (${err instanceof Error ? err.message : err}) — using offline scoring`
       );
       evaluation = scoreSentenceSubmission(sentencePrompts, body.sentences ?? {});
+      evaluationSource = 'offline';
     }
   } else {
     submission = String(body.text ?? '').trim();
@@ -414,7 +417,7 @@ export async function submitWriting(
     wordCount = countWords(submission);
 
     try {
-      const llmEvaluation = await runContentPipeline({
+      const pipelineResult = await runContentPipeline({
         service: PIPELINE_SERVICES.WRITING_EVALUATE,
         userId,
         input: {
@@ -424,22 +427,20 @@ export async function submitWriting(
           level: writingLevel,
         },
       });
-      evaluation = applyWordCountToEvaluation(
-        llmEvaluation,
-        wordCount,
-        prompt,
-        writingLevel
-      ) as Record<string, unknown>;
+      evaluation = pipelineResult as Record<string, unknown>;
+      evaluationSource =
+        evaluation.evaluationMethod === 'llm_polish' ? 'llm' : 'rubric';
     } catch (err) {
       console.warn(
-        `[writing] full evaluation LLM failed (${err instanceof Error ? err.message : err}) — using offline scoring`
+        `[writing] evaluation pipeline failed (${err instanceof Error ? err.message : err}) — using rubric`
       );
-      evaluation = scoreFullWritingSubmission(submission, wordCount, prompt, writingLevel);
+      evaluation = evaluateWritingWithRubric(submission, wordCount, prompt, writingLevel);
+      evaluationSource = 'rubric';
     }
   }
 
   const criteria = evaluation.criteria as Record<string, unknown>[];
-  const overallScore = overallWritingScore(criteria);
+  const overallScore = resolveWritingOverallScore(evaluation, criteria);
   const overallAccuracy = aggregateWritingScore(criteria);
   const weakAreas = weakAreasFromCriteria(criteria);
 
@@ -518,6 +519,7 @@ export async function submitWriting(
     writingXp: newWritingXp,
     writingProgress: progress,
     taskMode,
+    evaluationSource,
     profile: {
       readingLevel: doc.level,
       level: newLevel,

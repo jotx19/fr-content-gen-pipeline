@@ -109,7 +109,7 @@ function LevelDropdown({
             'transition-opacity hover:opacity-90 disabled:opacity-50',
           )}
         >
-          <span>{value || '—'}</span>
+          <span>{value || '-'}</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50" strokeWidth={2} />
         </button>
       </DropdownMenuTrigger>

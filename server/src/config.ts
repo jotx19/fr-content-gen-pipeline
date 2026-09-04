@@ -25,8 +25,8 @@ export const config = {
     'lax',
   appName: process.env.APP_NAME || 'TEF Canada Coach',
   tefPlacementCount: Number(process.env.TEF_PLACEMENT_COUNT) || 6,
-  /** TEF practice mini-exam: 14 Q across 7 sections (~35% of full 40 Q exam). */
-  tefPracticeCount: Number(process.env.TEF_PRACTICE_COUNT) || 14,
+  /** Full reading mock: 40 Q / 7 sections (set 14 for legacy mini session). */
+  tefPracticeCount: Number(process.env.TEF_PRACTICE_COUNT) || 40,
   /** MCQ batches need more output tokens than short writing eval JSON. */
   tefReadingLlmMaxTokens:
     Number(process.env.TEF_READING_LLM_MAX_TOKENS) ||
@@ -36,6 +36,8 @@ export const config = {
     Number(process.env.TEF_WRITING_LLM_MAX_TOKENS) ||
     Number(process.env.TEF_LLM_MAX_TOKENS) ||
     800,
+  /** Optional LLM polish on top of template rubric (default: rubric only) */
+  writingUseLlmEval: process.env.TEF_WRITING_USE_LLM_EVAL === 'true',
   /** @deprecated use tefReadingLlmMaxTokens / tefWritingLlmMaxTokens */
   tefLlmMaxTokens:
     Number(process.env.TEF_LLM_MAX_TOKENS) ||

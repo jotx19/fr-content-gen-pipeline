@@ -24,6 +24,7 @@ export function useBillingStatusQuery(enabled = true) {
     queryFn: fetchBillingStatus,
     enabled,
     staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 

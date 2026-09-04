@@ -17,7 +17,8 @@ import {
 import { bricolage, inter } from "@/lib/fonts";
 import { glassButtonPill, glassCard, glassTopOnDark } from "@/lib/glass-button-styles";
 import { useI18n } from "@/lib/i18n";
-import { BrandPlanPill } from "@/components/logo";
+import { PlanPillBadge } from "@/components/logo";
+import { Button } from "@/components/ui/button";
 import {
   loadLastReadingXp,
   saveLastReadingXp,
@@ -31,7 +32,9 @@ export type LearnBentoData = {
   summary?: string;
   streak: number;
   xp: number;
-  isPro?: boolean;
+  planBadge?: { label: string; variant: 'pro' | 'trial' } | null;
+  showUpgradeToPro?: boolean;
+  onUpgradeToPro?: () => void;
   practiceReady?: boolean;
   placementMode?: boolean;
   onStartPractice?: () => void;
@@ -387,7 +390,9 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
     summary,
     streak,
     xp,
-    isPro,
+    planBadge,
+    showUpgradeToPro,
+    onUpgradeToPro,
     practiceReady,
     placementMode,
     onStartPractice,
@@ -396,7 +401,7 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
   } = data;
 
   const confidenceDisplay =
-    confidence != null ? `${Math.round(confidence * 100)}%` : "—";
+    confidence != null ? `${Math.round(confidence * 100)}%` : "-";
 
   return (
     <section
@@ -455,23 +460,43 @@ export function LearnBentoGrid({ data, className }: LearnBentoGridProps) {
 
         <div className="mt-4 border-t border-[#675549]/15 pt-4 dark:border-white/10">
           <div
-            className={`${inter.className} flex items-center justify-between text-[11px] text-[#675549]/80 dark:text-white/70 sm:text-xs`}
+            className={`${inter.className} flex items-center justify-between gap-3 text-[11px] text-[#675549]/80 dark:text-white/70 sm:text-xs`}
           >
-            <BrandPlanPill
-              href="/learn"
-              pillLabel={isPro ? t("common.pro") : t("common.trial")}
-              variant={isPro ? "pro" : "trial"}
-              textClassName="text-[#675549] dark:text-white"
-            />
-            {!placementMode && onStartPlacement && (
+            <div className="flex min-w-0 items-center">
+              {planBadge ? (
+                <PlanPillBadge
+                  label={planBadge.label}
+                  variant={planBadge.variant}
+                  size="md"
+                />
+              ) : null}
+            </div>
+            {showUpgradeToPro && onUpgradeToPro ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={onUpgradeToPro}
+                className={cn(
+                  inter.className,
+                  'h-8 shrink-0 rounded-full text-xs font-semibold text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:bg-[#1A3D2E]/90',
+                  'bg-[#1A3D2E]',
+                )}
+              >
+                {t('dashboard.upgradeToPro')}
+              </Button>
+            ) : !placementMode && onStartPlacement ? (
               <button
                 type="button"
                 onClick={onStartPlacement}
-                className={cn(inter.className, glassButtonPill, 'h-9 px-4 text-xs font-medium text-foreground sm:text-sm')}
+                className={cn(
+                  inter.className,
+                  glassButtonPill,
+                  'inline-flex h-8 shrink-0 items-center justify-center rounded-full px-4 text-xs font-semibold text-[#675549] dark:text-white/90',
+                )}
               >
                 {t("learn.evaluateLevel")}
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

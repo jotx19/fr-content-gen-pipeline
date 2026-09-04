@@ -1,4 +1,5 @@
 import { usePaywallStore, type PaywallFeature } from '@/store/paywallStore';
+import { isBillingPro, type BillingLike } from '@/lib/billing-plan';
 
 export function handlePaywallError(error: unknown, fallback: PaywallFeature = 'reading') {
   const err = error as Error & { paywall?: boolean; feature?: PaywallFeature };
@@ -9,26 +10,23 @@ export function handlePaywallError(error: unknown, fallback: PaywallFeature = 'r
   return false;
 }
 
-type BillingLike =
-  | {
-      plan: string;
-      limits: {
-        readingSessionsPerDay: number | null;
-        writingSessionsPerDay: number | null;
-        notesMax?: number | null;
-        translationsMax?: number | null;
-      };
-      usage: {
-        readingSessions: number;
-        writingSessions: number;
-        notesCount?: number;
-        translationsTotal?: number;
-      };
-    }
-  | undefined;
+type BillingUsageLike = BillingLike & {
+  limits: {
+    readingSessionsPerDay: number | null;
+    writingSessionsPerDay: number | null;
+    notesMax?: number | null;
+    translationsMax?: number | null;
+  };
+  usage: {
+    readingSessions: number;
+    writingSessions: number;
+    notesCount?: number;
+    translationsTotal?: number;
+  };
+};
 
-export function isAtDailyLimit(billing: BillingLike, feature: PaywallFeature) {
-  if (!billing || billing.plan === 'pro') return false;
+export function isAtDailyLimit(billing: BillingUsageLike | undefined, feature: PaywallFeature) {
+  if (!billing || isBillingPro(billing)) return false;
 
   if (feature === 'notes') {
     const limit = billing.limits.notesMax;
@@ -55,10 +53,10 @@ export function isAtDailyLimit(billing: BillingLike, feature: PaywallFeature) {
 }
 
 export function remainingQuota(
-  billing: BillingLike,
+  billing: BillingUsageLike | undefined,
   feature: 'notes' | 'translate',
 ): { used: number; limit: number | null; remaining: number | null } {
-  if (!billing || billing.plan === 'pro') {
+  if (!billing || isBillingPro(billing)) {
     return { used: 0, limit: null, remaining: null };
   }
   if (feature === 'notes') {

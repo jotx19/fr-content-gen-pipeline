@@ -21,7 +21,7 @@ export function PaywallDialog() {
         <>
           <motion.div
             key="paywall-backdrop"
-            className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm dark:bg-black/35"
             aria-hidden
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -38,7 +38,7 @@ export function PaywallDialog() {
             <motion.div
               key="paywall-panel"
               className={cn(
-                'relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.15)] sm:h-[90vh] sm:max-h-[90vh] sm:max-w-5xl sm:rounded-[2rem]',
+                'relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-[#FCFCFC] shadow-[0_20px_60px_rgba(0,0,0,0.15)] sm:h-[90vh] sm:max-h-[90vh] sm:max-w-5xl sm:rounded-[2rem] dark:bg-[#1C1C1C] dark:shadow-[0_20px_60px_rgba(0,0,0,0.45)]',
               )}
               initial={{ opacity: 0, y: 28, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -49,7 +49,7 @@ export function PaywallDialog() {
               <button
                 type="button"
                 onClick={closePaywall}
-                className={`${inter.className} absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-black/40 transition-colors hover:bg-black/5 hover:text-black/70 sm:right-4 sm:top-4`}
+                className={`${inter.className} absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-[#675549]/50 transition-colors hover:bg-[#675549]/8 hover:text-[#675549] dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white sm:right-4 sm:top-4`}
                 aria-label={t('paywall.close')}
               >
                 <X className="h-4 w-4" />
@@ -58,11 +58,11 @@ export function PaywallDialog() {
               <div className="flex shrink-0 flex-col items-center px-5 pb-2 pt-7 text-center sm:px-8 sm:pb-3 sm:pt-9">
                 <div className="inline-flex items-center gap-2.5">
                   <LogoIcon size={28} rounded="lg" />
-                  <span className={`${bricolage.className} text-base font-semibold tracking-tight text-[#1A3D2E] sm:text-lg`}>
+                  <span className={`${bricolage.className} text-base font-semibold tracking-tight text-[#675549] dark:text-white sm:text-lg`}>
                     {BRAND.name}
                   </span>
                 </div>
-                <h2 className={`${bricolage.className} mt-2.5 text-xl font-semibold tracking-tight text-[#1A3D2E] sm:mt-3 sm:text-2xl sm:text-[1.65rem]`}>
+                <h2 className={`${bricolage.className} mt-2.5 text-xl font-semibold tracking-tight text-[#675549] dark:text-white sm:mt-3 sm:text-2xl sm:text-[1.65rem]`}>
                   {t('paywall.headlineDialog')}
                 </h2>
               </div>

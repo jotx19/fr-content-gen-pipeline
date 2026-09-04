@@ -127,7 +127,7 @@ export const fr: Messages = {
         label: 'Ce que disent nos apprenants',
         date: '02 fév. 2026',
         quoteBold: '40 % de meilleurs scores sur les exercices',
-        quoteMuted: 'que les manuels — sans jamais répéter le même contenu.',
+        quoteMuted: 'que les manuels, sans jamais répéter le même contenu.',
       },
       trustedLine1: 'Approuvé par les candidats au TEF et TCF qui ne suivent pas seulement les tendances,',
       trustedLine2: 'mais définissent comment ils avancent vers le jour J.',
@@ -226,7 +226,7 @@ export const fr: Messages = {
       },
       pro: {
         name: 'Pro',
-        blurb: 'Devenez prêt pour l’examen — pratique illimitée, retour complet, vraie progression.',
+        blurb: 'Devenez prêt pour l’examen : pratique illimitée, retour complet, vraie progression.',
         features: [
           'Pratique quotidienne illimitée',
           'Retour d’écriture complet',
@@ -310,7 +310,7 @@ export const fr: Messages = {
     placementBody:
       'Un court test de lecture fixe votre niveau CECRL et débloque la pratique QCM adaptative et l’écriture type TCF.',
     defaultSummary:
-      'Test de niveau adaptatif, pratique quotidienne et rapports complets — tout pour atteindre vos objectifs en français.',
+      'Test de niveau adaptatif, pratique quotidienne et rapports complets. Tout pour atteindre vos objectifs en français.',
     evaluateLevel: 'Évaluer le niveau',
     level: 'Niveau {level}',
     confidence: 'Confiance',
@@ -433,7 +433,7 @@ export const fr: Messages = {
     questionProgress: 'Progression : question {current} sur {total}',
     moduleProgress: 'Progression : module {current} sur {total}',
     progress: 'Progression',
-    tefReading: 'TEF Canada — compréhension écrite',
+    tefReading: 'TEF Canada · compréhension écrite',
     sectionItem: 'Section {section} · Question {item}/{total}',
     chart: 'Graphique / données',
     document: 'Document',
@@ -461,7 +461,7 @@ export const fr: Messages = {
     hideExample: 'Masquer l’exemple',
     generateAi: 'Générer avec l’IA',
     loadingQuestion: 'Chargement de la question',
-    aiExampleReply: 'Exemple IA — votre réponse',
+    aiExampleReply: 'Exemple IA · votre réponse',
     yourReply: 'Votre réponse',
     nextTask: 'Tâche suivante',
     aiExampleFr: 'Exemple IA (français)',
@@ -493,7 +493,7 @@ export const fr: Messages = {
     headlineReading: 'Continue ta préparation TEF',
     headlineWriting: 'Écris sans limites',
     subline:
-      'Lecture et écriture illimitées — deviens le francophone que tu te prépares à être.',
+      'Lecture et écriture illimitées. Deviens le francophone que tu te prépares à être.',
     free: 'Gratuit',
     perMonthLabel: 'Par mois',
     freeReading: '{count} lecture / jour',

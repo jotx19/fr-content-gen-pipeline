@@ -1,69 +1,127 @@
 // @ts-nocheck
 import { callStructuredSubagent } from '../shared/client.js';
-import { getTefModel } from '../../core/llm.js';
 import { config } from '../../../config.js';
-import { applyWordCountToEvaluation } from '../../../services/writing/scoring/writingWordCount.js';
+import { scoreSentenceSubmission } from '../../../services/writing/scoring/writingOfflineEvaluate.js';
+import { evaluateWritingWithRubric } from '../../../services/writing/scoring/writingRubricEvaluate.js';
 import {
   normalizeWritingEvaluationOutput,
   writingEvaluationOutputSchema,
 } from './writing.schemas.js';
 
-const EVAL_SYSTEM = `Evaluate a French writing submission for TEF Canada expression écrite.
+const COMPACT_LLM_SYSTEM = `You are a TEF Canada writing examiner. Rubric pre-scores are provided — adjust them based on the French submission quality.
 
-Return JSON with exactly these fields:
-- criteria: array of 4 objects, each with:
-  - criterion: one of "content_coherence" | "vocabulary" | "language_accuracy" | "task_fulfillment"
-  - label: short English label
-  - score: integer 0–100
-  - feedback: 1–2 English sentences
-- overallScore: integer 0–100 (weighted: task_fulfillment and language_accuracy matter slightly more)
-- summary: 2–3 English sentences
-- suggestions: array of 3–5 English strings
+Rules:
+- Change each criterion score by at most ±12 from the rubric value.
+- Focus on grammar (language_accuracy) and vocabulary sophistication.
+- Do NOT score word count — the system handles that.
+- Return JSON: criteria (4 items), overallScore (weighted), summary (2 sentences), suggestions (3 strings).
+- Be fair and vary scores when text quality clearly differs.`;
 
-Scoring rules:
-1. Check prompt.taskMode:
-   - "sentences": evaluate each short sentence separately; do NOT expect a full essay or TEF Section B length.
-   - "full": use prompt.minWords and prompt.maxWords as the ONLY word-count requirements.
-2. Use prompt.minWords and prompt.maxWords as word-count requirements when taskMode is "full".
-2. Do NOT penalize vocabulary, language_accuracy, or content_coherence for word count.
-3. Score task_fulfillment for instructions, tone, register, and task type only — NOT for word count.
-   Word-count compliance is scored separately by the system after your response.
-4. Use prompt.examSection (A or B) and prompt.level for qualitative expectations:
-   - Section A: shorter narrative/message tasks; Section B: longer argumentative/discursive tasks.
-   - CEFR level guides vocabulary sophistication, grammatical complexity, coherence, and register.
+function mergeRubricWithLlm(
+  rubric: Record<string, unknown>,
+  llm: Record<string, unknown>
+) {
+  const rubricCriteria = (rubric.criteria as { criterion: string; score: number; feedback: string }[]) ?? [];
+  const llmCriteria = (llm.criteria as { criterion: string; score: number; feedback: string }[]) ?? [];
 
-Be fair but rigorous like an official TEF examiner. Output only JSON.`;
+  const criteria = rubricCriteria.map((row) => {
+    const llmRow = llmCriteria.find((c) => c.criterion === row.criterion);
+    if (!llmRow) return row;
+    const blended = Math.round(row.score * 0.55 + llmRow.score * 0.45);
+    const clamped = Math.max(row.score - 12, Math.min(row.score + 12, blended));
+    return {
+      ...row,
+      score: clamped,
+      feedback: llmRow.feedback || row.feedback,
+    };
+  });
 
-export default {
-  name: 'writingEvaluator',
-  description: 'Evaluate a writing submission on TCF criteria',
-  async run(input) {
-    const payload = typeof input === 'string' ? JSON.parse(input) : input ?? {};
+  const weighted =
+    (criteria.find((c) => c.criterion === 'content_coherence')?.score ?? 0) * 0.2 +
+    (criteria.find((c) => c.criterion === 'vocabulary')?.score ?? 0) * 0.2 +
+    (criteria.find((c) => c.criterion === 'language_accuracy')?.score ?? 0) * 0.3 +
+    (criteria.find((c) => c.criterion === 'task_fulfillment')?.score ?? 0) * 0.3;
 
-    const llmEvaluation = await callStructuredSubagent({
-      systemPrompt: EVAL_SYSTEM,
+  return {
+    ...rubric,
+    criteria,
+    overallScore: Math.round(weighted),
+    summary: String(llm.summary ?? rubric.summary),
+    suggestions: (llm.suggestions as string[]) ?? rubric.suggestions,
+    evaluationMethod: 'llm_polish',
+  };
+}
+
+async function tryLlmPolish(
+  payload: Record<string, unknown>,
+  rubric: Record<string, unknown>
+) {
+  if (process.env.TEF_WRITING_USE_LLM_EVAL === 'false') return null;
+  if (!process.env.OPENROUTER_API_KEY) return null;
+
+  try {
+    const llm = await callStructuredSubagent({
+      systemPrompt: COMPACT_LLM_SYSTEM,
       userPayload: {
-        prompt: payload.prompt,
-        submission: payload.submission,
-        wordCount: payload.wordCount,
         level: payload.level,
-        wordCountRequirements: {
-          minWords: payload.prompt?.minWords,
-          maxWords: payload.prompt?.maxWords,
+        prompt: {
+          title: (payload.prompt as Record<string, unknown>)?.title,
+          instructions: (payload.prompt as Record<string, unknown>)?.instructions,
+          taskType: (payload.prompt as Record<string, unknown>)?.taskType,
+          examSection: (payload.prompt as Record<string, unknown>)?.examSection,
         },
+        submissionExcerpt: String(payload.submission ?? '').slice(0, 1400),
+        wordCount: payload.wordCount,
+        rubricScores: (rubric.criteria as { criterion: string; score: number }[]).map((c) => ({
+          criterion: c.criterion,
+          score: c.score,
+        })),
       },
       schema: writingEvaluationOutputSchema,
       normalize: normalizeWritingEvaluationOutput,
       maxAttempts: 3,
-      models: [getTefModel()],
-      maxTokens: config.tefWritingLlmMaxTokens,
+      models: ['openrouter/free'],
+      maxTokens: 384,
     });
 
-    return applyWordCountToEvaluation(
-      llmEvaluation,
-      payload.wordCount,
-      payload.prompt,
-      payload.level
+    return mergeRubricWithLlm(rubric, llm as Record<string, unknown>);
+  } catch (err) {
+    console.warn(
+      `[writing] LLM polish skipped (${err instanceof Error ? err.message : err}) — rubric only`
     );
+    return null;
+  }
+}
+
+export default {
+  name: 'writingEvaluator',
+  description: 'Evaluate writing with template rubric (+ optional LLM polish)',
+  async run(input) {
+    const payload = typeof input === 'string' ? JSON.parse(input) : input ?? {};
+    const taskMode = String((payload.prompt as Record<string, unknown>)?.taskMode ?? 'full');
+
+    if (taskMode === 'sentences') {
+      const sentencePrompts =
+        ((payload.prompt as Record<string, unknown>)?.sentencePrompts as {
+          id: string;
+          prompt: string;
+          minWords: number;
+          maxWords: number;
+        }[]) ?? [];
+      const answers = (payload.answers as Record<string, string>) ?? {};
+      if (sentencePrompts.length && Object.keys(answers).length) {
+        return { ...scoreSentenceSubmission(sentencePrompts, answers), evaluationMethod: 'rubric' };
+      }
+    }
+
+    const rubric = evaluateWritingWithRubric(
+      String(payload.submission ?? ''),
+      Number(payload.wordCount ?? 0),
+      (payload.prompt as Record<string, unknown>) ?? {},
+      String(payload.level ?? 'B1')
+    );
+
+    const polished = await tryLlmPolish(payload, rubric as Record<string, unknown>);
+    return polished ?? rubric;
   },
 };

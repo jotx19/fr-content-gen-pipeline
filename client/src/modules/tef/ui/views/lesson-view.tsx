@@ -28,6 +28,9 @@ import type { PublicQuestion, PublicReadingModule } from '@/modules/tef/types/te
 import { useLessonStore } from '@/store/lessonStore';
 
 const panelClass = 'bg-[#FCFCFC] dark:bg-[#1C1C1C]';
+const ink = 'text-black dark:text-white';
+const inkSoft = 'text-black/80 dark:text-white/85';
+const inkMuted = 'text-black/55 dark:text-white/70';
 
 type FlatItem = {
   question: PublicQuestion;
@@ -366,32 +369,32 @@ export function LessonView() {
     isPlacement ? (
       <>
         Question{' '}
-        <span className="font-medium tabular-nums text-foreground">{currentIdx + 1}</span>
-        <span className="text-muted-foreground/70"> / {questions.length}</span>
+        <span className={cn('font-medium tabular-nums', ink)}>{currentIdx + 1}</span>
+        <span className={inkMuted}> / {questions.length}</span>
       </>
     ) : (
       <>
         {currentModule?.sectionCode ? (
-          <span className="font-medium text-foreground">
+          <span className={cn('font-medium', ink)}>
             Section {currentModule.sectionCode}
           </span>
         ) : (
           <>
             Module{' '}
-            <span className="font-medium tabular-nums text-foreground">
+            <span className={cn('font-medium tabular-nums', ink)}>
               {currentModuleIndex + 1}
             </span>
           </>
         )}
-        <span className="text-muted-foreground/70"> / {modules.length}</span>
+        <span className={inkMuted}> / {modules.length}</span>
         {currentModule?.sectionTitle || currentModule?.title ? (
-          <span className="text-muted-foreground/70">
+          <span className={inkMuted}>
             {' '}
             · {currentModule.sectionTitle ?? currentModule.title}
           </span>
         ) : null}
         {itemsInModule > 1 ? (
-          <span className="text-muted-foreground/70">
+          <span className={inkMuted}>
             {' '}
             · {itemInModule}/{itemsInModule}
           </span>
@@ -486,25 +489,25 @@ export function LessonView() {
           )}
         >
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <div className={cn('flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide', inkSoft)}>
               <ModeIcon className="h-3.5 w-3.5" strokeWidth={2} />
-              <span className="uppercase tracking-wide">{modeLabel}</span>
+              <span>{modeLabel}</span>
             </div>
             <h1
-              className={`${bricolage.className} mt-2 text-xl font-semibold leading-tight tracking-tight uppercase xl:text-2xl`}
+              className={`${bricolage.className} mt-2 text-xl font-semibold leading-tight tracking-tight uppercase xl:text-2xl ${ink}`}
               title={title}
             >
               {title}
             </h1>
-            <p className="mt-3 text-sm leading-snug text-muted-foreground">{renderStatusLine()}</p>
+            <p className={cn('mt-3 text-sm leading-snug', inkSoft)}>{renderStatusLine()}</p>
           </div>
 
           <div>
             <div className="mb-3 flex items-end justify-between gap-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className={cn('text-xs font-medium uppercase tracking-wide', inkMuted)}>
                 {t('lesson.progress')}
               </p>
-              <p className={`${bricolage.className} text-2xl font-semibold tabular-nums`}>
+              <p className={`${bricolage.className} text-2xl font-semibold tabular-nums ${ink}`}>
                 {Math.min(100, Math.max(0, progressPct))}%
               </p>
             </div>
@@ -525,23 +528,23 @@ export function LessonView() {
           <div className={cn('rounded-2xl px-4 py-3.5', panelClass)}>
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <div className={cn('flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide', inkSoft)}>
                   <ModeIcon className="h-3.5 w-3.5" strokeWidth={2} />
-                  <span className="uppercase tracking-wide">{modeLabel}</span>
+                  <span>{modeLabel}</span>
                 </div>
                 <h1
-                  className={`${bricolage.className} mt-1 text-sm font-semibold leading-snug tracking-tight sm:text-base uppercase`}
+                  className={`${bricolage.className} mt-1 text-sm font-semibold leading-snug tracking-tight sm:text-base uppercase ${ink}`}
                   title={title}
                 >
                   {title}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">{renderStatusLine()}</p>
+                <p className={cn('mt-1 text-sm', inkSoft)}>{renderStatusLine()}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className={cn('text-xs font-medium uppercase tracking-wide', inkMuted)}>
                   {t('lesson.progress')}
                 </p>
-                <p className={`${bricolage.className} text-lg font-semibold tabular-nums`}>
+                <p className={`${bricolage.className} text-lg font-semibold tabular-nums ${ink}`}>
                   {Math.min(100, Math.max(0, progressPct))}%
                 </p>
               </div>
@@ -554,11 +557,11 @@ export function LessonView() {
           {!isPlacement && currentModule?.passage ? (
             <article
               className={cn(
-                'rounded-2xl px-5 py-4 text-[15px] leading-relaxed whitespace-pre-wrap text-neutral-800 dark:text-white/85',
+                'rounded-2xl px-5 py-4 text-[15px] leading-relaxed whitespace-pre-wrap text-black/90 dark:text-white/90',
                 panelClass,
               )}
             >
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground/50">
+              <p className={cn('mb-3 text-xs font-medium uppercase tracking-wide', inkMuted)}>
                 {passageLabel()}
               </p>
               {currentModule.passage}

@@ -14,7 +14,9 @@ import { useLessonStore } from '@/store/lessonStore';
 import { clearPlacementProgress } from '@/lib/tef-session-storage';
 import { handlePaywallError, isAtDailyLimit } from '@/lib/paywall';
 import { usePaywallStore } from '@/store/paywallStore';
+import { getLearnBentoPlanBadge, isBillingPro } from '@/lib/billing-plan';
 import { useBillingStatusQuery } from '@/modules/billing/hooks/use-billing-queries';
+import { useI18n } from '@/lib/i18n';
 import { overallLevelAndConfidence } from '@/modules/tef/lib/overall-progress';
 
 function LearnSkeleton() {
@@ -31,6 +33,7 @@ function LearnSkeleton() {
 
 export function LearnHomeView() {
   const router = useRouter();
+  const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
   const setMode = useLessonStore((s) => s.setMode);
   const { data: profile, isLoading, isError } = useTefProfileQuery(Boolean(user), {
@@ -106,7 +109,9 @@ export function LearnHomeView() {
       : summary,
     streak: profile?.stats?.streakDays ?? 0,
     xp: readingXp + writingXp,
-    isPro: billing?.plan === 'pro',
+    planBadge: getLearnBentoPlanBadge(billing, { pro: t('common.pro'), trial: t('common.trial') }),
+    showUpgradeToPro: !isBillingPro(billing),
+    onUpgradeToPro: () => openPaywall('reading'),
     practiceReady: profile?.practiceReady,
     placementMode,
     onStartPractice: handleStartPractice,

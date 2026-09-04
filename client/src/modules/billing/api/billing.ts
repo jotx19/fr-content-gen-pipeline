@@ -22,6 +22,9 @@ export type BillingStatus = {
   subscriptionStatus: string;
   subscriptionInterval: BillingInterval | null;
   currentPeriodEnd: string | null;
+  isPro: boolean;
+  isTrial: boolean;
+  showPlanBadge: boolean;
   billingConfigured: boolean;
   canManageBilling: boolean;
   limits: {

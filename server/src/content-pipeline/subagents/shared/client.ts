@@ -26,11 +26,16 @@ export function parseJsonFromText(raw) {
 }
 
 function isModelUnavailableError(message) {
-  const m = String(message ?? '');
+  const m = String(message ?? '').toLowerCase();
   return (
     m.includes('404') ||
-    m.includes('No endpoints found') ||
-    m.includes('not a valid model ID')
+    m.includes('no endpoints found') ||
+    m.includes('not a valid model id') ||
+    m.includes('insufficient credits') ||
+    m.includes('requires more credits') ||
+    m.includes('never purchased credits') ||
+    m.includes('credits are too low') ||
+    m.includes('can only afford 0')
   );
 }
 

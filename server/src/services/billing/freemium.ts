@@ -40,6 +40,19 @@ function isAccessExpired(user: { currentPeriodEnd?: Date | null }): boolean {
   return new Date() > new Date(user.currentPeriodEnd);
 }
 
+/** Persist free tier when a one-time or subscription period has ended. */
+export async function downgradeExpiredUserIfNeeded(user: UserDocument): Promise<UserDocument> {
+  if (user.plan === 'pro' && isAccessExpired(user)) {
+    user.plan = 'free';
+    user.subscriptionStatus = 'canceled';
+    user.subscriptionInterval = null;
+    user.currentPeriodEnd = null;
+    user.updatedAt = new Date();
+    await user.save();
+  }
+  return user;
+}
+
 export function isProUser(user: ProCheckUser | null | undefined): boolean {
   if (!user) return false;
   if (isAccessExpired(user)) return false;
@@ -73,6 +86,9 @@ export type UsageStatus = {
   subscriptionStatus: string;
   subscriptionInterval: string | null;
   currentPeriodEnd: string | null;
+  isPro: boolean;
+  isTrial: boolean;
+  showPlanBadge: boolean;
   limits: {
     readingSessionsPerDay: number | null;
     writingSessionsPerDay: number | null;
@@ -93,19 +109,12 @@ export async function getNotesCount(userId: string): Promise<number> {
 }
 
 export async function getUsageStatus(userId: string): Promise<UsageStatus> {
-  const user = await loadUser(userId);
+  let user = await loadUser(userId);
   resetUsageIfNeeded(user);
-
-  if (user.plan === 'pro' && isAccessExpired(user)) {
-    user.plan = 'free';
-    user.subscriptionStatus = 'canceled';
-    user.subscriptionInterval = null;
-    user.currentPeriodEnd = null;
-    user.updatedAt = new Date();
-    await user.save();
-  }
+  user = await downgradeExpiredUserIfNeeded(user);
 
   const pro = isProUser(user);
+  const isTrial = pro && user.subscriptionStatus === 'trialing';
   const notesCount = await getNotesCount(userId);
 
   return {
@@ -113,6 +122,9 @@ export async function getUsageStatus(userId: string): Promise<UsageStatus> {
     subscriptionStatus: user.subscriptionStatus ?? 'none',
     subscriptionInterval: user.subscriptionInterval ?? null,
     currentPeriodEnd: user.currentPeriodEnd?.toISOString?.() ?? null,
+    isPro: pro && !isTrial,
+    isTrial,
+    showPlanBadge: pro,
     limits: {
       readingSessionsPerDay: pro ? null : config.freemiumReadingPerDay,
       writingSessionsPerDay: pro ? null : config.freemiumWritingPerDay,
@@ -133,7 +145,8 @@ export async function assertFeatureAccess(
   userId: string,
   feature: PaywallFeature
 ): Promise<UserDocument> {
-  const user = await loadUser(userId);
+  let user = await loadUser(userId);
+  user = await downgradeExpiredUserIfNeeded(user);
   if (isProUser(user)) return user;
 
   resetUsageIfNeeded(user);
@@ -174,7 +187,8 @@ export async function consumeFeatureUsage(
   userId: string,
   feature: PaywallFeature
 ): Promise<void> {
-  const user = await loadUser(userId);
+  let user = await loadUser(userId);
+  user = await downgradeExpiredUserIfNeeded(user);
   if (isProUser(user)) return;
 
   resetUsageIfNeeded(user);

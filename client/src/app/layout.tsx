@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Providers } from '@/components/providers';
+import { ThemeScript } from '@/components/theme-script';
 import { BRAND } from '@/lib/brand';
 import { bricolage, inter, interTight, playfair } from '@/lib/fonts';
 import './globals.css';
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} ${bricolage.variable} ${interTight.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>

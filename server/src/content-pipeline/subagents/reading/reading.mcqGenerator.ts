@@ -5,12 +5,13 @@ import { normalizeMcqBatch, SKILL_TAGS } from '../shared/reading.normalize.js';
 import {
   readingLevelGuidance,
   TEF_READING_SECTIONS,
-  TEF_PRACTICE_QUESTION_COUNT,
+  getTefPracticeQuestionCount,
+  sectionQuestionCount,
 } from '../../../services/reading/prompts/readingExamStructure.js';
 
 const SKILL_LIST = SKILL_TAGS.map((t) => `"${t}"`).join(' | ');
 const SECTION_LIST = TEF_READING_SECTIONS.map(
-  (s) => `${s.code}. ${s.titleFr} (${s.practiceCount} Q)`
+  (s) => `${s.code}. ${s.titleFr} (${sectionQuestionCount(s)} Q)`
 ).join('\n');
 
 const MCQ_SYSTEM = `Generate a TEF Canada compréhension écrite practice batch as JSON.
@@ -19,7 +20,7 @@ Official exam: 40 MCQs in 60 minutes. This practice batch mirrors the 7 TEF sub-
 ${SECTION_LIST}
 
 Rules:
-- Total questions: ${TEF_PRACTICE_QUESTION_COUNT} (distributed across sections as above).
+- Total questions: ${getTefPracticeQuestionCount()} (distributed across sections as above).
 - question + options: French only, formal/administrative register for Canada.
 - exactly 4 options, include correctIndex (0-3) and skillTag.
 - skillTag must be one of: ${SKILL_LIST}
@@ -36,13 +37,13 @@ export default {
   async run(input) {
     const payload = typeof input === 'string' ? JSON.parse(input) : input ?? {};
 
-    const { level, weakAreas, topic, count = TEF_PRACTICE_QUESTION_COUNT } = payload;
+    const { level, weakAreas, topic, count = getTefPracticeQuestionCount() } = payload;
 
     if (!level || !topic) {
       throw new Error('Requires level and topic');
     }
 
-    const batchSize = Math.min(Math.max(Number(count) || TEF_PRACTICE_QUESTION_COUNT, 7), 20);
+    const batchSize = Math.min(Math.max(Number(count) || getTefPracticeQuestionCount(), 7), 20);
 
     return callStructuredSubagent({
       systemPrompt: MCQ_SYSTEM,

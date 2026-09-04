@@ -13,7 +13,7 @@ export const TEF_WRITING_SECTIONS: Record<
 > = {
   A: {
     label: 'Section A',
-    examLabel: 'TEF Canada — Expression écrite, Section A',
+    examLabel: 'TEF Canada · Expression écrite, Section A',
     description:
       'Shorter task: continue a story, describe, react to a document, or write a brief message.',
     examMinimum: 80,
@@ -22,7 +22,7 @@ export const TEF_WRITING_SECTIONS: Record<
   },
   B: {
     label: 'Section B',
-    examLabel: 'TEF Canada — Expression écrite, Section B',
+    examLabel: 'TEF Canada · Expression écrite, Section B',
     description:
       'Longer task: express an opinion, argue a position, compare viewpoints, or comment on a topic.',
     examMinimum: 200,
